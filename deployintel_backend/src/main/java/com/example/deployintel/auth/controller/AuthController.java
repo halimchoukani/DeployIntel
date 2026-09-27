@@ -43,6 +43,15 @@ public class AuthController {
         return ResponseEntity.ok(response);
     }
 
+    @PostMapping("/github")
+    public ResponseEntity<LoginResponse> loginWithGithub(
+            @Valid @RequestBody com.example.deployintel.auth.dto.OAuth2LoginRequest request
+    ) {
+        LoginResponse response = authService.loginWithGithub(request.code(), request.redirectUri());
+
+        return ResponseEntity.ok(response);
+    }
+
     @GetMapping("/me")
     public Map<String, Object> me(Authentication authentication) {
 

@@ -22,6 +22,8 @@ public class AuthService {
     private PasswordEncoder passwordEncoder;
     @Autowired
     private JwtService jwtService;
+    @Autowired
+    private GithubOAuth2Service githubOAuth2Service;
 
 
     @Transactional
@@ -91,5 +93,39 @@ public class AuthService {
                 token,
                 "Bearer"
         );
+    }
+
+    @Transactional
+    public LoginResponse loginWithGithub(String code, String redirectUri) {
+        String accessToken = githubOAuth2Service.exchangeCodeForAccessToken(code, redirectUri);
+        var userInfo = githubOAuth2Service.getGithubUserInfo(accessToken);
+
+        String email = userInfo.email();
+        if (email == null || email.isBlank()) {
+            email = githubOAuth2Service.fetchPrimaryEmail(accessToken, userInfo.id(), userInfo.login());
+        }
+
+        User user = githubOAuth2Service.findOrCreateUser(userInfo, email);
+
+        if (!user.getStatus().equals(UserStatus.ACTIVE)) {
+            throw new IllegalArgumentException("User account is inactive");
+        }
+
+        String token = jwtService.generateToken(
+                user.getId(),
+                user.getEmail(),
+                user.getRole()
+        );
+
+        return new LoginResponse(
+                user.getId(),
+                user.getEmail(),
+                token,
+                "Bearer"
+        );
+    }
+
+    public LoginResponse loginWithGithub(String code) {
+        return loginWithGithub(code, null);
     }
 }

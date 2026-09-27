@@ -1,3 +1,4 @@
+// ─── Signup ──────────────────────────────────────────────────────────────────
 export interface SignupFormData {
   firstName: string;
   lastName: string;
@@ -13,6 +14,35 @@ export interface RegisterPayload {
   email: string;
   password: string;
   phone?: string;
+}
+
+// ─── Signin ──────────────────────────────────────────────────────────────────
+export interface SigninFormData {
+  email: string;
+  password: string;
+  rememberMe: boolean;
+}
+
+export interface LoginPayload {
+  email: string;
+  password: string;
+}
+
+export interface LoginResponse {
+  userId: string;
+  email: string;
+  accessToken: string;
+  tokenType: string;
+}
+
+// ─── GitHub OAuth2 ──────────────────────────────────────────────────────────
+export interface GitHubCallbackParams {
+  code: string;
+  redirectUri?: string;
+}
+
+export interface GitHubAuthUrlResponse {
+  authorizationUrl: string;
 }
 
 export interface UserResponse {

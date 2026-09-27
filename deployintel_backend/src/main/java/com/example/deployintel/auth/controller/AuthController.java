@@ -1,0 +1,63 @@
+package com.example.deployintel.auth.controller;
+
+import com.example.deployintel.auth.dto.LoginRequest;
+import com.example.deployintel.auth.dto.LoginResponse;
+import com.example.deployintel.auth.dto.RegisterRequest;
+import com.example.deployintel.auth.dto.UserResponse;
+import com.example.deployintel.auth.security.UserPrincipal;
+import com.example.deployintel.auth.service.AuthService;
+import jakarta.validation.Valid;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.Map;
+
+@RestController
+@RequestMapping("/api/v1/auth")
+public class AuthController {
+
+    @Autowired
+    private AuthService authService;
+
+    @PostMapping("/register")
+    public ResponseEntity<UserResponse> register(
+            @Valid @RequestBody RegisterRequest request
+    ) {
+        UserResponse response = authService.register(request);
+
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(response);
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<LoginResponse> login(
+            @Valid @RequestBody LoginRequest request
+    ) {
+        LoginResponse response = authService.login(request);
+
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/me")
+    public Map<String, Object> me(Authentication authentication) {
+
+        UserPrincipal principal =
+                (UserPrincipal) authentication.getPrincipal();
+
+        return Map.of(
+                "id", principal.getId(),
+                "email", principal.getUsername(),
+                "role", principal.getRole()
+        );
+    }
+    @GetMapping("/dev-only")
+    @PreAuthorize("hasRole('DEVELOPER')")
+    public String patientOnly() {
+        return "You are a DEVELOPER";
+    }
+}

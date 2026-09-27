@@ -1,0 +1,5 @@
+spring:
+  application:
+    name: deployintel
+  profiles:
+    active: local

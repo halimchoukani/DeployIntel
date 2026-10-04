@@ -38,7 +38,8 @@ export function useGithubAuth(
     setError(null);
 
     try {
-      // Use current origin as redirect URI so GitHub sends the code back here
+      // GitHub must redirect back to the frontend callback page,
+      // which then POSTs the code to the backend for token exchange.
       const redirectUri =
         typeof window !== "undefined"
           ? `${window.location.origin}/auth/github/callback`

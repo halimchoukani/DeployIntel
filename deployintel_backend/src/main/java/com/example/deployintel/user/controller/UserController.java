@@ -11,7 +11,9 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
-
+import org.springframework.security.core.Authentication;
+import com.example.deployintel.auth.security.UserPrincipal;
+import com.example.deployintel.user.dto.UpdateProfileRequest;
 @RestController
 @RequestMapping("/api/v1/users")
 public class UserController {
@@ -41,5 +43,14 @@ public class UserController {
         UserResponse response = userService.deactivateUser(userId);
 
         return ResponseEntity.ok(response);
+    }
+
+    @PutMapping("/profile")
+    public ResponseEntity<UserResponse> updateProfile(
+            Authentication authentication,
+            @Valid @RequestBody UpdateProfileRequest request
+    ) {
+        UserPrincipal principal = (UserPrincipal) authentication.getPrincipal();
+        return ResponseEntity.ok(userService.updateProfile(principal.getId(), request));
     }
 }

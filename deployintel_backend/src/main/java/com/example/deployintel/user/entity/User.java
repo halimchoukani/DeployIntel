@@ -57,6 +57,9 @@ public class User {
     @Column(name = "avatar_url", length = 500)
     private String avatarUrl;
 
+    @Column(name = "github_access_token", length = 500)
+    private String githubAccessToken;
+
     @Column(name = "created_at", nullable = false)
     private OffsetDateTime createdAt;
 
@@ -114,6 +117,20 @@ public class User {
         OffsetDateTime now = OffsetDateTime.now();
         user.createdAt = now;
         user.updatedAt = now;
+        return user;
+    }
+
+    public static User createOAuth2User(
+            String email,
+            String firstName,
+            String lastName,
+            AuthProvider provider,
+            String providerId,
+            String avatarUrl,
+            String githubAccessToken
+    ) {
+        User user = createOAuth2User(email, firstName, lastName, provider, providerId, avatarUrl);
+        user.githubAccessToken = githubAccessToken;
         return user;
     }
 }

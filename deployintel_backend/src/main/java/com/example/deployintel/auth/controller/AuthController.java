@@ -6,6 +6,9 @@ import com.example.deployintel.auth.dto.RegisterRequest;
 import com.example.deployintel.auth.dto.UserResponse;
 import com.example.deployintel.auth.security.UserPrincipal;
 import com.example.deployintel.auth.service.AuthService;
+import com.example.deployintel.common.exception.UserNotFoundException;
+import com.example.deployintel.user.entity.User;
+import com.example.deployintel.user.repository.UserRepository;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -22,6 +25,9 @@ public class AuthController {
 
     @Autowired
     private AuthService authService;
+
+    @Autowired
+    private UserRepository userRepository;
 
     @PostMapping("/register")
     public ResponseEntity<UserResponse> register(
@@ -58,10 +64,18 @@ public class AuthController {
         UserPrincipal principal =
                 (UserPrincipal) authentication.getPrincipal();
 
+        User user = userRepository.findById(principal.getId())
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
+
         return Map.of(
                 "id", principal.getId(),
                 "email", principal.getUsername(),
-                "role", principal.getRole()
+                "role", principal.getRole(),
+                "firstName", user.getFirstName() != null ? user.getFirstName() : "",
+                "lastName", user.getLastName() != null ? user.getLastName() : "",
+                "phone", user.getPhone() != null ? user.getPhone() : "",
+                "avatarUrl", user.getAvatarUrl() != null ? user.getAvatarUrl() : "",
+                "githubConnected", user.getGithubAccessToken() != null && !user.getGithubAccessToken().isBlank()
         );
     }
     @GetMapping("/dev-only")

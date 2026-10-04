@@ -38,7 +38,7 @@ public class GithubOAuth2Service {
         UriComponentsBuilder builder = UriComponentsBuilder
                 .fromUriString("https://github.com/login/oauth/authorize")
                 .queryParam("client_id", clientId)
-                .queryParam("scope", "read:user user:email");
+                .queryParam("scope", "read:user user:email repo");
 
         if (redirectUri != null && !redirectUri.isBlank()) {
             builder.queryParam("redirect_uri", redirectUri);
@@ -183,6 +183,11 @@ public class GithubOAuth2Service {
 
     @Transactional
     public User findOrCreateUser(GithubUserInfo userInfo, String resolvedEmail) {
+        return findOrCreateUser(userInfo, resolvedEmail, null);
+    }
+
+    @Transactional
+    public User findOrCreateUser(GithubUserInfo userInfo, String resolvedEmail, String accessToken) {
         if (userInfo.id() == null || userInfo.id().isBlank()) {
             throw new IllegalArgumentException("GitHub user ID cannot be null");
         }
@@ -195,6 +200,9 @@ public class GithubOAuth2Service {
             }
             if (userInfo.avatarUrl() != null) {
                 user.setAvatarUrl(userInfo.avatarUrl());
+            }
+            if (accessToken != null && !accessToken.isBlank()) {
+                user.setGithubAccessToken(accessToken);
             }
             user.setUpdatedAt(OffsetDateTime.now());
             return userRepository.save(user);
@@ -210,6 +218,9 @@ public class GithubOAuth2Service {
                 }
                 if (userInfo.avatarUrl() != null) {
                     user.setAvatarUrl(userInfo.avatarUrl());
+                }
+                if (accessToken != null && !accessToken.isBlank()) {
+                    user.setGithubAccessToken(accessToken);
                 }
                 user.setUpdatedAt(OffsetDateTime.now());
                 return userRepository.save(user);
@@ -233,7 +244,8 @@ public class GithubOAuth2Service {
                 lastName,
                 AuthProvider.GITHUB,
                 userInfo.id(),
-                userInfo.avatarUrl()
+                userInfo.avatarUrl(),
+                accessToken
         );
 
         return userRepository.save(newUser);

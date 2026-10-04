@@ -12,6 +12,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.UUID;
+import java.time.OffsetDateTime;
+import com.example.deployintel.user.dto.UpdateProfileRequest;
 
 @Service
 public class UserService {
@@ -57,6 +59,37 @@ public class UserService {
                 );
 
         user.setStatus(UserStatus.INACTIVE);
+
+        User savedUser = userRepository.save(user);
+
+        return new UserResponse(
+                savedUser.getId(),
+                savedUser.getEmail(),
+                savedUser.getFirstName(),
+                savedUser.getLastName(),
+                savedUser.getPhone(),
+                savedUser.getStatus(),
+                savedUser.getCreatedAt(),
+                savedUser.getRole()
+        );
+    }
+
+    @Transactional
+    public UserResponse updateProfile(UUID userId, UpdateProfileRequest request) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() ->
+                        new UserNotFoundException(
+                                "User not found with id: " + userId
+                        )
+                );
+
+        user.setFirstName(request.firstName());
+        user.setLastName(request.lastName());
+        user.setPhone(request.phone());
+        if (request.avatarUrl() != null) {
+            user.setAvatarUrl(request.avatarUrl());
+        }
+        user.setUpdatedAt(OffsetDateTime.now());
 
         User savedUser = userRepository.save(user);
 

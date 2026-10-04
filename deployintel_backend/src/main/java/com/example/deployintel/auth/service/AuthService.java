@@ -105,7 +105,7 @@ public class AuthService {
             email = githubOAuth2Service.fetchPrimaryEmail(accessToken, userInfo.id(), userInfo.login());
         }
 
-        User user = githubOAuth2Service.findOrCreateUser(userInfo, email);
+        User user = githubOAuth2Service.findOrCreateUser(userInfo, email, accessToken);
 
         if (!user.getStatus().equals(UserStatus.ACTIVE)) {
             throw new IllegalArgumentException("User account is inactive");

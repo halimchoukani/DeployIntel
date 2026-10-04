@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
 import { SigninFormData } from "@/types/auth";
 import { useLoginMutation } from "./use-login";
 
@@ -10,15 +11,28 @@ const initialValues: SigninFormData = {
   rememberMe: true,
 };
 
+function getUrlErrorMessage(urlError: string | null | undefined): string | null {
+  if (!urlError) return null;
+  if (urlError === "github_auth_failed") return "GitHub authentication failed.";
+  if (urlError === "missing_code") return "GitHub authentication returned no code.";
+  if (urlError === "oauth2_missing_params") return "OAuth2 provider did not return required user data.";
+  return decodeURIComponent(urlError);
+}
+
 export function useSigninForm(onSuccessCallback?: () => void) {
+  const searchParams = useSearchParams();
+  const urlError = searchParams?.get("error");
+  const initialUrlError = getUrlErrorMessage(urlError);
+
   const [values, setValues] = useState<SigninFormData>(initialValues);
   const [showPassword, setShowPassword] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<
     Partial<Record<keyof SigninFormData, string>>
   >({});
-  const [generalError, setGeneralError] = useState<string | null>(null);
+  const [generalError, setGeneralError] = useState<string | null>(initialUrlError);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [, startTransition] = useTransition();
+  const router = useRouter();
 
   const loginMutation = useLoginMutation({
     onSuccess: (data) => {
@@ -40,6 +54,8 @@ export function useSigninForm(onSuccessCallback?: () => void) {
           onSuccessCallback();
         }, 1000);
       }
+      router.replace("/dashboard");
+
     },
     onError: (err) => {
       setSuccessMessage(null);

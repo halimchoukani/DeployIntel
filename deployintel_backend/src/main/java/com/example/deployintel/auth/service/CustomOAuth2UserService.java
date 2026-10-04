@@ -46,13 +46,16 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         String email = oauth2User.getAttribute("email");
         String avatarUrl = oauth2User.getAttribute("avatar_url");
 
+        String accessToken = userRequest.getAccessToken().getTokenValue();
         if (email == null || email.isBlank()) {
-            String accessToken = userRequest.getAccessToken().getTokenValue();
             email = githubOAuth2Service.fetchPrimaryEmail(accessToken, githubId, username);
         }
 
         GithubUserInfo userInfo = new GithubUserInfo(githubId, username, name, email, avatarUrl);
         User user = githubOAuth2Service.findOrCreateUser(userInfo, email);
+        if (user != null && accessToken != null) {
+            user.setGithubAccessToken(accessToken);
+        }
 
         Map<String, Object> attributes = new HashMap<>(oauth2User.getAttributes());
         attributes.put("email", user.getEmail());

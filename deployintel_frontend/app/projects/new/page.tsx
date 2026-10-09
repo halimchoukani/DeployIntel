@@ -58,7 +58,7 @@ interface ManualForm {
 
 // ─── Main Page ───────────────────────────────────────────────────────────────
 
-export default function NewProjectPage() {
+function NewProjectPageContent() {
   const router = useRouter();
   const [mode, setMode] = useState<Mode>("github");
   const [search, setSearch] = useState("");
@@ -696,5 +696,13 @@ function RepoRow({
         />
       </svg>
     </button>
+  );
+}
+
+export default function NewProjectPage() {
+  return (
+    <React.Suspense fallback={<div className="px-6 py-8 text-zinc-500 text-xs">Loading repository configuration...</div>}>
+      <NewProjectPageContent />
+    </React.Suspense>
   );
 }

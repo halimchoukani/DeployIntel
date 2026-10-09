@@ -6,6 +6,8 @@ import { useRouter } from "next/navigation";
 import { useProjects } from "@/hooks/use-projects";
 import { useAuthUser } from "@/hooks/use-auth-user";
 import { useGithubAuth } from "@/hooks/use-github-auth";
+import { useProjectCommits } from "@/hooks/use-project-commits";
+import { AllProjectsCommitsView } from "@/components/projects/all-projects-commits-view";
 import type { Project } from "@/lib/api/project";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -89,6 +91,8 @@ export default function ProjectsPage() {
     initiateGithubLogin();
   }
 
+  const [viewMode, setViewMode] = useState<"grid" | "commits">("grid");
+
   const filteredProjects = projects?.filter(
     (p) =>
       p.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -102,7 +106,7 @@ export default function ProjectsPage() {
         <div>
           <h1 className="text-2xl font-bold text-zinc-900 leading-tight">Projects</h1>
           <p className="text-sm text-zinc-500 mt-1">
-            Manage your monitored applications and their configurations.
+            Manage your monitored applications, commit streams, and deployment gate guardrails.
           </p>
         </div>
         <div className="flex items-center gap-3">
@@ -134,27 +138,54 @@ export default function ProjectsPage() {
       </div>
 
       {/* Toolbar */}
-      <div className="flex items-center justify-between gap-4 mb-6">
-        <div className="relative w-[320px]">
-          <svg
-            viewBox="0 0 20 20"
-            fill="currentColor"
-            className="w-4 h-4 text-zinc-400 absolute left-3 top-1/2 -translate-y-1/2"
-          >
-            <path
-              fillRule="evenodd"
-              d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z"
-              clipRule="evenodd"
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+        <div className="flex items-center gap-3">
+          <div className="relative w-full sm:w-[320px]">
+            <svg
+              viewBox="0 0 20 20"
+              fill="currentColor"
+              className="w-4 h-4 text-zinc-400 absolute left-3 top-1/2 -translate-y-1/2"
+            >
+              <path
+                fillRule="evenodd"
+                d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z"
+                clipRule="evenodd"
+              />
+            </svg>
+            <input
+              type="text"
+              placeholder="Search projects..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="w-full pl-9 pr-4 py-2 text-sm text-zinc-900 bg-white border border-zinc-200 rounded-xl outline-none focus:border-[#5850ec] focus:ring-2 focus:ring-[#5850ec]/10 transition-all placeholder:text-zinc-400 shadow-sm"
             />
-          </svg>
-          <input
-            type="text"
-            placeholder="Search projects..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-9 pr-4 py-2 text-sm text-zinc-900 bg-white border border-zinc-200 rounded-xl outline-none focus:border-[#5850ec] focus:ring-2 focus:ring-[#5850ec]/10 transition-all placeholder:text-zinc-400 shadow-sm"
-          />
+          </div>
+
+          {/* View Toggle */}
+          <div className="flex items-center bg-zinc-100 p-1 rounded-xl border border-zinc-200/80">
+            <button
+              onClick={() => setViewMode("grid")}
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                viewMode === "grid"
+                  ? "bg-white text-zinc-900 shadow-xs"
+                  : "text-zinc-500 hover:text-zinc-800"
+              }`}
+            >
+              Projects Grid
+            </button>
+            <button
+              onClick={() => setViewMode("commits")}
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                viewMode === "commits"
+                  ? "bg-white text-zinc-900 shadow-xs"
+                  : "text-zinc-500 hover:text-zinc-800"
+              }`}
+            >
+              Commits Stream
+            </button>
+          </div>
         </div>
+
         <div className="flex items-center gap-2">
           <span className="text-xs font-medium text-zinc-500">
             {projects?.length || 0} projects
@@ -203,6 +234,8 @@ export default function ProjectsPage() {
             </Link>
           </div>
         </div>
+      ) : viewMode === "commits" ? (
+        <AllProjectsCommitsView projects={filteredProjects} />
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
           {filteredProjects.map((project) => (
@@ -328,19 +361,31 @@ export default function ProjectsPage() {
 
 function ProjectCard({ project }: { project: Project }) {
   const shortUrl = project.repositoryUrl.replace(/^https?:\/\/github\.com\//, "");
+  const { data: commits } = useProjectCommits(project.name, project.repositoryUrl, project.defaultBranch);
+  const latestCommit = commits?.[0];
 
   return (
-    <div className="group bg-white border border-zinc-200 hover:border-[#5850ec]/40 hover:shadow-md transition-all rounded-2xl p-5 flex flex-col relative overflow-hidden">
-      {project.status === "ARCHIVED" && (
+    <Link
+      href={`/projects/${project.id}`}
+      className="group bg-white border border-zinc-200 hover:border-[#5850ec]/60 hover:shadow-md transition-all rounded-2xl p-5 flex flex-col relative overflow-hidden"
+    >
+      {project.status === "ARCHIVED" ? (
         <div className="absolute top-0 right-0 bg-zinc-100 text-zinc-500 text-[10px] font-bold px-2 py-1 rounded-bl-xl border-b border-l border-zinc-200">
           ARCHIVED
         </div>
+      ) : (
+        <div className="absolute top-3 right-3 flex items-center gap-1.5 opacity-80 group-hover:opacity-100 transition-opacity">
+          <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+          <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200/60 px-1.5 py-0.5 rounded-full">
+            Active Gate
+          </span>
+        </div>
       )}
 
-      <div className="flex items-start justify-between mb-4 mt-1">
+      <div className="flex items-start justify-between mb-3 mt-1">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-zinc-50 flex items-center justify-center border border-zinc-100 shadow-sm shrink-0">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5 text-zinc-500">
+          <div className="w-10 h-10 rounded-xl bg-indigo-50/50 flex items-center justify-center border border-indigo-100/60 text-[#5850ec] shadow-2xs shrink-0 group-hover:scale-105 transition-transform">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
               <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
             </svg>
           </div>
@@ -349,26 +394,17 @@ function ProjectCard({ project }: { project: Project }) {
               {project.name}
             </h3>
             <p
-              className="text-xs text-zinc-500 mt-0.5 w-full overflow-hidden overflow-ellipsis whitespace-nowrap"
+              className="text-xs text-zinc-500 mt-0.5 w-full overflow-hidden overflow-ellipsis whitespace-nowrap max-w-[220px]"
               title={project.description || undefined}
             >
               {project.description || "No description"}
             </p>
           </div>
         </div>
-
-        <Link
-          href={`/projects/${project.id}/edit`}
-          className="opacity-0 group-hover:opacity-100 p-1.5 text-zinc-400 hover:text-[#5850ec] hover:bg-[#5850ec]/10 rounded-lg transition-all"
-        >
-          <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
-            <path d="M5.433 13.917l1.262-3.155A4 4 0 017.58 9.42l6.92-6.918a2.121 2.121 0 013 3l-6.92 6.918c-.383.383-.84.685-1.343.886l-3.154 1.262a.5.5 0 01-.65-.65z" />
-            <path d="M3.5 5.75c0-.69.56-1.25 1.25-1.25H10A.75.75 0 0010 3H4.75A2.75 2.75 0 002 5.75v9.5A2.75 2.75 0 004.75 18h9.5A2.75 2.75 0 0017 15.25V10a.75.75 0 00-1.5 0v5.25c0 .69-.56 1.25-1.25-1.25h-9.5c-.69 0-1.25-.56-1.25-1.25v-9.5z" />
-          </svg>
-        </Link>
       </div>
 
-      <div className="flex-1 mt-2 mb-5">
+      {/* Repo link */}
+      <div className="mb-3">
         <div className="flex items-center gap-2 text-xs text-zinc-500">
           <svg viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5 text-zinc-400 shrink-0">
             <path
@@ -381,7 +417,47 @@ function ProjectCard({ project }: { project: Project }) {
         </div>
       </div>
 
-      <div className="flex items-center justify-between pt-4 border-t border-zinc-100">
+      {/* Latest Commit Preview Snippet */}
+      <div className="flex-1 mb-4">
+        {latestCommit ? (
+          <div className="p-2.5 rounded-xl bg-zinc-50/90 border border-zinc-200/70 text-xs space-y-1.5 group-hover:border-indigo-200/80 transition-colors">
+            <div className="flex items-center justify-between text-[11px]">
+              <span className="font-semibold text-zinc-500 flex items-center gap-1">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="w-3 h-3 text-zinc-400">
+                  <circle cx="12" cy="12" r="3" />
+                  <line x1="3" y1="12" x2="9" y2="12" />
+                  <line x1="15" y1="12" x2="21" y2="12" />
+                </svg>
+                Latest Commit
+              </span>
+              <span className="font-mono text-[10px] text-zinc-600 font-bold bg-white px-1.5 py-0.5 rounded border border-zinc-200 shadow-2xs">
+                {latestCommit.shortHash}
+              </span>
+            </div>
+            <p className="text-zinc-800 font-medium truncate text-[11px] leading-tight">
+              {latestCommit.message}
+            </p>
+            <div className="flex items-center justify-between pt-1 border-t border-zinc-200/60 text-[10px] text-zinc-400">
+              <span className="truncate max-w-[130px]">{latestCommit.authorName} • {latestCommit.timeAgo}</span>
+              <span className={`font-bold px-1.5 py-0.2 rounded ${
+                latestCommit.gateVerdict === "ALLOWED"
+                  ? "text-emerald-700 bg-emerald-50 border border-emerald-200"
+                  : latestCommit.gateVerdict === "BLOCKED"
+                  ? "text-rose-700 bg-rose-50 border border-rose-200"
+                  : "text-amber-700 bg-amber-50 border border-amber-200"
+              }`}>
+                {latestCommit.gateVerdict}
+              </span>
+            </div>
+          </div>
+        ) : (
+          <div className="h-16 flex items-center justify-center text-[11px] text-zinc-400 italic bg-zinc-50/50 rounded-xl border border-dashed border-zinc-200">
+            No commit activity recorded yet
+          </div>
+        )}
+      </div>
+
+      <div className="flex items-center justify-between pt-3.5 border-t border-zinc-100">
         <div className="flex items-center gap-3">
           <LangDot lang={project.language} />
           <span className="text-xs text-zinc-400 flex items-center gap-1">
@@ -394,10 +470,12 @@ function ProjectCard({ project }: { project: Project }) {
             {project.defaultBranch}
           </span>
         </div>
-        <span className="text-[11px] font-medium text-zinc-400">
-          Updated {timeAgo(project.updatedAt)}
-        </span>
+        <div className="flex items-center gap-1.5">
+          <span className="text-[11px] font-semibold text-[#5850ec] hover:underline flex items-center gap-0.5">
+            {commits?.length || 0} commits →
+          </span>
+        </div>
       </div>
-    </div>
+    </Link>
   );
 }

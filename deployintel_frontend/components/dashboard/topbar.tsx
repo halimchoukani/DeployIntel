@@ -24,7 +24,7 @@ export function DashboardTopbar() {
 
   return (
     <header className="fixed top-0 left-[220px] right-0 h-14 bg-white border-b border-zinc-200 flex items-center justify-between px-6 z-20">
-      
+
       {/* Breadcrumbs (Left) */}
       <div className="flex items-center gap-2 text-sm">
         <span className="text-zinc-400">Projects</span>

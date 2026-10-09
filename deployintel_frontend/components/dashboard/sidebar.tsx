@@ -129,15 +129,6 @@ export function Sidebar() {
         </div>
       </div>
 
-      {/* Breadcrumb */}
-      <div className="flex items-center gap-1.5 px-5 py-2.5 border-b border-zinc-100">
-        <span className="text-[11px] text-zinc-400">Projects</span>
-        <svg viewBox="0 0 20 20" fill="currentColor" className="w-3 h-3 text-zinc-300">
-          <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
-        </svg>
-        <span className="text-[11px] text-zinc-700 font-medium truncate">Platform Infrastructure</span>
-      </div>
-
       {/* Nav */}
       <nav className="flex-1 px-3 py-3 overflow-y-auto">
         <ul className="space-y-0.5">
@@ -148,8 +139,8 @@ export function Sidebar() {
                 <Link
                   href={item.href}
                   className={`flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-all group ${isActive
-                      ? "bg-[#5850ec] text-white shadow-sm"
-                      : "text-zinc-600 hover:bg-zinc-50 hover:text-zinc-900"
+                    ? "bg-[#5850ec] text-white shadow-sm"
+                    : "text-zinc-600 hover:bg-zinc-50 hover:text-zinc-900"
                     }`}
                 >
                   <span className={isActive ? "text-white" : "text-zinc-400 group-hover:text-zinc-600"}>{item.icon}</span>

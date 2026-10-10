@@ -67,10 +67,11 @@ public class AuthService {
                         new IllegalArgumentException("Invalid email or password")
                 );
 
+        if (user.getStatus() == UserStatus.BLOCKED) {
+            throw new IllegalArgumentException("User account is blocked");
+        }
         if (!user.getStatus().equals(UserStatus.ACTIVE)) {
-            throw new IllegalArgumentException(
-                    "Invalid email or password"
-            );
+            throw new IllegalArgumentException("User account is inactive");
         }
         if (!passwordEncoder.matches(
                 request.password(),
@@ -107,6 +108,9 @@ public class AuthService {
 
         User user = githubOAuth2Service.findOrCreateUser(userInfo, email, accessToken);
 
+        if (user.getStatus() == UserStatus.BLOCKED) {
+            throw new IllegalArgumentException("User account is blocked");
+        }
         if (!user.getStatus().equals(UserStatus.ACTIVE)) {
             throw new IllegalArgumentException("User account is inactive");
         }

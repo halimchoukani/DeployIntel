@@ -40,9 +40,23 @@ public class UserController {
     public ResponseEntity<UserResponse> deactivateUser(
             @PathVariable UUID userId
     ) {
-        UserResponse response = userService.deactivateUser(userId);
+        return ResponseEntity.ok(userService.deactivateUser(userId));
+    }
 
-        return ResponseEntity.ok(response);
+    @PatchMapping("/{userId}/block")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<UserResponse> blockUser(
+            @PathVariable UUID userId
+    ) {
+        return ResponseEntity.ok(userService.blockUser(userId));
+    }
+
+    @PatchMapping("/{userId}/activate-user")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<UserResponse> activateUser(
+            @PathVariable UUID userId
+    ) {
+        return ResponseEntity.ok(userService.activateUser(userId));
     }
 
     @PutMapping("/profile")

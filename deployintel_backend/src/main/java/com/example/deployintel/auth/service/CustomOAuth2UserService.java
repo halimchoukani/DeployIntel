@@ -53,8 +53,16 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 
         GithubUserInfo userInfo = new GithubUserInfo(githubId, username, name, email, avatarUrl);
         User user = githubOAuth2Service.findOrCreateUser(userInfo, email);
-        if (user != null && accessToken != null) {
-            user.setGithubAccessToken(accessToken);
+        if (user != null) {
+            if (user.getStatus() == com.example.deployintel.user.entity.UserStatus.BLOCKED) {
+                throw new OAuth2AuthenticationException(new org.springframework.security.oauth2.core.OAuth2Error("account_blocked", "User account is blocked", null));
+            }
+            if (!com.example.deployintel.user.entity.UserStatus.ACTIVE.equals(user.getStatus())) {
+                throw new OAuth2AuthenticationException(new org.springframework.security.oauth2.core.OAuth2Error("account_inactive", "User account is inactive", null));
+            }
+            if (accessToken != null) {
+                user.setGithubAccessToken(accessToken);
+            }
         }
 
         Map<String, Object> attributes = new HashMap<>(oauth2User.getAttributes());

@@ -50,7 +50,21 @@ public class UserService {
 
     @Transactional
     public UserResponse deactivateUser(UUID userId) {
+        return updateUserStatus(userId, UserStatus.INACTIVE);
+    }
 
+    @Transactional
+    public UserResponse blockUser(UUID userId) {
+        return updateUserStatus(userId, UserStatus.BLOCKED);
+    }
+
+    @Transactional
+    public UserResponse activateUser(UUID userId) {
+        return updateUserStatus(userId, UserStatus.ACTIVE);
+    }
+
+    @Transactional
+    public UserResponse updateUserStatus(UUID userId, UserStatus status) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() ->
                         new UserNotFoundException(
@@ -58,7 +72,8 @@ public class UserService {
                         )
                 );
 
-        user.setStatus(UserStatus.INACTIVE);
+        user.setStatus(status);
+        user.setUpdatedAt(OffsetDateTime.now());
 
         User savedUser = userRepository.save(user);
 

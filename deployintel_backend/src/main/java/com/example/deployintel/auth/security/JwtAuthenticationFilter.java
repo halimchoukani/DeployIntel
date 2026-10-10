@@ -12,7 +12,12 @@ import org.springframework.security.web.authentication.WebAuthenticationDetailsS
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
+import com.example.deployintel.user.entity.User;
+import com.example.deployintel.user.entity.UserStatus;
+import com.example.deployintel.user.repository.UserRepository;
+
 import java.io.IOException;
+import java.util.Optional;
 import java.util.UUID;
 
 @Component
@@ -20,6 +25,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     @Autowired
     private JwtService jwtService;
+
+    @Autowired(required = false)
+    private UserRepository userRepository;
 
     @Override
     protected void doFilterInternal(
@@ -48,6 +56,17 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 UUID userId = jwtService.extractUserId(token);
                 String email = jwtService.extractEmail(token);
                 UserRole role = jwtService.extractRole(token);
+
+                if (userRepository != null) {
+                    Optional<User> userOptional = userRepository.findById(userId);
+                    if (userOptional.isEmpty() || userOptional.get().getStatus() != UserStatus.ACTIVE) {
+                        filterChain.doFilter(request, response);
+                        return;
+                    }
+                    User user = userOptional.get();
+                    email = user.getEmail();
+                    role = user.getRole();
+                }
 
                 UserPrincipal principal = new UserPrincipal(
                         userId,

@@ -96,12 +96,22 @@ public class ProjectService {
 
     @Transactional
     public ProjectResponse archiveProject(UserPrincipal currentUser, UUID projectId) {
+        return updateProjectStatus(currentUser, projectId, ProjectStatus.ARCHIVED);
+    }
+
+    @Transactional
+    public ProjectResponse activateProject(UserPrincipal currentUser, UUID projectId) {
+        return updateProjectStatus(currentUser, projectId, ProjectStatus.ACTIVE);
+    }
+
+    @Transactional
+    public ProjectResponse updateProjectStatus(UserPrincipal currentUser, UUID projectId, ProjectStatus status) {
         Project project = projectRepository.findById(projectId)
                 .orElseThrow(() -> new ProjectNotFoundException("Project not found with id: " + projectId));
 
         validateOwnershipOrAdmin(currentUser, project);
 
-        project.setStatus(ProjectStatus.ARCHIVED);
+        project.setStatus(status);
         project.setUpdatedAt(OffsetDateTime.now());
 
         Project savedProject = projectRepository.save(project);

@@ -104,6 +104,16 @@ public class ProjectController {
         return ResponseEntity.ok(response);
     }
 
+    @PatchMapping("/{projectId}/activate")
+    public ResponseEntity<ProjectResponse> activateProject(
+            Authentication authentication,
+            @PathVariable UUID projectId
+    ) {
+        UserPrincipal principal = (UserPrincipal) authentication.getPrincipal();
+        ProjectResponse response = projectService.activateProject(principal, projectId);
+        return ResponseEntity.ok(response);
+    }
+
     @DeleteMapping("/{projectId}")
     public ResponseEntity<Void> deleteProject(
             Authentication authentication,

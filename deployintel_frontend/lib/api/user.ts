@@ -1,3 +1,5 @@
+import { getAuthToken, performAutoLogout } from "@/lib/auth/session";
+
 function getApiBaseUrl(): string {
     if (typeof window !== "undefined") {
         return "";
@@ -20,8 +22,9 @@ export async function editProfile(payload: EditProfilePayload) {
     const baseUrl = getApiBaseUrl();
     const url = `${baseUrl}/api/v1/users/profile`;
 
-    const token = localStorage.getItem("access_token");
+    const token = getAuthToken();
     if (!token) {
+        performAutoLogout("unauthorized");
         throw new Error("No authentication token found");
     }
 
@@ -36,6 +39,9 @@ export async function editProfile(payload: EditProfilePayload) {
     if (res.ok) {
         return true;
     } else {
+        if (res.status === 401 || res.status === 403) {
+            performAutoLogout("session_expired");
+        }
         console.error("Failed to update profile");
         return false;
     }

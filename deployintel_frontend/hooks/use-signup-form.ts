@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { SignupFormData } from "@/types/auth";
 import { usePasswordStrength } from "./use-password-strength";
 import { useSignupMutation } from "./use-signup";
@@ -15,6 +16,7 @@ const initialValues: SignupFormData = {
 };
 
 export function useSignupForm(onSuccessCallback?: () => void) {
+  const router = useRouter();
   const [values, setValues] = useState<SignupFormData>(initialValues);
   const [showPassword, setShowPassword] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<Partial<Record<keyof SignupFormData, string>>>({});
@@ -27,15 +29,17 @@ export function useSignupForm(onSuccessCallback?: () => void) {
   const signupMutation = useSignupMutation({
     onSuccess: (data) => {
       setSuccessMessage(
-        `Account created successfully for ${data.firstName || values.firstName}! Redirecting...`
+        `Account created successfully for ${data.firstName || values.firstName}! Redirecting to sign in...`
       );
       setGeneralError(null);
       setFieldErrors({});
-      if (onSuccessCallback) {
-        setTimeout(() => {
+      setTimeout(() => {
+        if (onSuccessCallback) {
           onSuccessCallback();
-        }, 1500);
-      }
+        } else {
+          router.push("/login");
+        }
+      }, 1500);
     },
     onError: (err) => {
       setSuccessMessage(null);

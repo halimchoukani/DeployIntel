@@ -2,6 +2,8 @@
 
 import { useQuery } from "@tanstack/react-query";
 
+import { getAuthToken, performAutoLogout } from "@/lib/auth/session";
+
 interface UserMeResponse {
   id: string;
   email: string;
@@ -14,12 +16,10 @@ interface UserMeResponse {
 }
 
 async function fetchAuthUser(): Promise<UserMeResponse> {
-  const token =
-    typeof window !== "undefined"
-      ? localStorage.getItem("access_token") || sessionStorage.getItem("access_token")
-      : null;
+  const token = getAuthToken();
 
   if (!token) {
+    performAutoLogout("unauthorized");
     throw new Error("No authentication token found");
   }
 
@@ -33,13 +33,7 @@ async function fetchAuthUser(): Promise<UserMeResponse> {
 
   if (!response.ok) {
     if (response.status === 401 || response.status === 403) {
-      if (typeof window !== "undefined") {
-        localStorage.removeItem("access_token");
-        localStorage.removeItem("user_email");
-        localStorage.removeItem("user_id");
-        sessionStorage.removeItem("access_token");
-        window.location.href = "/login";
-      }
+      performAutoLogout("session_expired");
     }
     throw new Error("Failed to fetch user data");
   }

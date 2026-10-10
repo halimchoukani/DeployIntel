@@ -6,6 +6,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { editProfile } from "@/lib/api/user";
 import { uploadToCloudinary } from "@/lib/api/cloudinary";
+import { clearAuthSession } from "@/lib/auth/session";
 
 function getInitialFormData(user: ProfileUser | undefined) {
   let fName = user?.firstName || "";
@@ -114,10 +115,7 @@ function ProfileContent({ user }: { user: ProfileUser | undefined }) {
   };
 
   const handleSignOut = () => {
-    localStorage.removeItem("access_token");
-    localStorage.removeItem("user_email");
-    localStorage.removeItem("user_id");
-    sessionStorage.removeItem("access_token");
+    clearAuthSession();
     router.replace("/login");
   };
 

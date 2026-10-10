@@ -5,6 +5,8 @@ import { getGithubAuthUrl, AuthError } from "@/lib/api/auth";
 import { useGithubLoginMutation } from "./use-github-login";
 import { LoginResponse } from "@/types/auth";
 
+import { setAuthSession } from "@/lib/auth/session";
+
 /**
  * Manages the full GitHub OAuth2 flow:
  * 1. Fetches the authorization URL from the backend
@@ -20,10 +22,8 @@ export function useGithubAuth(
 
   const githubMutation = useGithubLoginMutation({
     onSuccess: (data) => {
-      // Persist token on GitHub login
-      localStorage.setItem("access_token", data.accessToken);
-      localStorage.setItem("user_email", data.email);
-      localStorage.setItem("user_id", data.userId);
+      // Persist token and cookie on GitHub login
+      setAuthSession(data.accessToken, { email: data.email, userId: data.userId });
       setError(null);
       onSuccess?.(data);
     },

@@ -3,6 +3,7 @@
 import { Suspense, useEffect, useRef } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useGithubLoginMutation } from "@/hooks/use-github-login";
+import { setAuthSession } from "@/lib/auth/session";
 
 function GithubCallbackInner() {
   const searchParams = useSearchParams();
@@ -11,9 +12,7 @@ function GithubCallbackInner() {
 
   const githubMutation = useGithubLoginMutation({
     onSuccess: (data) => {
-      localStorage.setItem("access_token", data.accessToken);
-      localStorage.setItem("user_email", data.email);
-      localStorage.setItem("user_id", data.userId);
+      setAuthSession(data.accessToken, { email: data.email, userId: data.userId });
       const returnTo = sessionStorage.getItem("auth_return_to") || "/dashboard";
       sessionStorage.removeItem("auth_return_to");
       router.replace(returnTo);

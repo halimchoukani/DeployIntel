@@ -2,6 +2,7 @@
 
 import { Suspense, useEffect, useRef } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
+import { setAuthSession } from "@/lib/auth/session";
 
 /**
  * Landing page for Spring Security's OAuth2 success handler.
@@ -31,9 +32,7 @@ function OAuth2RedirectInner() {
     }
 
     if (token && userId && email) {
-      localStorage.setItem("access_token", token);
-      localStorage.setItem("user_email", email);
-      localStorage.setItem("user_id", userId);
+      setAuthSession(token, { email, userId });
       router.replace("/dashboard");
     } else {
       router.replace("/login?error=oauth2_missing_params");

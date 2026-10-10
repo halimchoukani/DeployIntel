@@ -1,9 +1,11 @@
+import { getAuthToken, performAutoLogout } from "@/lib/auth/session";
+
 function getToken(): string {
-  const token =
-    typeof window !== "undefined"
-      ? localStorage.getItem("access_token") || sessionStorage.getItem("access_token")
-      : null;
-  if (!token) throw new Error("No authentication token found");
+  const token = getAuthToken();
+  if (!token) {
+    performAutoLogout("unauthorized");
+    throw new Error("No authentication token found");
+  }
   return token;
 }
 
@@ -17,6 +19,9 @@ function apiHeaders(extra?: Record<string, string>): HeadersInit {
 
 async function handleResponse<T>(res: Response): Promise<T> {
   if (!res.ok) {
+    if (res.status === 401 || res.status === 403) {
+      performAutoLogout("session_expired");
+    }
     const body = await res.json().catch(() => ({}));
     throw new Error(body?.message || `Request failed with status ${res.status}`);
   }

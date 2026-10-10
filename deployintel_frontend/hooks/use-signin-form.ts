@@ -5,6 +5,8 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { SigninFormData } from "@/types/auth";
 import { useLoginMutation } from "./use-login";
 
+import { setAuthSession } from "@/lib/auth/session";
+
 const initialValues: SigninFormData = {
   email: "",
   password: "",
@@ -16,6 +18,8 @@ function getUrlErrorMessage(urlError: string | null | undefined): string | null 
   if (urlError === "github_auth_failed") return "GitHub authentication failed.";
   if (urlError === "missing_code") return "GitHub authentication returned no code.";
   if (urlError === "oauth2_missing_params") return "OAuth2 provider did not return required user data.";
+  if (urlError === "session_expired") return "Your session has expired. Please sign in again.";
+  if (urlError === "unauthorized") return "Please sign in to access your dashboard.";
   return decodeURIComponent(urlError);
 }
 
@@ -36,26 +40,25 @@ export function useSigninForm(onSuccessCallback?: () => void) {
 
   const loginMutation = useLoginMutation({
     onSuccess: (data) => {
-      // Persist token according to rememberMe preference
-      if (values.rememberMe) {
-        localStorage.setItem("access_token", data.accessToken);
-        localStorage.setItem("user_email", data.email);
-        localStorage.setItem("user_id", data.userId);
-      } else {
-        sessionStorage.setItem("access_token", data.accessToken);
-        sessionStorage.setItem("user_email", data.email);
-        sessionStorage.setItem("user_id", data.userId);
-      }
+      // Persist session across storage and cookies
+      setAuthSession(
+        data.accessToken,
+        { email: data.email, userId: data.userId },
+        values.rememberMe
+      );
+
       setSuccessMessage("Sign in successful! Redirecting...");
       setGeneralError(null);
       setFieldErrors({});
+
+      const targetPath = searchParams?.get("redirect") || "/dashboard";
+
       if (onSuccessCallback) {
         setTimeout(() => {
           onSuccessCallback();
         }, 1000);
       }
-      router.replace("/dashboard");
-
+      router.replace(targetPath);
     },
     onError: (err) => {
       setSuccessMessage(null);

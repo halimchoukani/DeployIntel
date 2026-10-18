@@ -1,4 +1,4 @@
-import { getAuthToken, performAutoLogout } from "@/lib/auth/session";
+﻿import { getAuthToken, performAutoLogout } from "@/lib/auth/session";
 
 function getToken(): string {
   const token = getAuthToken();
@@ -161,4 +161,62 @@ export async function getGithubRepoDetails(repoUrl: string, githubToken?: string
     { headers: apiHeaders(githubToken ? { "X-GitHub-Token": githubToken } : undefined) }
   );
   return handleResponse<GithubRepo>(res);
+}
+
+// ─── CI/CD Workflow Push ──────────────────────────────────────────────────────
+
+export interface WorkflowPushPayload {
+  workflowContent: string;
+  commitMessage?: string;
+  githubToken?: string;
+}
+
+export interface WorkflowPushResult {
+  filePath: string;
+  commitSha: string;
+  commitUrl: string;
+  created: boolean;
+}
+
+export async function pushWorkflowFile(
+  projectId: string,
+  payload: WorkflowPushPayload,
+  githubToken?: string
+): Promise<WorkflowPushResult> {
+  const res = await fetch(`/api/v1/projects/${projectId}/cicd/workflow`, {
+    method: "POST",
+    headers: apiHeaders(githubToken ? { "X-GitHub-Token": githubToken } : undefined),
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body?.message || `Failed to push workflow (HTTP ${res.status})`);
+  }
+  return res.json() as Promise<WorkflowPushResult>;
+}
+
+// ─── CI/CD Token Generation ───────────────────────────────────────────────
+
+export interface CicdTokenResponse {
+  token: string;
+  tokenType: string;
+  expiresAt: string;
+  projectId: string;
+  createdBy: string;
+}
+
+export async function createCicdToken(
+  projectId: string,
+  expirationDays: number = 365
+): Promise<CicdTokenResponse> {
+  const res = await fetch(`/api/v1/projects/${projectId}/cicd/token`, {
+    method: "POST",
+    headers: apiHeaders(),
+    body: JSON.stringify({ expirationDays }),
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body?.message || `Failed to create CI/CD token (HTTP ${res.status})`);
+  }
+  return res.json() as Promise<CicdTokenResponse>;
 }

@@ -47,6 +47,38 @@ public class JwtService {
                 .compact();
     }
 
+    /**
+     * Generates a long-lived CI/CD or API token for GitHub Actions automation.
+     *
+     * @param userId             the token owner's UUID
+     * @param email              the token owner's email
+     * @param role               the token owner's user role
+     * @param projectId          the associated project UUID
+     * @param customExpirationMs custom token lifetime in milliseconds
+     * @return signed JWT token string
+     */
+    public String generateCicdToken(
+            UUID userId,
+            String email,
+            UserRole role,
+            UUID projectId,
+            long customExpirationMs
+    ) {
+        Date now = new Date();
+        Date expirationDate = new Date(now.getTime() + customExpirationMs);
+
+        return Jwts.builder()
+                .subject(userId.toString())
+                .claim("email", email)
+                .claim("role", role.name())
+                .claim("projectId", projectId.toString())
+                .claim("type", "CICD")
+                .issuedAt(now)
+                .expiration(expirationDate)
+                .signWith(signingKey)
+                .compact();
+    }
+
     public Claims extractClaims(String token) {
 
         return Jwts.parser()

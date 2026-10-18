@@ -41,6 +41,12 @@ class ProjectServiceTest {
     @Mock
     private GithubRepositoryService githubRepositoryService;
 
+    @Mock
+    private GithubWorkflowService githubWorkflowService;
+
+    @Mock
+    private com.example.deployintel.auth.security.JwtService jwtService;
+
     @InjectMocks
     private ProjectService projectService;
 
@@ -344,5 +350,31 @@ class ProjectServiceTest {
 
         assertThat(repos).hasSize(1);
         assertThat(repos.get(0).name()).isEqualTo("repo");
+    }
+
+    @Test
+    @DisplayName("createCicdToken generates long-lived token for project owner")
+    void testCreateCicdTokenSuccess() {
+        when(projectRepository.findById(projectId)).thenReturn(Optional.of(project));
+        when(userRepository.findById(owner.getId())).thenReturn(Optional.of(owner));
+        when(jwtService.generateCicdToken(eq(owner.getId()), eq(owner.getEmail()), eq(owner.getRole()), eq(projectId), anyLong()))
+                .thenReturn("mock-cicd-jwt-token");
+
+        CreateCicdTokenRequest request = new CreateCicdTokenRequest(30);
+        CicdTokenResponse response = projectService.createCicdToken(ownerPrincipal, projectId, request);
+
+        assertThat(response.token()).isEqualTo("mock-cicd-jwt-token");
+        assertThat(response.tokenType()).isEqualTo("Bearer");
+        assertThat(response.projectId()).isEqualTo(projectId);
+        assertThat(response.createdBy()).isEqualTo(owner.getEmail());
+    }
+
+    @Test
+    @DisplayName("createCicdToken throws when non-owner requests token")
+    void testCreateCicdTokenDenied() {
+        when(projectRepository.findById(projectId)).thenReturn(Optional.of(project));
+
+        assertThatThrownBy(() -> projectService.createCicdToken(otherPrincipal, projectId, null))
+                .isInstanceOf(ProjectAccessDeniedException.class);
     }
 }

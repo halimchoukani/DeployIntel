@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
@@ -10,10 +10,13 @@ import {
   archiveProject,
   deleteProject,
   getUserGithubRepos,
+  pushWorkflowFile,
+  createCicdToken,
   type CreateProjectPayload,
   type CreateProjectFromGithubPayload,
   type UpdateProjectPayload,
   type ProjectStatus,
+  type WorkflowPushPayload,
 } from "@/lib/api/project";
 
 export function useProjects(status?: ProjectStatus) {
@@ -83,6 +86,24 @@ export function useGithubRepos(githubToken?: string) {
     queryFn: () => getUserGithubRepos(githubToken),
     retry: false,
     staleTime: 60 * 1000,
-    enabled: !!githubToken || true, // always try; will fail gracefully if no oauth token either
+    enabled: !!githubToken || true,
+  });
+}
+
+export function usePushWorkflow(projectId: string) {
+  return useMutation({
+    mutationFn: ({
+      payload,
+      githubToken,
+    }: {
+      payload: WorkflowPushPayload;
+      githubToken?: string;
+    }) => pushWorkflowFile(projectId, payload, githubToken),
+  });
+}
+
+export function useCreateCicdToken(projectId: string) {
+  return useMutation({
+    mutationFn: (expirationDays?: number) => createCicdToken(projectId, expirationDays),
   });
 }

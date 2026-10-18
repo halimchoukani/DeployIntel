@@ -21,8 +21,13 @@ import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.UUID;
 
+import com.example.deployintel.auth.security.JwtService;
 import com.example.deployintel.project.dto.CreateProjectFromGithubRequest;
 import com.example.deployintel.project.dto.GithubRepoResponse;
+import com.example.deployintel.project.dto.WorkflowPushRequest;
+import com.example.deployintel.project.dto.WorkflowPushResponse;
+import com.example.deployintel.project.dto.CreateCicdTokenRequest;
+import com.example.deployintel.project.dto.CicdTokenResponse;
 
 @Service
 @RequiredArgsConstructor
@@ -31,6 +36,8 @@ public class ProjectService {
     private final ProjectRepository projectRepository;
     private final UserRepository userRepository;
     private final GithubRepositoryService githubRepositoryService;
+    private final GithubWorkflowService githubWorkflowService;
+    private final JwtService jwtService;
 
     @Transactional
     public ProjectResponse createProject(UUID ownerId, CreateProjectRequest request) {
@@ -219,5 +226,96 @@ public class ProjectService {
         if (!isOwner && !isAdmin) {
             throw new ProjectAccessDeniedException("You do not have permission to access or modify this project");
         }
+    }
+
+    /**
+     * Pushes the DeployIntel release workflow file to the project's GitHub repository.
+     *
+     * <p>Token resolution order:
+     * <ol>
+     *   <li>githubTokenHeader — explicit PAT from the request header</li>
+     *   <li>request.githubToken() — PAT embedded in the request body</li>
+     *   <li>User.githubAccessToken — OAuth token stored when the user signed in via GitHub</li>
+     * </ol>
+     */
+    @Transactional(readOnly = true)
+    public WorkflowPushResponse pushWorkflowFile(
+            UserPrincipal currentUser,
+            UUID projectId,
+            String githubTokenHeader,
+            WorkflowPushRequest request
+    ) {
+        Project project = projectRepository.findById(projectId)
+                .orElseThrow(() -> new ProjectNotFoundException("Project not found: " + projectId));
+
+        validateOwnershipOrAdmin(currentUser, project);
+
+        // Resolve GitHub token (header wins, then body, then stored OAuth token)
+        String token = resolveGithubToken(currentUser.getId(), githubTokenHeader, request.githubToken());
+
+        // Parse owner/repo from the project's repository URL
+        GithubRepositoryService.RepoIdentifier repo =
+                githubRepositoryService.parseRepository(project.getRepositoryUrl());
+
+        return githubWorkflowService.pushWorkflowFile(
+                repo.owner(),
+                repo.repo(),
+                project.getDefaultBranch(),
+                token,
+                request.workflowContent(),
+                request.commitMessage()
+        );
+    }
+
+    private String resolveGithubToken(UUID userId, String headerToken, String bodyToken) {
+        if (headerToken != null && !headerToken.isBlank()) return headerToken;
+        if (bodyToken != null && !bodyToken.isBlank()) return bodyToken;
+        // Fall back to stored OAuth token
+        return userRepository.findById(userId)
+                .map(User::getGithubAccessToken)
+                .filter(t -> t != null && !t.isBlank())
+                .orElseThrow(() -> new ProjectAccessDeniedException(
+                        "No GitHub token available. Connect your GitHub account or provide a Personal Access Token."));
+    }
+
+    /**
+     * Generates a long-lived CI/CD access token for the project, used in GitHub Actions.
+     */
+    @Transactional(readOnly = true)
+    public CicdTokenResponse createCicdToken(
+            UserPrincipal currentUser,
+            UUID projectId,
+            CreateCicdTokenRequest request
+    ) {
+        Project project = projectRepository.findById(projectId)
+                .orElseThrow(() -> new ProjectNotFoundException("Project not found: " + projectId));
+
+        validateOwnershipOrAdmin(currentUser, project);
+
+        User user = userRepository.findById(currentUser.getId())
+                .orElseThrow(() -> new UserNotFoundException("User not found: " + currentUser.getId()));
+
+        int expirationDays = (request != null && request.expirationDays() != null && request.expirationDays() > 0)
+                ? request.expirationDays()
+                : 365;
+
+        long durationMs = (long) expirationDays * 24L * 60L * 60L * 1000L;
+        OffsetDateTime expiresAt = OffsetDateTime.now().plusDays(expirationDays);
+
+        String token = jwtService.generateCicdToken(
+                user.getId(),
+                user.getEmail(),
+                user.getRole(),
+                project.getId(),
+                durationMs
+        );
+
+        return new CicdTokenResponse(
+                token,
+                "Bearer",
+                expiresAt,
+                projectId,
+                user.getEmail()
+        );
     }
 }

@@ -4,6 +4,7 @@ import com.example.deployintel.auth.security.UserPrincipal;
 import com.example.deployintel.project.dto.*;
 import com.example.deployintel.project.entity.ProjectStatus;
 import com.example.deployintel.project.service.ProjectService;
+import com.example.deployintel.project.service.GithubWorkflowService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -20,6 +21,7 @@ import java.util.UUID;
 public class ProjectController {
 
     private final ProjectService projectService;
+    private final GithubWorkflowService githubWorkflowService;
 
     @PostMapping
     public ResponseEntity<ProjectResponse> createProject(
@@ -122,5 +124,41 @@ public class ProjectController {
         UserPrincipal principal = (UserPrincipal) authentication.getPrincipal();
         projectService.deleteProject(principal, projectId);
         return ResponseEntity.noContent().build();
+    }
+
+    /**
+     * Pushes the DeployIntel GitHub Actions workflow file directly into the
+     * project's repository via the GitHub Contents API.
+     *
+     * <p>The caller must supply a GitHub token that has {@code contents:write}
+     * (or {@code repo}) scope either via the {@code X-GitHub-Token} header or
+     * by having connected their account via GitHub OAuth.
+     */
+    @PostMapping("/{projectId}/cicd/workflow")
+    public ResponseEntity<WorkflowPushResponse> pushWorkflowFile(
+            Authentication authentication,
+            @PathVariable UUID projectId,
+            @RequestHeader(value = "X-GitHub-Token", required = false) String githubTokenHeader,
+            @Valid @RequestBody WorkflowPushRequest request
+    ) {
+        UserPrincipal principal = (UserPrincipal) authentication.getPrincipal();
+        WorkflowPushResponse response = projectService.pushWorkflowFile(
+                principal, projectId, githubTokenHeader, request);
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * Generates a long-lived CI/CD access token for the project,
+     * suitable for embedding into the release workflow or storing as a GitHub Secret.
+     */
+    @PostMapping("/{projectId}/cicd/token")
+    public ResponseEntity<CicdTokenResponse> createCicdToken(
+            Authentication authentication,
+            @PathVariable UUID projectId,
+            @RequestBody(required = false) CreateCicdTokenRequest request
+    ) {
+        UserPrincipal principal = (UserPrincipal) authentication.getPrincipal();
+        CicdTokenResponse response = projectService.createCicdToken(principal, projectId, request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 }

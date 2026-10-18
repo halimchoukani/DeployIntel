@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useState, use } from "react";
 import Link from "next/link";
@@ -13,16 +13,16 @@ import { DeploymentsTab } from "@/components/projects/tabs/deployments-tab";
 import { InsightsTab } from "@/components/projects/tabs/insights-tab";
 import { PoliciesTab } from "@/components/projects/tabs/policies-tab";
 import { SettingsTab } from "@/components/projects/tabs/settings-tab";
+import { ReleasesTab } from "@/components/projects/tabs/releases-tab";
 import { AnalysisModal } from "@/components/projects/analysis-modal";
-import { 
-  Activity, 
+import {
+  Activity,
   GitCommit,
-  Layers, 
-  Sparkles, 
-  Sliders, 
-  Settings, 
-  Clock,
-  ArrowLeft
+  Layers,
+  Sparkles,
+  Sliders,
+  Settings,
+  Tag,
 } from "lucide-react";
 
 export default function ProjectDetailsPage({
@@ -41,17 +41,21 @@ export default function ProjectDetailsPage({
   React.useEffect(() => {
     if (typeof window !== "undefined") {
       const urlTab = new URLSearchParams(window.location.search).get("tab");
-      if (urlTab && ["overview", "commits", "deployments", "insights", "policies", "settings"].includes(urlTab)) {
+      if (
+        urlTab &&
+        ["overview", "commits", "deployments", "releases", "insights", "policies", "settings"].includes(urlTab)
+      ) {
         setActiveTab(urlTab);
       }
     }
   }, []);
 
-  // If liveProject is not found (e.g. during frontend design preview or mock), provide realistic fallback
+  // Fallback project for design preview
   const project: Project = liveProject || {
     id: id || "proj-dev-01",
     name: "Checkout Core Service",
-    description: "High-throughput microservice handling customer transactions, payment gateways, and tokenized authorization.",
+    description:
+      "High-throughput microservice handling customer transactions, payment gateways, and tokenized authorization.",
     repositoryUrl: "https://github.com/deployintel/checkout-engine",
     defaultBranch: "main",
     language: "TypeScript",
@@ -65,6 +69,7 @@ export default function ProjectDetailsPage({
     { id: "overview", label: "Overview & Health", icon: Activity },
     { id: "commits", label: "Commits", icon: GitCommit, count: 8 },
     { id: "deployments", label: "Deployments", icon: Layers, count: 5 },
+    { id: "releases", label: "Releases", icon: Tag },
     { id: "insights", label: "AI Blast Radius", icon: Sparkles },
     { id: "policies", label: "Gate Guardrails", icon: Sliders },
     { id: "settings", label: "CI/CD & Settings", icon: Settings },
@@ -151,18 +156,11 @@ export default function ProjectDetailsPage({
             onRunAnalysis={() => setIsAnalysisModalOpen(true)}
           />
         )}
-        {activeTab === "deployments" && (
-          <DeploymentsTab project={project} />
-        )}
-        {activeTab === "insights" && (
-          <InsightsTab project={project} />
-        )}
-        {activeTab === "policies" && (
-          <PoliciesTab project={project} />
-        )}
-        {activeTab === "settings" && (
-          <SettingsTab project={project} />
-        )}
+        {activeTab === "deployments" && <DeploymentsTab project={project} />}
+        {activeTab === "releases" && <ReleasesTab project={project} />}
+        {activeTab === "insights" && <InsightsTab project={project} />}
+        {activeTab === "policies" && <PoliciesTab project={project} />}
+        {activeTab === "settings" && <SettingsTab project={project} />}
       </div>
 
       {/* 5. Interactive Gate Analysis Simulator Modal */}

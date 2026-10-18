@@ -16,6 +16,8 @@ import java.util.UUID;
 @Repository
 public interface ProjectRepository extends JpaRepository<Project, UUID> {
 
+    Optional<Project> findByRepositoryUrl(String repositoryUrl);
+
     List<Project> findByOwnerIdOrderByCreatedAtDesc(UUID ownerId);
 
     List<Project> findByOwnerIdAndStatusOrderByCreatedAtDesc(UUID ownerId, ProjectStatus status);

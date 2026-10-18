@@ -3,6 +3,8 @@
 import React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useAuthUser } from "@/hooks/use-auth-user";
+import { ShieldAlert, Users, FolderGit2, LayoutDashboard } from "lucide-react";
 
 interface NavItem {
   label: string;
@@ -111,8 +113,28 @@ const navItems: NavItem[] = [
   },
 ];
 
+const adminNavItems = [
+  {
+    label: "KPI Overview",
+    href: "/admin",
+    icon: <LayoutDashboard className="w-4 h-4" />,
+  },
+  {
+    label: "Users Directory",
+    href: "/admin/users",
+    icon: <Users className="w-4 h-4" />,
+  },
+  {
+    label: "Projects Control",
+    href: "/admin/projects",
+    icon: <FolderGit2 className="w-4 h-4" />,
+  },
+];
+
 export function Sidebar() {
   const pathname = usePathname();
+  const { data: user } = useAuthUser();
+  const isAdmin = user?.role === "ADMIN";
 
   return (
     <aside className="fixed left-0 top-0 h-screen w-[220px] bg-white border-r border-zinc-200 flex flex-col z-30">
@@ -130,36 +152,75 @@ export function Sidebar() {
       </div>
 
       {/* Nav */}
-      <nav className="flex-1 px-3 py-3 overflow-y-auto">
-        <ul className="space-y-0.5">
-          {navItems.map((item) => {
-            const isActive = pathname === item.href || (item.href === "/dashboard" && pathname === "/dashboard");
-            return (
-              <li key={item.href}>
-                <Link
-                  href={item.href}
-                  className={`flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-all group ${isActive
-                    ? "bg-[#5850ec] text-white shadow-sm"
-                    : "text-zinc-600 hover:bg-zinc-50 hover:text-zinc-900"
-                    }`}
-                >
-                  <span className={isActive ? "text-white" : "text-zinc-400 group-hover:text-zinc-600"}>{item.icon}</span>
-                  <span className="flex-1 font-medium">{item.label}</span>
-                  {item.badge && (
-                    <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full ${isActive ? "bg-white/20 text-white" : "bg-zinc-100 text-zinc-500"}`}>
-                      {item.badge}
-                    </span>
-                  )}
-                  {item.dot && !item.badge && (
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#5850ec]" />
-                  )}
-                </Link>
-              </li>
-            );
-          })}
-        </ul>
-      </nav>
+      <nav className="flex-1 px-3 py-3 overflow-y-auto space-y-4">
+        {/* Main Navigation */}
+        <div>
+          <ul className="space-y-0.5">
+            {navItems.map((item) => {
+              const isActive = pathname === item.href || (item.href === "/dashboard" && pathname === "/dashboard");
+              return (
+                <li key={item.href}>
+                  <Link
+                    href={item.href}
+                    className={`flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-all group ${isActive
+                      ? "bg-[#5850ec] text-white shadow-sm"
+                      : "text-zinc-600 hover:bg-zinc-50 hover:text-zinc-900"
+                      }`}
+                  >
+                    <span className={isActive ? "text-white" : "text-zinc-400 group-hover:text-zinc-600"}>{item.icon}</span>
+                    <span className="flex-1 font-medium">{item.label}</span>
+                    {item.badge && (
+                      <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full ${isActive ? "bg-white/20 text-white" : "bg-zinc-100 text-zinc-500"}`}>
+                        {item.badge}
+                      </span>
+                    )}
+                    {item.dot && !item.badge && (
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#5850ec]" />
+                    )}
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
 
+        {/* Administration Section (Only visible for ADMIN users) */}
+        {isAdmin && (
+          <div className="pt-2 border-t border-zinc-100">
+            <div className="px-3 mb-1.5 flex items-center justify-between">
+              <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider">
+                Administration
+              </span>
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" title="Admin Active" />
+            </div>
+            <ul className="space-y-0.5">
+              {adminNavItems.map((item) => {
+                const isActive =
+                  item.href === "/admin"
+                    ? pathname === "/admin"
+                    : pathname.startsWith(item.href);
+                return (
+                  <li key={item.href}>
+                    <Link
+                      href={item.href}
+                      className={`flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-all group ${
+                        isActive
+                          ? "bg-slate-900 text-white shadow-sm font-semibold"
+                          : "text-zinc-600 hover:bg-zinc-50 hover:text-zinc-900"
+                      }`}
+                    >
+                      <span className={isActive ? "text-white" : "text-zinc-400 group-hover:text-zinc-600"}>
+                        {item.icon}
+                      </span>
+                      <span className="flex-1 font-medium text-xs">{item.label}</span>
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+        )}
+      </nav>
     </aside>
   );
 }

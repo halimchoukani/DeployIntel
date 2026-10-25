@@ -14,11 +14,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.io.ByteArrayOutputStream;
-import java.io.Closeable;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 
 @Slf4j
 @Service
@@ -71,24 +71,78 @@ public class DockerService {
 
     /**
      * Pulls the image if not already present locally.
+     *
+     * Key fixes vs naïve approaches:
+     * 1. Exact tag matching: withImageNameFilter() does fuzzy matching, so "python:3.9" would
+     *    match a check for "python:3.11-slim" and skip the pull entirely.
+     * 2. Error-aware pull callback: the default PullImageResultCallback ignores JSON error events
+     *    in the stream (e.g. "pull access denied", "manifest not found"). We capture them explicitly.
      */
     public void ensureImageAvailable(String image) {
+        // Normalize: if no tag specified, append :latest for exact matching
+        String normalizedImage = image.contains(":") ? image : image + ":latest";
+
+        // Check for exact tag match across all local images
         try {
-            List<Image> images = dockerClient.listImagesCmd().withImageNameFilter(image).exec();
-            if (images.isEmpty()) {
-                log.info("Image {} not found locally, pulling from registry...", image);
-                dockerClient.pullImageCmd(image)
-                        .exec(new PullImageResultCallback())
-                        .awaitCompletion(5, TimeUnit.MINUTES);
-                log.info("Successfully pulled image: {}", image);
+            boolean alreadyPresent = dockerClient.listImagesCmd().exec().stream()
+                    .filter(img -> img.getRepoTags() != null)
+                    .flatMap(img -> Arrays.stream(img.getRepoTags()))
+                    .anyMatch(t -> t.equals(normalizedImage) || t.equals(image));
+
+            if (alreadyPresent) {
+                log.info("Image {} is already available locally", image);
+                return;
             }
+        } catch (Exception e) {
+            log.warn("Could not list local images (will attempt pull anyway): {}", e.getMessage());
+        }
+
+        log.info("Image {} not found locally — pulling via Docker API...", image);
+
+        // Split "repository:tag" — docker-java requires these as separate params
+        String repository = image;
+        String tag = "latest";
+        int colonIdx = image.lastIndexOf(':');
+        if (colonIdx > 0 && colonIdx < image.length() - 1) {
+            repository = image.substring(0, colonIdx);
+            tag = image.substring(colonIdx + 1);
+        }
+
+        // Custom callback that captures error events from the Docker JSON event stream.
+        // The default PullImageResultCallback silently ignores these, making the pull
+        // appear successful even when Docker Hub returns "manifest not found" etc.
+        AtomicReference<String> pullError = new AtomicReference<>();
+        try {
+            dockerClient.pullImageCmd(repository)
+                    .withTag(tag)
+                    .exec(new PullImageResultCallback() {
+                        @Override
+                        public void onNext(PullResponseItem item) {
+                            if (item != null && item.isErrorIndicated()) {
+                                String err = item.getError();
+                                if (err != null && !err.isBlank()) {
+                                    pullError.set(err);
+                                    log.error("Docker pull error event for {}: {}", image, err);
+                                }
+                            }
+                            super.onNext(item);
+                        }
+                    })
+                    .awaitCompletion(5, TimeUnit.MINUTES);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             throw new RuntimeException("Interrupted while pulling Docker image: " + image, e);
         } catch (Exception e) {
-            log.error("Failed to pull image {}: {}", image, e.getMessage());
-            throw new RuntimeException("Failed to pull image " + image + ": " + e.getMessage(), e);
+            throw new RuntimeException("Docker pull command failed for '" + image + "': " + e.getMessage(), e);
         }
+
+        if (pullError.get() != null) {
+            throw new RuntimeException(
+                    "Failed to pull Docker image '" + image + "': " + pullError.get() +
+                    ". Ensure Docker Desktop is running, logged in, and the image name is correct.");
+        }
+
+        log.info("Successfully pulled image: {}", image);
     }
 
     /**

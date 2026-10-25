@@ -14,6 +14,7 @@ import { InsightsTab } from "@/components/projects/tabs/insights-tab";
 import { PoliciesTab } from "@/components/projects/tabs/policies-tab";
 import { SettingsTab } from "@/components/projects/tabs/settings-tab";
 import { ReleasesTab } from "@/components/projects/tabs/releases-tab";
+import { EnvironmentsTab } from "@/components/projects/tabs/environments-tab";
 import { AnalysisModal } from "@/components/projects/analysis-modal";
 import {
   Activity,
@@ -23,6 +24,7 @@ import {
   Sliders,
   Settings,
   Tag,
+  Box,
 } from "lucide-react";
 
 export default function ProjectDetailsPage({
@@ -43,7 +45,7 @@ export default function ProjectDetailsPage({
       const urlTab = new URLSearchParams(window.location.search).get("tab");
       if (
         urlTab &&
-        ["overview", "commits", "deployments", "releases", "insights", "policies", "settings"].includes(urlTab)
+        ["overview", "commits", "deployments", "releases", "environments", "insights", "policies", "settings"].includes(urlTab)
       ) {
         setActiveTab(urlTab);
       }
@@ -70,6 +72,7 @@ export default function ProjectDetailsPage({
     { id: "commits", label: "Commits", icon: GitCommit, count: 8 },
     { id: "deployments", label: "Deployments", icon: Layers, count: 5 },
     { id: "releases", label: "Releases", icon: Tag },
+    { id: "environments", label: "Test Environments", icon: Box },
     { id: "insights", label: "AI Blast Radius", icon: Sparkles },
     { id: "policies", label: "Gate Guardrails", icon: Sliders },
     { id: "settings", label: "CI/CD & Settings", icon: Settings },
@@ -158,6 +161,7 @@ export default function ProjectDetailsPage({
         )}
         {activeTab === "deployments" && <DeploymentsTab project={project} />}
         {activeTab === "releases" && <ReleasesTab project={project} />}
+        {activeTab === "environments" && <EnvironmentsTab project={project} />}
         {activeTab === "insights" && <InsightsTab project={project} />}
         {activeTab === "policies" && <PoliciesTab project={project} />}
         {activeTab === "settings" && <SettingsTab project={project} />}

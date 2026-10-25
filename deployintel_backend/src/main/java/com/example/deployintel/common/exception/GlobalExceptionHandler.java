@@ -96,7 +96,6 @@ public class GlobalExceptionHandler {
                 .status(HttpStatus.FORBIDDEN)
                 .body(error);
     }
-
     @ExceptionHandler(DuplicateResourceException.class)
     public ResponseEntity<ErrorResponse> handleDuplicateResource(
             DuplicateResourceException exception
@@ -112,4 +111,36 @@ public class GlobalExceptionHandler {
                 .status(HttpStatus.CONFLICT)
                 .body(error);
     }
-}
+
+    @ExceptionHandler(EnvironmentNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleEnvironmentNotFound(
+            EnvironmentNotFoundException exception
+    ) {
+        ErrorResponse error = new ErrorResponse(
+                HttpStatus.NOT_FOUND.value(),
+                "ENVIRONMENT_NOT_FOUND",
+                exception.getMessage(),
+                OffsetDateTime.now()
+        );
+
+        return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .body(error);
+    }
+
+    @ExceptionHandler(DockerOperationException.class)
+    public ResponseEntity<ErrorResponse> handleDockerOperationException(
+            DockerOperationException exception
+    ) {
+        ErrorResponse error = new ErrorResponse(
+                HttpStatus.SERVICE_UNAVAILABLE.value(),
+                "DOCKER_ERROR",
+                exception.getMessage(),
+                OffsetDateTime.now()
+        );
+
+        return ResponseEntity
+                .status(HttpStatus.SERVICE_UNAVAILABLE)
+                .body(error);
+    }
+}

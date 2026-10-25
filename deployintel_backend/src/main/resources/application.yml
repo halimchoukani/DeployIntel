@@ -3,3 +3,6 @@ spring:
     name: deployintel
   profiles:
     active: local
+
+docker:
+  host: ${DOCKER_HOST:}

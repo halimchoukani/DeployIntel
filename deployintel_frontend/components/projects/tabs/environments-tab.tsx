@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import type { Project } from "@/lib/api/project";
 import {
   useEnvironments,
@@ -38,7 +38,12 @@ import {
   Cpu,
   Layers,
   Key,
+  Search,
+  Download,
+  ArrowDown,
+  Hash,
 } from "lucide-react";
+import { AnsiLogViewer } from "@/components/projects/ansi-log-viewer";
 
 interface EnvironmentsTabProps {
   project: Project;
@@ -854,9 +859,9 @@ function CommandExecModal({
                   </span>
                 )}
               </div>
-              <pre className="text-zinc-300 whitespace-pre-wrap font-mono text-[11.5px] bg-zinc-900/60 p-3 rounded-lg overflow-x-auto border border-zinc-800/50">
-                {item.output || "(no output)"}
-              </pre>
+              <div className="bg-zinc-900/60 p-3 rounded-lg overflow-x-auto border border-zinc-800/50">
+                <AnsiLogViewer logs={item.output || "(no output)"} />
+              </div>
             </div>
           ))}
 
@@ -909,82 +914,252 @@ function ContainerLogsModal({
   environment: TestEnvironment;
   onClose: () => void;
 }) {
-  const [tail, setTail] = useState(100);
-  const { data: logsData, isLoading, refetch, isFetching } = useEnvironmentLogs(
-    project.id,
-    environment.id,
-    tail,
-    true
-  );
-
+  const [tail, setTail] = useState(250);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [showLineNumbers, setShowLineNumbers] = useState(false);
+  const [autoScroll, setAutoScroll] = useState(true);
   const [copied, setCopied] = useState(false);
+
+  const logsContainerRef = useRef<HTMLDivElement>(null);
+
+  const {
+    data: logsData,
+    isLoading,
+    refetch,
+    isFetching,
+  } = useEnvironmentLogs(project.id, environment.id, tail, true);
+
+  // Auto-scroll when new logs arrive if autoScroll is enabled
+  useEffect(() => {
+    if (autoScroll && logsContainerRef.current) {
+      logsContainerRef.current.scrollTop = logsContainerRef.current.scrollHeight;
+    }
+  }, [logsData?.logs, autoScroll]);
+
+  // Clean copy (strips ANSI and escape box artifacts)
   const handleCopyLogs = () => {
     if (logsData?.logs) {
-      navigator.clipboard.writeText(logsData.logs);
+      const cleanText = logsData.logs
+        .replace(
+          /(?:\x1b|\u001b|\u009b|[\uFFFD\u25A1\u25AF\u25FB\u25FC\u25FD\u25FE\u3013]|\[\])\[[0-9;?]*[A-Za-z]/g,
+          ""
+        )
+        .replace(/[\x00-\x08\x0B\x0C\x0E-\x1A\x1C-\x1F]/g, "");
+      navigator.clipboard.writeText(cleanText);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     }
   };
 
+  const handleDownloadLogs = () => {
+    if (!logsData?.logs) return;
+    const cleanText = logsData.logs
+      .replace(
+        /(?:\x1b|\u001b|\u009b|[\uFFFD\u25A1\u25AF\u25FB\u25FC\u25FD\u25FE\u3013]|\[\])\[[0-9;?]*[A-Za-z]/g,
+        ""
+      )
+      .replace(/[\x00-\x08\x0B\x0C\x0E-\x1A\x1C-\x1F]/g, "");
+    const blob = new Blob([cleanText], { type: "text/plain;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `${environment.name.toLowerCase().replace(/\s+/g, "-")}-logs.txt`;
+    link.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const lineCount = logsData?.logs
+    ? logsData.logs.split("\n").filter((l) => l.trim().length > 0).length
+    : 0;
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-xs p-4 animate-in fade-in duration-150">
-      <div className="bg-zinc-950 text-zinc-100 rounded-2xl max-w-3xl w-full border border-zinc-800 shadow-2xl overflow-hidden flex flex-col max-h-[85vh]">
-        <div className="px-5 py-3.5 bg-zinc-900 border-b border-zinc-800 flex items-center justify-between">
-          <div className="flex items-center gap-2 text-xs">
-            <FileText className="w-4 h-4 text-[#5850ec]" />
-            <span className="font-bold text-white">Container Logs:</span>
-            <span className="font-mono text-zinc-400">
-              {environment.containerName || environment.name}
-            </span>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 animate-in fade-in duration-150">
+      <div className="bg-zinc-950 text-zinc-100 rounded-2xl max-w-4xl w-full border border-zinc-800 shadow-2xl overflow-hidden flex flex-col max-h-[88vh]">
+        {/* Top Header */}
+        <div className="px-5 py-3 bg-zinc-900 border-b border-zinc-800 flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center gap-2.5">
+            <div className="w-7 h-7 rounded-lg bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-[#5850ec]">
+              <FileText className="w-4 h-4" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="font-bold text-white text-xs">
+                  {environment.name}
+                </span>
+                <span className="text-[10px] px-2 py-0.5 rounded-full font-mono bg-zinc-800 text-zinc-400 border border-zinc-700">
+                  {environment.image}
+                </span>
+                {environment.status === "RUNNING" && (
+                  <span className="inline-flex items-center gap-1 text-[10px] text-emerald-400 font-medium">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                    Active
+                  </span>
+                )}
+              </div>
+            </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          {/* Action Toolbar */}
+          <div className="flex items-center gap-1.5 flex-wrap">
+            {/* Search Input */}
+            <div className="relative flex items-center">
+              <Search className="w-3.5 h-3.5 absolute left-2.5 text-zinc-500 pointer-events-none" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Filter logs..."
+                className="pl-8 pr-6 py-1 bg-zinc-950 border border-zinc-700 hover:border-zinc-600 focus:border-[#5850ec] rounded-lg text-xs text-zinc-200 placeholder:text-zinc-500 focus:outline-hidden w-36 sm:w-44 transition-colors"
+              />
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery("")}
+                  className="absolute right-2 text-zinc-500 hover:text-zinc-300 text-xs"
+                >
+                  ×
+                </button>
+              )}
+            </div>
+
+            {/* Tail Selector */}
+            <select
+              value={tail}
+              onChange={(e) => setTail(Number(e.target.value))}
+              className="bg-zinc-950 border border-zinc-700 hover:border-zinc-600 rounded-lg text-xs text-zinc-300 px-2.5 py-1 focus:outline-hidden focus:border-[#5850ec] cursor-pointer"
+              title="Lines limit"
+            >
+              <option value={50}>Last 50 lines</option>
+              <option value={100}>Last 100 lines</option>
+              <option value={250}>Last 250 lines</option>
+              <option value={500}>Last 500 lines</option>
+              <option value={1000}>Last 1000 lines</option>
+            </select>
+
+            {/* Auto-scroll toggle */}
+            <button
+              onClick={() => setAutoScroll((prev) => !prev)}
+              className={`p-1.5 rounded-lg border text-xs transition-colors cursor-pointer ${
+                autoScroll
+                  ? "bg-indigo-500/20 border-indigo-500/40 text-indigo-300"
+                  : "bg-zinc-800 hover:bg-zinc-700 border-zinc-700 text-zinc-400"
+              }`}
+              title={autoScroll ? "Auto-scroll ON (click to disable)" : "Auto-scroll OFF (click to enable)"}
+            >
+              <ArrowDown className={`w-3.5 h-3.5 ${autoScroll ? "animate-bounce" : ""}`} />
+            </button>
+
+            {/* Line numbers toggle */}
+            <button
+              onClick={() => setShowLineNumbers((prev) => !prev)}
+              className={`p-1.5 rounded-lg border text-xs transition-colors cursor-pointer ${
+                showLineNumbers
+                  ? "bg-indigo-500/20 border-indigo-500/40 text-indigo-300"
+                  : "bg-zinc-800 hover:bg-zinc-700 border-zinc-700 text-zinc-400"
+              }`}
+              title={showLineNumbers ? "Hide line numbers" : "Show line numbers"}
+            >
+              <Hash className="w-3.5 h-3.5" />
+            </button>
+
+            {/* Copy button */}
             <button
               onClick={handleCopyLogs}
-              className="flex items-center gap-1 px-2.5 py-1 text-[11px] font-medium text-zinc-300 hover:text-white bg-zinc-800 hover:bg-zinc-700 rounded border border-zinc-700 transition-colors cursor-pointer"
+              className="flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-zinc-300 hover:text-white bg-zinc-800 hover:bg-zinc-700 rounded-lg border border-zinc-700 transition-colors cursor-pointer"
+              title="Copy clean logs to clipboard"
             >
               {copied ? (
                 <>
                   <Check className="w-3 h-3 text-emerald-400" />
-                  <span>Copied</span>
+                  <span className="text-[11px]">Copied</span>
                 </>
               ) : (
                 <>
                   <Copy className="w-3 h-3" />
-                  <span>Copy</span>
+                  <span className="text-[11px]">Copy</span>
                 </>
               )}
             </button>
+
+            {/* Download button */}
+            <button
+              onClick={handleDownloadLogs}
+              className="p-1.5 text-zinc-400 hover:text-white bg-zinc-800 hover:bg-zinc-700 rounded-lg border border-zinc-700 transition-colors cursor-pointer"
+              title="Download logs file"
+            >
+              <Download className="w-3.5 h-3.5" />
+            </button>
+
+            {/* Refresh */}
             <button
               onClick={() => refetch()}
               disabled={isFetching}
-              className="p-1 text-zinc-400 hover:text-white cursor-pointer"
+              className="p-1.5 text-zinc-400 hover:text-white bg-zinc-800 hover:bg-zinc-700 rounded-lg border border-zinc-700 transition-colors cursor-pointer disabled:opacity-50"
               title="Refresh logs"
             >
               <RefreshCw
                 className={`w-3.5 h-3.5 ${isFetching ? "animate-spin text-[#5850ec]" : ""}`}
               />
             </button>
+
+            {/* Close */}
             <button
               onClick={onClose}
-              className="text-zinc-400 hover:text-white cursor-pointer ml-1"
+              className="p-1.5 text-zinc-400 hover:text-white bg-zinc-800 hover:bg-zinc-700 rounded-lg border border-zinc-700 transition-colors cursor-pointer ml-1"
+              title="Close modal"
             >
-              <X className="w-4 h-4" />
+              <X className="w-3.5 h-3.5" />
             </button>
           </div>
         </div>
 
-        <div className="p-4 font-mono text-[11.5px] flex-1 overflow-y-auto bg-zinc-950 text-zinc-300 whitespace-pre-wrap select-text leading-relaxed">
+        {/* Console / Log Body */}
+        <div
+          ref={logsContainerRef}
+          className="p-4 flex-1 overflow-y-auto bg-[#0a0d14] min-h-[360px] max-h-[60vh] select-text transition-colors scrollbar-thin"
+        >
           {isLoading ? (
-            <div className="flex items-center justify-center py-12 text-zinc-500 gap-2">
-              <Loader2 className="w-4 h-4 animate-spin text-[#5850ec]" />
-              <span>Streaming container logs...</span>
+            <div className="flex flex-col items-center justify-center py-20 text-zinc-400 gap-3">
+              <Loader2 className="w-5 h-5 animate-spin text-[#5850ec]" />
+              <span className="text-xs font-medium">Connecting to container log stream...</span>
             </div>
           ) : logsData?.logs ? (
-            logsData.logs
+            <AnsiLogViewer
+              logs={logsData.logs}
+              searchQuery={searchQuery}
+              showLineNumbers={showLineNumbers}
+            />
           ) : (
-            <div className="text-zinc-500 italic">No output in container log stream.</div>
+            <div className="text-zinc-500 italic py-10 text-center text-xs">
+              No output recorded in container log stream yet.
+            </div>
           )}
+        </div>
+
+        {/* Bottom Status Bar */}
+        <div className="px-5 py-2 bg-zinc-900/90 border-t border-zinc-800/80 flex items-center justify-between text-[11px] font-mono text-zinc-400">
+          <div className="flex items-center gap-3">
+            <span className="inline-flex items-center gap-1.5 text-emerald-400">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+              Live Streaming (3s interval)
+            </span>
+            <span className="text-zinc-600">|</span>
+            <span>{lineCount} lines</span>
+            {searchQuery && (
+              <>
+                <span className="text-zinc-600">|</span>
+                <span className="text-amber-400">Filtering: &ldquo;{searchQuery}&rdquo;</span>
+              </>
+            )}
+          </div>
+
+          <div className="flex items-center gap-3 text-zinc-500">
+            {environment.containerId && (
+              <span>ID: {environment.containerId.slice(0, 12)}</span>
+            )}
+            {environment.portMapping && (
+              <span className="text-[#5850ec]">Port {environment.portMapping}</span>
+            )}
+          </div>
         </div>
       </div>
     </div>

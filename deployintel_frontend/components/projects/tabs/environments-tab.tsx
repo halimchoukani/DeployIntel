@@ -42,6 +42,7 @@ import {
   Download,
   ArrowDown,
   Hash,
+  ShieldCheck,
 } from "lucide-react";
 import { AnsiLogViewer } from "@/components/projects/ansi-log-viewer";
 
@@ -117,6 +118,7 @@ export function EnvironmentsTab({ project }: EnvironmentsTabProps) {
   const [customImage, setCustomImage] = useState("");
   const [port, setPort] = useState<string>("");
   const [autoClone, setAutoClone] = useState(true);
+  const [installSemgrep, setInstallSemgrep] = useState(true);
 
   // Environment variables state
   const [envVars, setEnvVars] = useState<Array<{ key: string; value: string }>>([
@@ -214,6 +216,7 @@ export function EnvironmentsTab({ project }: EnvironmentsTabProps) {
       environmentVariables: finalEnvVars,
       autoClone,
       workspacePath: "/workspace",
+      installSemgrep,
     });
     setIsCreateModalOpen(false);
   };
@@ -696,6 +699,55 @@ export function EnvironmentsTab({ project }: EnvironmentsTabProps) {
                 </label>
               </div>
 
+              {/* Semgrep Toggle */}
+              <div className={`flex items-start gap-3 p-3 rounded-xl border transition-all ${
+                installSemgrep
+                  ? "border-emerald-200 bg-emerald-50/60"
+                  : "border-zinc-200 bg-zinc-50/40"
+              }`}>
+                <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 mt-0.5 transition-colors ${
+                  installSemgrep
+                    ? "bg-emerald-100 text-emerald-700"
+                    : "bg-zinc-100 text-zinc-400"
+                }`}>
+                  <ShieldCheck className="w-4 h-4" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between gap-2">
+                    <div>
+                      <p className={`text-xs font-semibold ${installSemgrep ? "text-emerald-800" : "text-zinc-700"}`}>
+                        Install Semgrep SAST Scanner
+                      </p>
+                      <p className="text-[10px] text-zinc-500 mt-0.5 leading-relaxed">
+                        Installs <span className="font-mono">semgrep</span> via pip for static analysis & security scanning. Available immediately in the container terminal.
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setInstallSemgrep((prev) => !prev)}
+                      className={`relative shrink-0 w-10 h-5 rounded-full transition-colors cursor-pointer focus:outline-none ${
+                        installSemgrep ? "bg-emerald-500" : "bg-zinc-300"
+                      }`}
+                      role="switch"
+                      aria-checked={installSemgrep}
+                      title={installSemgrep ? "Disable Semgrep installation" : "Enable Semgrep installation"}
+                    >
+                      <span
+                        className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow-sm transition-transform ${
+                          installSemgrep ? "translate-x-5" : "translate-x-0"
+                        }`}
+                      />
+                    </button>
+                  </div>
+                  {installSemgrep && (
+                    <p className="text-[10px] text-emerald-600 font-medium mt-1.5 flex items-center gap-1">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block" />
+                      Run <span className="font-mono">semgrep scan --config=auto</span> on your cloned code to detect vulnerabilities
+                    </p>
+                  )}
+                </div>
+              </div>
+
               <div className="flex items-center justify-end gap-2 pt-4 border-t border-zinc-100">
                 <button
                   type="button"
@@ -790,16 +842,18 @@ function CommandExecModal({
 
   const getQuickCommands = () => {
     const l = (project.language || "").toLowerCase();
+    const semgrepScan = "semgrep scan --config=auto";
+    const semgrepVersion = "semgrep --version";
     if (l.includes("java")) {
-      return ["mvn clean test", "mvn -v", "ls -la"];
+      return ["mvn clean test", "mvn -v", semgrepScan, "ls -la"];
     }
     if (l.includes("node") || l.includes("script")) {
-      return ["npm test", "npm run build", "node -v", "ls -la"];
+      return ["npm test", "npm run build", "node -v", semgrepScan, "ls -la"];
     }
     if (l.includes("python")) {
-      return ["pytest", "python --version", "ls -la"];
+      return ["pytest", "python --version", semgrepScan, "ls -la"];
     }
-    return ["pwd", "ls -la", "uname -a"];
+    return ["pwd", "ls -la", semgrepScan, semgrepVersion];
   };
 
   return (
@@ -834,6 +888,9 @@ function CommandExecModal({
               {qc}
             </button>
           ))}
+          <span className="text-[10px] text-zinc-500 font-mono ml-auto hidden md:inline shrink-0">
+            Semgrep installs in background (~1-2m)
+          </span>
         </div>
 
         {/* Output Console */}
@@ -862,6 +919,17 @@ function CommandExecModal({
               <div className="bg-zinc-900/60 p-3 rounded-lg overflow-x-auto border border-zinc-800/50">
                 <AnsiLogViewer logs={item.output || "(no output)"} />
               </div>
+              {item.cmd.includes("semgrep") && (item.exitCode === 127 || (item.output || "").toLowerCase().includes("not found")) && (
+                <div className="flex items-start gap-2 text-[11px] text-amber-300/90 bg-amber-950/40 border border-amber-800/50 p-2.5 rounded-lg mt-1 font-sans">
+                  <ShieldCheck className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+                  <div>
+                    <span className="font-semibold text-amber-200">Semgrep may still be installing in the background.</span>
+                    <p className="text-amber-300/80 text-[10.5px] mt-0.5">
+                      The Semgrep SAST engine binary is ~75MB and installs automatically via pip right after container launch (takes ~1-2 min). Switch to the <strong>Logs</strong> tab to track live installation progress.
+                    </p>
+                  </div>
+                </div>
+              )}
             </div>
           ))}
 

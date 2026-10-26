@@ -1,4 +1,4 @@
-﻿import { getAuthToken, performAutoLogout } from "@/lib/auth/session";
+import { getAuthToken, performAutoLogout } from "@/lib/auth/session";
 
 function getToken(): string {
   const token = getAuthToken();
@@ -63,6 +63,7 @@ export interface CreateEnvironmentPayload {
   environmentVariables?: Record<string, string>;
   workspacePath?: string;
   autoClone?: boolean;
+  installSemgrep?: boolean;
 }
 
 export interface CommandExecutionResponse {

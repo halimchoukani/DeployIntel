@@ -108,6 +108,12 @@ public class EnvironmentService {
                 writeEnvFile(containerId, workspacePath, request.environmentVariables());
             }
 
+            // Install Semgrep SAST scanner in container (non-blocking)
+            boolean shouldInstallSemgrep = request.installSemgrep() == null || Boolean.TRUE.equals(request.installSemgrep());
+            if (shouldInstallSemgrep) {
+                installSemgrep(containerId, workspacePath);
+            }
+
             // Automatically download dependencies and start the project with the exposed port
             launchAutoStartup(containerId, workspacePath, containerPort, project.getLanguage());
 
@@ -389,6 +395,65 @@ public class EnvironmentService {
             } catch (IOException ex) {
                 return preferredPort;
             }
+        }
+    }
+
+    private void installSemgrep(String containerId, String workspacePath) {
+        try {
+            String targetWorkspace = (workspacePath != null && !workspacePath.isBlank()) ? workspacePath : "/workspace";
+            String installerScript = String.join("\n",
+                    "#!/bin/sh",
+                    "LOG_FILE=\"" + targetWorkspace + "/app.log\"",
+                    "log() {",
+                    "  TS=$(date '+%Y-%m-%d %H:%M:%S')",
+                    "  M=\"[$TS] [DeployIntel] [Security] $1\"",
+                    "  echo \"$M\" >> \"$LOG_FILE\" 2>/dev/null",
+                    "  echo \"$M\" > /proc/1/fd/1 2>/dev/null || true",
+                    "}",
+                    "if command -v semgrep >/dev/null 2>&1; then",
+                    "  V=$(semgrep --version 2>/dev/null || echo \"ready\")",
+                    "  log \"Semgrep SAST scanner is already available ($V).\"",
+                    "  exit 0",
+                    "fi",
+                    "log \"Starting background installation of Semgrep SAST scanner...\"",
+                    "if ! command -v pip3 >/dev/null 2>&1 && ! command -v pip >/dev/null 2>&1; then",
+                    "  if command -v apk >/dev/null 2>&1; then",
+                    "    log \"Alpine environment detected: installing python3 and py3-pip via apk...\"",
+                    "    apk add --no-cache python3 py3-pip >> \"$LOG_FILE\" 2>&1",
+                    "  elif command -v apt-get >/dev/null 2>&1; then",
+                    "    log \"Debian/Ubuntu environment detected: installing python3 and python3-pip via apt-get...\"",
+                    "    export DEBIAN_FRONTEND=noninteractive",
+                    "    apt-get update -qq >> \"$LOG_FILE\" 2>&1",
+                    "    apt-get install -y -qq --no-install-recommends python3 python3-pip >> \"$LOG_FILE\" 2>&1",
+                    "  fi",
+                    "fi",
+                    "P=\"\"",
+                    "if command -v pip3 >/dev/null 2>&1; then",
+                    "  P=\"pip3\"",
+                    "elif command -v pip >/dev/null 2>&1; then",
+                    "  P=\"pip\"",
+                    "fi",
+                    "if [ -n \"$P\" ]; then",
+                    "  log \"Downloading and installing Semgrep wheel via $P (~75MB binary, takes 1-2 min)...\"",
+                    "  $P install --break-system-packages --no-cache-dir semgrep >> \"$LOG_FILE\" 2>&1",
+                    "fi",
+                    "if command -v semgrep >/dev/null 2>&1; then",
+                    "  V=$(semgrep --version 2>/dev/null || echo \"ready\")",
+                    "  log \"Semgrep SAST scanner installed successfully ($V)! Ready for 'semgrep scan --config=auto'.\"",
+                    "else",
+                    "  log \"Semgrep installation completed with warnings. Check logs for details.\"",
+                    "fi"
+            );
+
+            String safeScript = installerScript.replace("'", "'\\''");
+            String cmd = "printf '%s' '" + safeScript + "' > /tmp/.semgrep_install.sh && " +
+                    "chmod +x /tmp/.semgrep_install.sh && " +
+                    "/tmp/.semgrep_install.sh >/dev/null 2>&1 &";
+
+            dockerService.executeCommand(containerId, cmd, targetWorkspace);
+            log.info("Semgrep background installation initiated for container {}", containerId);
+        } catch (Exception e) {
+            log.warn("Could not initiate Semgrep installation in container {}: {}", containerId, e.getMessage());
         }
     }
 

@@ -45,6 +45,7 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import { AnsiLogViewer } from "@/components/projects/ansi-log-viewer";
+import { ProvisioningLoadingView } from "@/components/projects/provisioning-loading-view";
 
 interface EnvironmentsTabProps {
   project: Project;
@@ -119,6 +120,7 @@ export function EnvironmentsTab({ project }: EnvironmentsTabProps) {
   const [port, setPort] = useState<string>("");
   const [autoClone, setAutoClone] = useState(true);
   const [installSemgrep, setInstallSemgrep] = useState(true);
+  const [createErrorMsg, setCreateErrorMsg] = useState<string | null>(null);
 
   // Environment variables state
   const [envVars, setEnvVars] = useState<Array<{ key: string; value: string }>>([
@@ -209,16 +211,23 @@ export function EnvironmentsTab({ project }: EnvironmentsTabProps) {
       }
     }
 
-    await createMutation.mutateAsync({
-      name: name.trim() || "Test Environment",
-      image: finalImage,
-      port: port ? parseInt(port, 10) : undefined,
-      environmentVariables: finalEnvVars,
-      autoClone,
-      workspacePath: "/workspace",
-      installSemgrep,
-    });
-    setIsCreateModalOpen(false);
+    setCreateErrorMsg(null);
+    try {
+      await createMutation.mutateAsync({
+        name: name.trim() || "Test Environment",
+        image: finalImage,
+        port: port ? parseInt(port, 10) : undefined,
+        environmentVariables: finalEnvVars,
+        autoClone,
+        workspacePath: "/workspace",
+        installSemgrep,
+      });
+      setIsCreateModalOpen(false);
+    } catch (err: any) {
+      setCreateErrorMsg(
+        err?.message || "Failed to provision container. Please check Docker daemon status and try again."
+      );
+    }
   };
 
   function getDefaultImageForLanguage(lang?: string | null): string {
@@ -505,24 +514,58 @@ export function EnvironmentsTab({ project }: EnvironmentsTabProps) {
 
       {/* ── CREATE MODAL ────────────────────────────────────────── */}
       {isCreateModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-xs p-4 animate-in fade-in duration-150">
-          <div className="bg-white rounded-2xl max-w-lg w-full border border-zinc-200 shadow-xl overflow-hidden max-h-[90vh] flex flex-col">
-            <div className="px-6 py-4 border-b border-zinc-200 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Box className="w-5 h-5 text-[#5850ec]" />
-                <h3 className="text-sm font-bold text-zinc-900">
-                  Provision Docker Test Container
-                </h3>
-              </div>
-              <button
-                onClick={() => setIsCreateModalOpen(false)}
-                className="text-zinc-400 hover:text-zinc-600 cursor-pointer"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 animate-in fade-in duration-200">
+          <div
+            className={`rounded-2xl w-full border shadow-2xl overflow-hidden max-h-[92vh] flex flex-col transition-all duration-300 ${
+              createMutation.isPending
+                ? "max-w-xl border-zinc-800 bg-zinc-950"
+                : "max-w-lg border-zinc-200 bg-white"
+            }`}
+          >
+            {createMutation.isPending ? (
+              <ProvisioningLoadingView
+                name={name.trim() || "Test Runner Container"}
+                image={customImage.trim() || selectedImage}
+                port={port}
+                autoClone={autoClone}
+                installSemgrep={installSemgrep}
+                envVarsCount={
+                  envInputMode === "raw"
+                    ? rawEnvText.split("\n").filter((l) => l.includes("=")).length
+                    : envVars.filter((p) => p.key.trim().length > 0).length
+                }
+                language={project.language}
+              />
+            ) : (
+              <>
+                <div className="px-6 py-4 border-b border-zinc-200 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Box className="w-5 h-5 text-[#5850ec]" />
+                    <h3 className="text-sm font-bold text-zinc-900">
+                      Provision Docker Test Container
+                    </h3>
+                  </div>
+                  <button
+                    onClick={() => {
+                      setCreateErrorMsg(null);
+                      setIsCreateModalOpen(false);
+                    }}
+                    className="text-zinc-400 hover:text-zinc-600 cursor-pointer"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
 
-            <form onSubmit={handleCreateSubmit} className="p-6 space-y-4 overflow-y-auto flex-1">
+                <form onSubmit={handleCreateSubmit} className="p-6 space-y-4 overflow-y-auto flex-1">
+                  {createErrorMsg && (
+                    <div className="p-3 rounded-lg bg-rose-50 border border-rose-200 text-rose-700 text-xs flex items-start gap-2.5">
+                      <AlertCircle className="w-4 h-4 shrink-0 text-rose-600 mt-0.5" />
+                      <div>
+                        <span className="font-semibold block">Provisioning Failed</span>
+                        <span className="text-[11px] text-rose-600/90">{createErrorMsg}</span>
+                      </div>
+                    </div>
+                  )}
               <div>
                 <label className="block text-xs font-semibold text-zinc-700 mb-1">
                   Environment Name
@@ -772,9 +815,11 @@ export function EnvironmentsTab({ project }: EnvironmentsTabProps) {
                 </button>
               </div>
             </form>
-          </div>
-        </div>
-      )}
+          </>
+        )}
+      </div>
+    </div>
+  )}
 
       {/* ── EXECUTE COMMAND MODAL ─────────────────────────────────── */}
       {activeExecEnv && (

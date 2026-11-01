@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, { useState, use } from "react";
 import Link from "next/link";
@@ -16,6 +16,7 @@ import { SettingsTab } from "@/components/projects/tabs/settings-tab";
 import { ReleasesTab } from "@/components/projects/tabs/releases-tab";
 import { EnvironmentsTab } from "@/components/projects/tabs/environments-tab";
 import { AnalysisModal } from "@/components/projects/analysis-modal";
+import { GateCheckModal } from "@/components/projects/gate-check-modal";
 import {
   Activity,
   GitCommit,
@@ -38,6 +39,7 @@ export default function ProjectDetailsPage({
   const { data: liveProject, isLoading, error } = useProject(id);
   const [activeTab, setActiveTab] = useState<string>("overview");
   const [isAnalysisModalOpen, setIsAnalysisModalOpen] = useState<boolean>(false);
+  const [isGateCheckModalOpen, setIsGateCheckModalOpen] = useState<boolean>(false);
 
   // Read URL tab query parameter on mount if present
   React.useEffect(() => {
@@ -95,6 +97,7 @@ export default function ProjectDetailsPage({
       <ProjectHeader
         project={project}
         onRunAnalysis={() => setIsAnalysisModalOpen(true)}
+        onTriggerGateCheck={() => setIsGateCheckModalOpen(true)}
       />
 
       {/* 2. Key Performance Indicators */}
@@ -172,6 +175,13 @@ export default function ProjectDetailsPage({
         project={project}
         isOpen={isAnalysisModalOpen}
         onClose={() => setIsAnalysisModalOpen(false)}
+      />
+
+      {/* 6. Real Semgrep SAST Gate Evaluation Modal */}
+      <GateCheckModal
+        project={project}
+        isOpen={isGateCheckModalOpen}
+        onClose={() => setIsGateCheckModalOpen(false)}
       />
     </div>
   );

@@ -20,6 +20,7 @@ import {
 interface ProjectHeaderProps {
   project: Project;
   onRunAnalysis: () => void;
+  onTriggerGateCheck?: () => void;
 }
 
 const LANG_COLORS: Record<string, string> = {
@@ -37,7 +38,7 @@ const LANG_COLORS: Record<string, string> = {
   Kotlin: "#A97BFF",
 };
 
-export function ProjectHeader({ project, onRunAnalysis }: ProjectHeaderProps) {
+export function ProjectHeader({ project, onRunAnalysis, onTriggerGateCheck }: ProjectHeaderProps) {
   const [copiedId, setCopiedId] = useState(false);
 
   function copyProjectId() {
@@ -170,7 +171,7 @@ export function ProjectHeader({ project, onRunAnalysis }: ProjectHeaderProps) {
           </button>
 
           <button
-            onClick={onRunAnalysis}
+            onClick={onTriggerGateCheck || onRunAnalysis}
             className="inline-flex items-center gap-2 text-xs font-semibold text-white bg-[#5850ec] hover:bg-[#4d44e7] px-4 py-2.5 rounded-xl transition-all shadow-sm hover:shadow-indigo-500/20 active:scale-[0.98]"
           >
             <Play className="w-3.5 h-3.5 fill-current" />

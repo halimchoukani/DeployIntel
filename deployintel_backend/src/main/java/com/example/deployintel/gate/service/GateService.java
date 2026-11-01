@@ -800,7 +800,7 @@ public class GateService {
 
         PerformanceMetric p95Metric = PerformanceMetric.builder()
                 .deployment(deployment)
-                .metricName("RESPONSE_TIME")
+                .metricName("RESPONSE_TIME")    
                 .currentValue(BigDecimal.valueOf(response.getP95DurationMs()).setScale(4, RoundingMode.HALF_UP))
                 .unit("ms")
                 .threshold(BigDecimal.valueOf(800.0).setScale(4, RoundingMode.HALF_UP))

@@ -39,6 +39,17 @@ function isTokenValid(token: string | undefined): boolean {
 
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
+
+  // ─── Ngrok header injection for /api/* routes ────────────────────────────
+  // When proxying API requests via Next.js rewrites to an ngrok URL,
+  // we must include this header to skip ngrok's browser interstitial page.
+  if (pathname.startsWith("/api/")) {
+    const requestHeaders = new Headers(request.headers);
+    requestHeaders.set("ngrok-skip-browser-warning", "true");
+    return NextResponse.next({ request: { headers: requestHeaders } });
+  }
+
+  // ─── Auth guard for non-API routes ───────────────────────────────────────
   const tokenCookie = request.cookies.get(AUTH_COOKIE_NAME)?.value;
   const hasValidToken = isTokenValid(tokenCookie);
 
@@ -88,9 +99,8 @@ export const config = {
      * - _next/static (static files)
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
-     * - api routes (/api/...)
      * - static image extensions (svg, png, jpg, jpeg, gif, webp)
      */
-    "/((?!api|_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
   ],
 };

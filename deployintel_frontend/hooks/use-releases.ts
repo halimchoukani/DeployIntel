@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
@@ -14,7 +14,14 @@ export function useReleases(projectId: string) {
     queryFn: () => getReleasesForProject(projectId),
     enabled: !!projectId,
     retry: false,
-    staleTime: 30 * 1000,
+    staleTime: 10 * 1000,
+    refetchInterval: (query) => {
+      const releases = query.state.data;
+      const hasPending = releases?.some(
+        (r) => r.status === "PENDING" || r.testVerdict === "PENDING" || r.testVerdict === "RUNNING"
+      );
+      return hasPending ? 3000 : false;
+    },
   });
 }
 
@@ -33,6 +40,7 @@ export function useCreateRelease() {
     mutationFn: (payload: CreateReleasePayload) => createRelease(payload),
     onSuccess: (data) => {
       qc.invalidateQueries({ queryKey: ["releases", data.projectId] });
+      qc.invalidateQueries({ queryKey: ["test-history", data.projectId] });
     },
   });
 }

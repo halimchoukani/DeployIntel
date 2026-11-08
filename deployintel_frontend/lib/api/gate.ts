@@ -67,6 +67,66 @@ export interface K6CheckItem {
   passed: boolean;
 }
 
+export interface SecurityFindingHistoryDto {
+  id: string;
+  tool: string;
+  category: string;
+  title: string;
+  description?: string;
+  severity: "CRITICAL" | "HIGH" | "MEDIUM" | "LOW";
+  filePath?: string;
+  lineNumber?: number;
+  ruleId?: string;
+  remediation?: string;
+  status: string;
+  createdAt: string;
+}
+
+export interface PerformanceMetricHistoryDto {
+  id: string;
+  metricName: string;
+  previousValue?: number;
+  currentValue?: number;
+  unit?: string;
+  changePercent?: number;
+  threshold?: number;
+  status: string;
+}
+
+export interface TestResultHistoryDto {
+  id: string;
+  testName: string;
+  status: string;
+  severity?: string;
+  durationMs?: number;
+  errorMessage?: string;
+}
+
+export interface TestRunHistoryItem {
+  id: string;
+  projectId: string;
+  deploymentId?: string;
+  releaseId?: string;
+  releaseVersion?: string;
+  environment?: string;
+  branch?: string;
+  commitSha?: string;
+  type: "SECURITY" | "PERFORMANCE" | "UNIT" | "INTEGRATION" | "REGRESSION";
+  status: "PASSED" | "FAILED" | "RUNNING" | "PENDING" | "ERROR";
+  totalTests: number;
+  passedTests: number;
+  failedTests: number;
+  skippedTests: number;
+  durationMs?: number;
+  startedAt?: string;
+  completedAt?: string;
+  logs?: string;
+  findingsCount: number;
+  findings?: SecurityFindingHistoryDto[];
+  metrics?: PerformanceMetricHistoryDto[];
+  results?: TestResultHistoryDto[];
+}
+
 export interface K6CheckResponse {
   projectId: string;
   projectName: string;
@@ -463,3 +523,21 @@ function parseK6RawOutput(
     };
   }
 }
+
+/**
+ * Fetches test run execution history for the project.
+ */
+export async function getProjectTestHistory(projectId: string): Promise<TestRunHistoryItem[]> {
+  try {
+    const res = await fetch(`/api/v1/projects/${projectId}/gate/history`, {
+      headers: apiHeaders(),
+    });
+    if (res.ok) {
+      return (await res.json()) as TestRunHistoryItem[];
+    }
+    return [];
+  } catch {
+    return [];
+  }
+}
+

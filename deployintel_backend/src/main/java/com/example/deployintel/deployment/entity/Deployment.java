@@ -1,6 +1,7 @@
 package com.example.deployintel.deployment.entity;
 
 import com.example.deployintel.project.entity.Project;
+import com.example.deployintel.release.entity.Release;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -23,6 +24,10 @@ public class Deployment {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "project_id", nullable = false)
     private Project project;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "release_id")
+    private Release release;
 
     @Column(length = 50)
     @Builder.Default

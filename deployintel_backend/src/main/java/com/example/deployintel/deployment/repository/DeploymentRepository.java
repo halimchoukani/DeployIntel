@@ -12,5 +12,7 @@ import java.util.UUID;
 public interface DeploymentRepository extends JpaRepository<Deployment, UUID> {
     List<Deployment> findByProjectIdOrderByCreatedAtDesc(UUID projectId);
     Optional<Deployment> findFirstByProjectIdOrderByCreatedAtDesc(UUID projectId);
+    Optional<Deployment> findByReleaseId(UUID releaseId);
+    List<Deployment> findByReleaseIdIn(List<UUID> releaseIds);
 }
 

@@ -15,6 +15,7 @@ import { PoliciesTab } from "@/components/projects/tabs/policies-tab";
 import { SettingsTab } from "@/components/projects/tabs/settings-tab";
 import { ReleasesTab } from "@/components/projects/tabs/releases-tab";
 import { EnvironmentsTab } from "@/components/projects/tabs/environments-tab";
+import { TestHistoryTab } from "@/components/projects/tabs/test-history-tab";
 import { AnalysisModal } from "@/components/projects/analysis-modal";
 import { GateCheckModal } from "@/components/projects/gate-check-modal";
 import {
@@ -26,6 +27,7 @@ import {
   Settings,
   Tag,
   Box,
+  History,
 } from "lucide-react";
 
 export default function ProjectDetailsPage({
@@ -47,7 +49,7 @@ export default function ProjectDetailsPage({
       const urlTab = new URLSearchParams(window.location.search).get("tab");
       if (
         urlTab &&
-        ["overview", "commits", "deployments", "releases", "environments", "insights", "policies", "settings"].includes(urlTab)
+        ["overview", "commits", "deployments", "releases", "test-history", "environments", "insights", "policies", "settings"].includes(urlTab)
       ) {
         setActiveTab(urlTab);
       }
@@ -74,6 +76,7 @@ export default function ProjectDetailsPage({
     { id: "commits", label: "Commits", icon: GitCommit, count: 8 },
     { id: "deployments", label: "Deployments", icon: Layers, count: 5 },
     { id: "releases", label: "Releases", icon: Tag },
+    { id: "test-history", label: "Test History", icon: History },
     { id: "environments", label: "Test Environments", icon: Box },
     { id: "insights", label: "AI Blast Radius", icon: Sparkles },
     { id: "policies", label: "Gate Guardrails", icon: Sliders },
@@ -163,7 +166,18 @@ export default function ProjectDetailsPage({
           />
         )}
         {activeTab === "deployments" && <DeploymentsTab project={project} />}
-        {activeTab === "releases" && <ReleasesTab project={project} />}
+        {activeTab === "releases" && (
+          <ReleasesTab
+            project={project}
+            onNavigateToTestHistory={() => setActiveTab("test-history")}
+          />
+        )}
+        {activeTab === "test-history" && (
+          <TestHistoryTab
+            project={project}
+            onTriggerGateCheck={() => setIsGateCheckModalOpen(true)}
+          />
+        )}
         {activeTab === "environments" && <EnvironmentsTab project={project} />}
         {activeTab === "insights" && <InsightsTab project={project} />}
         {activeTab === "policies" && <PoliciesTab project={project} />}

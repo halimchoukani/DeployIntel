@@ -10,7 +10,9 @@ import java.util.UUID;
 
 @Repository
 public interface TestRunRepository extends JpaRepository<TestRun, UUID> {
+    List<TestRun> findByProjectIdOrderByStartedAtDesc(UUID projectId);
     List<TestRun> findByDeploymentIdOrderByStartedAtDesc(UUID deploymentId);
+    List<TestRun> findByDeploymentIdInOrderByStartedAtDesc(List<UUID> deploymentIds);
     List<TestRun> findByDeploymentIdAndTypeOrderByStartedAtDesc(UUID deploymentId, TestRunType type);
 }
 

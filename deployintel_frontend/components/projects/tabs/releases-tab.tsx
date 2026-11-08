@@ -1,7 +1,7 @@
-﻿"use client";
+"use client";
 
 import React, { useState } from "react";
-import { useReleases } from "@/hooks/use-releases";
+import { useReleases, useCreateRelease } from "@/hooks/use-releases";
 import type { Release, ReleaseEnvironment, ReleaseStatus } from "@/lib/api/releases";
 import type { Project } from "@/lib/api/project";
 import {
@@ -17,10 +17,17 @@ import {
   AlertCircle,
   Loader2,
   Rocket,
+  Plus,
+  Shield,
+  Zap,
+  CheckCircle2,
+  XCircle,
+  History,
 } from "lucide-react";
 
 interface ReleasesTabProps {
   project: Project;
+  onNavigateToTestHistory?: () => void;
 }
 
 function envBadge(env: ReleaseEnvironment) {
@@ -54,11 +61,44 @@ function statusLabel(status: ReleaseStatus) {
   };
   const s = map[status] ?? { label: status, cls: "text-zinc-500 bg-zinc-50 border-zinc-200" };
   return (
-    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold border ${s.cls}`}>
+    <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold border ${s.cls}`}>
       {statusIcon(status)}
       {s.label}
     </span>
   );
+}
+
+function testVerdictBadge(verdict?: string) {
+  switch (verdict?.toUpperCase()) {
+    case "PASSED":
+      return (
+        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
+          Gates Passed
+        </span>
+      );
+    case "FAILED":
+      return (
+        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-red-50 text-red-700 border border-red-200">
+          <XCircle className="w-3.5 h-3.5 text-red-500" />
+          Gate Blocked
+        </span>
+      );
+    case "RUNNING":
+    case "PENDING":
+      return (
+        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-amber-50 text-amber-700 border border-amber-200">
+          <Loader2 className="w-3.5 h-3.5 text-amber-500 animate-spin" />
+          Running Tests...
+        </span>
+      );
+    default:
+      return (
+        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] text-zinc-400 bg-zinc-50 border border-zinc-200">
+          Not Run
+        </span>
+      );
+  }
 }
 
 function timeAgo(iso: string) {
@@ -76,14 +116,59 @@ function shortSha(sha: string) {
   return sha.startsWith("refs/") ? sha : sha.slice(0, 7);
 }
 
-export function ReleasesTab({ project }: ReleasesTabProps) {
-  const { data: releases, isLoading, error, refetch } = useReleases(project.id);
+export function ReleasesTab({ project, onNavigateToTestHistory }: ReleasesTabProps) {
+  const { data: releases = [], isLoading, error, refetch } = useReleases(project.id);
+  const createReleaseMutation = useCreateRelease();
+
   const [selected, setSelected] = useState<Release | null>(null);
   const [envFilter, setEnvFilter] = useState<ReleaseEnvironment | "ALL">("ALL");
 
-  const filtered = (releases ?? []).filter(
+  // Create Release Modal State
+  const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [versionNumber, setVersionNumber] = useState("");
+  const [environment, setEnvironment] = useState<ReleaseEnvironment>("PRODUCTION");
+  const [branch, setBranch] = useState(project.defaultBranch || "main");
+  const [commitSha, setCommitSha] = useState("");
+  const [tag, setTag] = useState("");
+  const [createError, setCreateError] = useState<string | null>(null);
+
+  const filtered = releases.filter(
     (r) => envFilter === "ALL" || r.environment === envFilter
   );
+
+  const handleOpenCreate = () => {
+    // Generate an automatic next version if releases exist, e.g. v1.0.1
+    const nextVer = releases.length > 0 ? `v1.${releases.length}.0` : "v1.0.0";
+    setVersionNumber(nextVer);
+    setBranch(project.defaultBranch || "main");
+    setCommitSha(Math.random().toString(36).substring(2, 10));
+    setTag(nextVer);
+    setCreateError(null);
+    setIsCreateOpen(true);
+  };
+
+  const handleCreateRelease = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!versionNumber.trim()) {
+      setCreateError("Version number is required");
+      return;
+    }
+    setCreateError(null);
+    try {
+      await createReleaseMutation.mutateAsync({
+        projectId: project.id,
+        versionNumber: versionNumber.trim(),
+        commitSha: commitSha.trim() || Math.random().toString(36).substring(2, 10),
+        branch: branch.trim() || "main",
+        tag: tag.trim() || versionNumber.trim(),
+        environment,
+      });
+      setIsCreateOpen(false);
+      refetch();
+    } catch (err: any) {
+      setCreateError(err.message || "Failed to create release");
+    }
+  };
 
   // ── Loading ──────────────────────────────────────────────────────────────
   if (isLoading) {
@@ -113,7 +198,7 @@ export function ReleasesTab({ project }: ReleasesTabProps) {
   }
 
   // ── Empty ─────────────────────────────────────────────────────────────────
-  if (!releases || releases.length === 0) {
+  if (releases.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-24 gap-4 text-center">
         <div className="w-14 h-14 rounded-2xl bg-indigo-50 flex items-center justify-center">
@@ -122,16 +207,16 @@ export function ReleasesTab({ project }: ReleasesTabProps) {
         <div>
           <p className="text-sm font-bold text-zinc-800">No releases yet</p>
           <p className="text-xs text-zinc-400 mt-1 max-w-sm">
-            Releases are created automatically when your GitHub Actions workflow runs on a new tag or publish event.
+            Releases trigger automatic security (Semgrep) and performance (k6) gate checks upon creation.
           </p>
         </div>
-        <a
-          href={`/projects/${project.id}?tab=settings`}
-          className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#5850ec] bg-indigo-50 hover:bg-indigo-100 border border-indigo-100 px-4 py-2 rounded-xl transition-colors"
+        <button
+          onClick={handleOpenCreate}
+          className="inline-flex items-center gap-1.5 text-xs font-semibold text-white bg-[#5850ec] hover:bg-[#4d44e7] px-4 py-2 rounded-xl transition-colors shadow-xs"
         >
-          Set up CI/CD workflow
-          <ChevronRight className="w-3.5 h-3.5" />
-        </a>
+          <Plus className="w-4 h-4" />
+          Create First Release
+        </button>
       </div>
     );
   }
@@ -142,26 +227,38 @@ export function ReleasesTab({ project }: ReleasesTabProps) {
       {/* Header row */}
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
-          <h3 className="text-sm font-bold text-zinc-900">Release History</h3>
+          <h3 className="text-sm font-bold text-zinc-900">Release History & Gate Evaluations</h3>
           <p className="text-xs text-zinc-400 mt-0.5">
-            {releases.length} release{releases.length !== 1 ? "s" : ""} recorded via GitHub Actions
+            {releases.length} release{releases.length !== 1 ? "s" : ""} recorded • Automated tests execute on every release
           </p>
         </div>
-        {/* Environment filter */}
-        <div className="flex items-center gap-1.5">
-          {(["ALL", "PRODUCTION", "STAGING", "DEVELOPMENT"] as const).map((env) => (
-            <button
-              key={env}
-              onClick={() => setEnvFilter(env)}
-              className={`px-3 py-1.5 rounded-lg text-[11px] font-semibold border transition-all ${
-                envFilter === env
-                  ? "bg-[#5850ec] text-white border-[#5850ec] shadow-sm"
-                  : "bg-white text-zinc-500 border-zinc-200 hover:border-zinc-300 hover:text-zinc-700"
-              }`}
-            >
-              {env === "ALL" ? "All" : env.charAt(0) + env.slice(1).toLowerCase()}
-            </button>
-          ))}
+
+        <div className="flex items-center gap-3">
+          {/* Environment filter */}
+          <div className="flex items-center gap-1.5">
+            {(["ALL", "PRODUCTION", "STAGING", "DEVELOPMENT"] as const).map((env) => (
+              <button
+                key={env}
+                onClick={() => setEnvFilter(env)}
+                className={`px-3 py-1.5 rounded-lg text-[11px] font-semibold border transition-all ${
+                  envFilter === env
+                    ? "bg-[#5850ec] text-white border-[#5850ec] shadow-xs"
+                    : "bg-white text-zinc-500 border-zinc-200 hover:border-zinc-300 hover:text-zinc-700"
+                }`}
+              >
+                {env === "ALL" ? "All" : env.charAt(0) + env.slice(1).toLowerCase()}
+              </button>
+            ))}
+          </div>
+
+          {/* New Release Button */}
+          <button
+            onClick={handleOpenCreate}
+            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold rounded-xl bg-[#5850ec] hover:bg-[#4d44e7] text-white shadow-xs transition-colors"
+          >
+            <Plus className="w-3.5 h-3.5" />
+            <span>New Release</span>
+          </button>
         </div>
       </div>
 
@@ -172,6 +269,7 @@ export function ReleasesTab({ project }: ReleasesTabProps) {
             <tr className="border-b border-zinc-100 bg-zinc-50/60 text-[11px] font-semibold text-zinc-400 uppercase tracking-wide">
               <th className="py-3 px-5 text-left">Version</th>
               <th className="py-3 px-4 text-left">Environment</th>
+              <th className="py-3 px-4 text-left">Automated Gate Check</th>
               <th className="py-3 px-4 text-left">Status</th>
               <th className="py-3 px-4 text-left">Commit</th>
               <th className="py-3 px-4 text-left">Branch / Tag</th>
@@ -182,7 +280,7 @@ export function ReleasesTab({ project }: ReleasesTabProps) {
           <tbody className="divide-y divide-zinc-100">
             {filtered.length === 0 ? (
               <tr>
-                <td colSpan={7} className="py-12 text-center text-zinc-400 text-xs">
+                <td colSpan={8} className="py-12 text-center text-zinc-400 text-xs">
                   No releases matching the selected environment.
                 </td>
               </tr>
@@ -208,6 +306,30 @@ export function ReleasesTab({ project }: ReleasesTabProps) {
                     <span className={`inline-block px-2.5 py-0.5 rounded-full text-[11px] font-semibold border ${envBadge(release.environment)}`}>
                       {release.environment.charAt(0) + release.environment.slice(1).toLowerCase()}
                     </span>
+                  </td>
+
+                  {/* Automated Gate Check State */}
+                  <td className="py-4 px-4 whitespace-nowrap">
+                    <div className="flex items-center gap-2">
+                      {testVerdictBadge(release.testVerdict)}
+                      {release.testRuns && release.testRuns.length > 0 && (
+                        <div className="hidden sm:flex items-center gap-1 text-[11px] text-zinc-500">
+                          {release.testRuns.map((tr) => (
+                            <span
+                              key={tr.id}
+                              className={`w-2 h-2 rounded-full ${
+                                tr.status === "PASSED"
+                                  ? "bg-emerald-500"
+                                  : tr.status === "FAILED"
+                                  ? "bg-rose-500"
+                                  : "bg-amber-500 animate-pulse"
+                              }`}
+                              title={`${tr.type}: ${tr.status}`}
+                            />
+                          ))}
+                        </div>
+                      )}
+                    </div>
                   </td>
 
                   {/* Status */}
@@ -277,7 +399,7 @@ export function ReleasesTab({ project }: ReleasesTabProps) {
                   <Tag className="w-5 h-5 text-[#5850ec]" />
                 </div>
                 <div>
-                  <p className="text-xs text-zinc-400 font-medium">Release</p>
+                  <p className="text-xs text-zinc-400 font-medium">Release Overview</p>
                   <h3 className="text-base font-bold text-zinc-900">{selected.versionNumber}</h3>
                 </div>
               </div>
@@ -292,8 +414,12 @@ export function ReleasesTab({ project }: ReleasesTabProps) {
             {/* Grid of details */}
             <div className="grid grid-cols-2 gap-3 text-xs">
               <div className="bg-zinc-50 p-3 rounded-xl border border-zinc-200/70">
-                <p className="text-zinc-400 font-medium mb-1">Status</p>
+                <p className="text-zinc-400 font-medium mb-1">Release Status</p>
                 {statusLabel(selected.status)}
+              </div>
+              <div className="bg-zinc-50 p-3 rounded-xl border border-zinc-200/70">
+                <p className="text-zinc-400 font-medium mb-1">Gate Check State</p>
+                {testVerdictBadge(selected.testVerdict)}
               </div>
               <div className="bg-zinc-50 p-3 rounded-xl border border-zinc-200/70">
                 <p className="text-zinc-400 font-medium mb-1">Environment</p>
@@ -306,10 +432,6 @@ export function ReleasesTab({ project }: ReleasesTabProps) {
                 <span className="font-mono text-[11px] text-zinc-700 break-all">{selected.commitSha}</span>
               </div>
               <div className="bg-zinc-50 p-3 rounded-xl border border-zinc-200/70">
-                <p className="text-zinc-400 font-medium mb-1">Tag</p>
-                <span className="font-mono text-zinc-700">{selected.tag ?? "—"}</span>
-              </div>
-              <div className="bg-zinc-50 p-3 rounded-xl border border-zinc-200/70">
                 <p className="text-zinc-400 font-medium mb-1">Branch</p>
                 <span className="font-mono text-zinc-700">{selected.branch ?? "—"}</span>
               </div>
@@ -319,14 +441,178 @@ export function ReleasesTab({ project }: ReleasesTabProps) {
               </div>
             </div>
 
-            <div className="pt-2 flex justify-end">
+            {/* Test Runs Section */}
+            {selected.testRuns && selected.testRuns.length > 0 && (
+              <div className="space-y-2 pt-1 border-t border-zinc-100">
+                <h4 className="text-xs font-bold text-zinc-900 flex items-center gap-1.5">
+                  <Shield className="w-3.5 h-3.5 text-[#5850ec]" />
+                  Executed Automated Gate Checks:
+                </h4>
+                <div className="divide-y divide-zinc-100 bg-zinc-50 rounded-xl border border-zinc-200/70">
+                  {selected.testRuns.map((tr) => (
+                    <div key={tr.id} className="p-3 flex items-center justify-between text-xs">
+                      <div className="flex items-center gap-2">
+                        {tr.type === "SECURITY" ? (
+                          <Shield className="w-4 h-4 text-purple-600" />
+                        ) : (
+                          <Zap className="w-4 h-4 text-amber-500" />
+                        )}
+                        <div>
+                          <span className="font-semibold text-zinc-800">
+                            {tr.type === "SECURITY" ? "Semgrep SAST Security" : "Grafana k6 Performance"}
+                          </span>
+                          <span className="text-[11px] text-zinc-400 block">
+                            {tr.passedTests}/{tr.totalTests} tests passed
+                            {tr.durationMs ? ` • ${(tr.durationMs / 1000).toFixed(1)}s` : ""}
+                          </span>
+                        </div>
+                      </div>
+                      <span
+                        className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
+                          tr.status === "PASSED"
+                            ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                            : tr.status === "FAILED"
+                            ? "bg-rose-50 text-rose-700 border-rose-200"
+                            : "bg-amber-50 text-amber-700 border-amber-200"
+                        }`}
+                      >
+                        {tr.status}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <div className="pt-2 flex items-center justify-between">
+              {onNavigateToTestHistory && (
+                <button
+                  onClick={() => {
+                    setSelected(null);
+                    onNavigateToTestHistory();
+                  }}
+                  className="text-xs font-semibold text-[#5850ec] hover:underline flex items-center gap-1"
+                >
+                  <History className="w-3.5 h-3.5" />
+                  View in Test History
+                </button>
+              )}
+              <div className="ml-auto">
+                <button
+                  onClick={() => setSelected(null)}
+                  className="px-4 py-2 text-xs font-semibold text-zinc-700 bg-zinc-100 hover:bg-zinc-200 rounded-xl transition-colors"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Create New Release Modal */}
+      {isCreateOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-zinc-900/40 backdrop-blur-sm animate-in fade-in duration-150">
+          <div className="bg-white rounded-2xl border border-zinc-200 shadow-2xl max-w-md w-full p-6 space-y-4">
+            <div className="flex items-center justify-between border-b border-zinc-100 pb-3">
+              <div className="flex items-center gap-2">
+                <Rocket className="w-5 h-5 text-[#5850ec]" />
+                <h3 className="text-sm font-bold text-zinc-900">Create New Release</h3>
+              </div>
               <button
-                onClick={() => setSelected(null)}
-                className="px-4 py-2 text-xs font-semibold text-zinc-700 bg-zinc-100 hover:bg-zinc-200 rounded-xl transition-colors"
+                onClick={() => setIsCreateOpen(false)}
+                className="text-zinc-400 hover:text-zinc-600 p-1 rounded-lg"
               >
-                Close
+                <X className="w-4 h-4" />
               </button>
             </div>
+
+            <p className="text-xs text-zinc-500">
+              When created, DeployIntel will automatically trigger the Semgrep security scan and k6 performance gate check.
+            </p>
+
+            {createError && (
+              <div className="p-3 bg-red-50 text-red-700 text-xs rounded-xl border border-red-200">
+                {createError}
+              </div>
+            )}
+
+            <form onSubmit={handleCreateRelease} className="space-y-3.5 text-xs">
+              <div>
+                <label className="block font-semibold text-zinc-700 mb-1">Version Number *</label>
+                <input
+                  type="text"
+                  value={versionNumber}
+                  onChange={(e) => setVersionNumber(e.target.value)}
+                  placeholder="e.g. v2.1.0"
+                  className="w-full px-3 py-2 bg-zinc-50 border border-zinc-200 rounded-xl text-xs focus:ring-2 focus:ring-[#5850ec]/30 focus:border-[#5850ec]"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block font-semibold text-zinc-700 mb-1">Target Environment *</label>
+                <select
+                  value={environment}
+                  onChange={(e) => setEnvironment(e.target.value as ReleaseEnvironment)}
+                  className="w-full px-3 py-2 bg-zinc-50 border border-zinc-200 rounded-xl text-xs focus:ring-2 focus:ring-[#5850ec]/30 focus:border-[#5850ec]"
+                >
+                  <option value="PRODUCTION">Production</option>
+                  <option value="STAGING">Staging</option>
+                  <option value="DEVELOPMENT">Development</option>
+                </select>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-semibold text-zinc-700 mb-1">Branch</label>
+                  <input
+                    type="text"
+                    value={branch}
+                    onChange={(e) => setBranch(e.target.value)}
+                    placeholder="main"
+                    className="w-full px-3 py-2 bg-zinc-50 border border-zinc-200 rounded-xl text-xs"
+                  />
+                </div>
+                <div>
+                  <label className="block font-semibold text-zinc-700 mb-1">Commit SHA</label>
+                  <input
+                    type="text"
+                    value={commitSha}
+                    onChange={(e) => setCommitSha(e.target.value)}
+                    placeholder="e.g. 7f9a2b1"
+                    className="w-full px-3 py-2 bg-zinc-50 border border-zinc-200 rounded-xl text-xs font-mono"
+                  />
+                </div>
+              </div>
+
+              <div className="pt-3 flex justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => setIsCreateOpen(false)}
+                  className="px-4 py-2 text-xs font-semibold text-zinc-600 bg-zinc-100 hover:bg-zinc-200 rounded-xl transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={createReleaseMutation.isPending}
+                  className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-white bg-[#5850ec] hover:bg-[#4d44e7] rounded-xl transition-colors shadow-xs disabled:opacity-50"
+                >
+                  {createReleaseMutation.isPending ? (
+                    <>
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      <span>Creating & Triggering Tests...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Rocket className="w-3.5 h-3.5" />
+                      <span>Create & Run Tests</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

@@ -1,4 +1,4 @@
-﻿import { getAuthToken, performAutoLogout } from "@/lib/auth/session";
+import { getAuthToken, performAutoLogout } from "@/lib/auth/session";
 
 function getToken(): string {
   const token = getAuthToken();
@@ -32,6 +32,17 @@ async function handleResponse<T>(res: Response): Promise<T> {
 export type ReleaseEnvironment = "DEVELOPMENT" | "STAGING" | "PRODUCTION";
 export type ReleaseStatus = "PENDING" | "SUCCESS" | "FAILED" | "DRAFT";
 
+export interface TestRunSummary {
+  id: string;
+  type: "SECURITY" | "PERFORMANCE" | "UNIT" | "INTEGRATION" | "REGRESSION";
+  status: "PASSED" | "FAILED" | "RUNNING" | "PENDING" | "ERROR";
+  totalTests: number;
+  passedTests: number;
+  failedTests: number;
+  durationMs?: number;
+  completedAt?: string;
+}
+
 export interface Release {
   id: string;
   projectId: string;
@@ -43,6 +54,9 @@ export interface Release {
   environment: ReleaseEnvironment;
   status: ReleaseStatus;
   createdAt: string;
+  deploymentId?: string;
+  testVerdict?: "PASSED" | "FAILED" | "RUNNING" | "PENDING" | "NOT_RUN";
+  testRuns?: TestRunSummary[];
 }
 
 export interface CreateReleasePayload {

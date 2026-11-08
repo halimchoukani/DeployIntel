@@ -1,6 +1,7 @@
 package com.example.deployintel.gate.entity;
 
 import com.example.deployintel.deployment.entity.Deployment;
+import com.example.deployintel.project.entity.Project;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -25,6 +26,10 @@ public class TestRun {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "deployment_id")
     private Deployment deployment;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "project_id")
+    private Project project;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 50)

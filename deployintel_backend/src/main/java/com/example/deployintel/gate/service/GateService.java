@@ -10,10 +10,7 @@ import com.example.deployintel.environment.entity.TestEnvironment;
 import com.example.deployintel.environment.repository.TestEnvironmentRepository;
 import com.example.deployintel.environment.service.DockerService;
 import com.example.deployintel.environment.service.EnvironmentService;
-import com.example.deployintel.gate.dto.GateCheckResponse;
-import com.example.deployintel.gate.dto.K6CheckItem;
-import com.example.deployintel.gate.dto.K6CheckResponse;
-import com.example.deployintel.gate.dto.SemgrepFinding;
+import com.example.deployintel.gate.dto.*;
 import com.example.deployintel.project.entity.Project;
 import com.example.deployintel.project.repository.ProjectRepository;
 import com.example.deployintel.deployment.entity.Deployment;
@@ -53,6 +50,11 @@ public class GateService {
 
     @Transactional
     public GateCheckResponse runSemgrepCheck(UserPrincipal currentUser, UUID projectId) {
+        return runSemgrepCheck(currentUser, projectId, null);
+    }
+
+    @Transactional
+    public GateCheckResponse runSemgrepCheck(UserPrincipal currentUser, UUID projectId, Deployment targetDeployment) {
         Project project = getProjectAndValidateAccess(currentUser, projectId);
 
         if (!dockerService.isDockerAvailable()) {
@@ -118,7 +120,7 @@ public class GateService {
 
         GateCheckResponse response = parseSemgrepOutput(project, targetEnv, rawOutput, durationSeconds);
         try {
-            persistSemgrepResults(project, targetEnv, response, durationSeconds, rawOutput);
+            persistSemgrepResults(project, targetEnv, response, durationSeconds, rawOutput, targetDeployment);
         } catch (Exception e) {
             log.error("Failed to persist Semgrep test results to database: {}", e.getMessage(), e);
         }
@@ -127,6 +129,11 @@ public class GateService {
 
     @Transactional
     public K6CheckResponse runK6PerformanceCheck(UserPrincipal currentUser, UUID projectId) {
+        return runK6PerformanceCheck(currentUser, projectId, null);
+    }
+
+    @Transactional
+    public K6CheckResponse runK6PerformanceCheck(UserPrincipal currentUser, UUID projectId, Deployment targetDeployment) {
         Project project = getProjectAndValidateAccess(currentUser, projectId);
 
         if (!dockerService.isDockerAvailable()) {
@@ -228,7 +235,7 @@ public class GateService {
 
         K6CheckResponse response = parseK6Output(project, targetEnv, targetUrl, summaryJson, execRes.output(), durationSeconds);
         try {
-            persistK6Results(project, targetEnv, response, durationSeconds, execRes.output());
+            persistK6Results(project, targetEnv, response, durationSeconds, execRes.output(), targetDeployment);
         } catch (Exception e) {
             log.error("Failed to persist k6 test results to database: {}", e.getMessage(), e);
         }
@@ -636,8 +643,8 @@ public class GateService {
                 ));
     }
 
-    private void persistSemgrepResults(Project project, TestEnvironment targetEnv, GateCheckResponse response, double durationSeconds, String rawOutput) {
-        Deployment deployment = resolveDeployment(project);
+    private void persistSemgrepResults(Project project, TestEnvironment targetEnv, GateCheckResponse response, double durationSeconds, String rawOutput, Deployment targetDeployment) {
+        Deployment deployment = targetDeployment != null ? targetDeployment : resolveDeployment(project);
 
         TestRunStatus runStatus;
         if ("PASSED".equalsIgnoreCase(response.getVerdict())) {
@@ -655,6 +662,7 @@ public class GateService {
         OffsetDateTime now = response.getTimestamp() != null ? response.getTimestamp() : OffsetDateTime.now();
 
         TestRun testRun = TestRun.builder()
+                .project(project)
                 .deployment(deployment)
                 .type(TestRunType.SECURITY)
                 .status(runStatus)
@@ -749,8 +757,8 @@ public class GateService {
         riskAssessmentRepository.save(riskAssessment);
     }
 
-    private void persistK6Results(Project project, TestEnvironment targetEnv, K6CheckResponse response, double durationSeconds, String rawOutput) {
-        Deployment deployment = resolveDeployment(project);
+    private void persistK6Results(Project project, TestEnvironment targetEnv, K6CheckResponse response, double durationSeconds, String rawOutput, Deployment targetDeployment) {
+        Deployment deployment = targetDeployment != null ? targetDeployment : resolveDeployment(project);
 
         TestRunStatus runStatus;
         if ("PASSED".equalsIgnoreCase(response.getVerdict())) {
@@ -768,6 +776,7 @@ public class GateService {
         OffsetDateTime now = response.getTimestamp() != null ? response.getTimestamp() : OffsetDateTime.now();
 
         TestRun testRun = TestRun.builder()
+                .project(project)
                 .deployment(deployment)
                 .type(TestRunType.PERFORMANCE)
                 .status(runStatus)
@@ -872,5 +881,106 @@ public class GateService {
     private String truncate(String val, int max) {
         if (val == null) return null;
         return val.length() <= max ? val : val.substring(0, max);
+    }
+
+    @Transactional(readOnly = true)
+    public List<TestRunHistoryResponse> getTestHistoryForProject(UserPrincipal currentUser, UUID projectId) {
+        Project project = getProjectAndValidateAccess(currentUser, projectId);
+
+        List<TestRun> testRuns = testRunRepository.findByProjectIdOrderByStartedAtDesc(projectId);
+        if (testRuns.isEmpty()) {
+            List<Deployment> deployments = deploymentRepository.findByProjectIdOrderByCreatedAtDesc(projectId);
+            if (!deployments.isEmpty()) {
+                List<UUID> depIds = deployments.stream().map(Deployment::getId).toList();
+                testRuns = testRunRepository.findByDeploymentIdInOrderByStartedAtDesc(depIds);
+            }
+        }
+
+        if (testRuns.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        return testRuns.stream().map(tr -> {
+            Deployment dep = tr.getDeployment();
+            UUID depId = dep != null ? dep.getId() : null;
+            UUID relId = (dep != null && dep.getRelease() != null) ? dep.getRelease().getId() : null;
+            String relVersion = (dep != null && dep.getVersion() != null)
+                    ? dep.getVersion()
+                    : ((dep != null && dep.getRelease() != null) ? dep.getRelease().getVersionNumber() : "v1.0.0");
+            String env = (dep != null && dep.getEnvironment() != null) ? dep.getEnvironment() : "PRODUCTION";
+            String branch = (dep != null && dep.getBranch() != null)
+                    ? dep.getBranch()
+                    : (project.getDefaultBranch() != null ? project.getDefaultBranch() : "main");
+            String commitSha = (dep != null && dep.getCommitSha() != null) ? dep.getCommitSha() : "HEAD";
+
+            List<TestResult> results = testResultRepository.findByTestRunId(tr.getId());
+            List<TestResultSummaryDto> resultDtos = results.stream().map(r -> TestResultSummaryDto.builder()
+                    .id(r.getId())
+                    .testName(r.getTestName())
+                    .status(r.getStatus())
+                    .severity(r.getSeverity())
+                    .durationMs(r.getDurationMs())
+                    .errorMessage(r.getErrorMessage())
+                    .build()).toList();
+
+            List<SecurityFindingSummaryDto> findingDtos = Collections.emptyList();
+            if (tr.getType() == TestRunType.SECURITY && depId != null) {
+                List<SecurityFinding> findings = securityFindingRepository.findByDeploymentIdOrderByCreatedAtDesc(depId);
+                findingDtos = findings.stream().map(f -> SecurityFindingSummaryDto.builder()
+                        .id(f.getId())
+                        .tool(f.getTool())
+                        .category(f.getCategory())
+                        .title(f.getTitle())
+                        .description(f.getDescription())
+                        .severity(f.getSeverity())
+                        .filePath(f.getFilePath())
+                        .lineNumber(f.getLineNumber())
+                        .ruleId(f.getRuleId())
+                        .remediation(f.getRemediation())
+                        .status(f.getStatus())
+                        .createdAt(f.getCreatedAt())
+                        .build()).toList();
+            }
+
+            List<PerformanceMetricSummaryDto> metricDtos = Collections.emptyList();
+            if (tr.getType() == TestRunType.PERFORMANCE && depId != null) {
+                List<PerformanceMetric> metrics = performanceMetricRepository.findByDeploymentId(depId);
+                metricDtos = metrics.stream().map(m -> PerformanceMetricSummaryDto.builder()
+                        .id(m.getId())
+                        .metricName(m.getMetricName())
+                        .previousValue(m.getPreviousValue())
+                        .currentValue(m.getCurrentValue())
+                        .unit(m.getUnit())
+                        .changePercent(m.getChangePercent())
+                        .threshold(m.getThreshold())
+                        .status(m.getStatus())
+                        .build()).toList();
+            }
+
+            return TestRunHistoryResponse.builder()
+                    .id(tr.getId())
+                    .projectId(projectId)
+                    .deploymentId(depId)
+                    .releaseId(relId)
+                    .releaseVersion(relVersion)
+                    .environment(env)
+                    .branch(branch)
+                    .commitSha(commitSha)
+                    .type(tr.getType())
+                    .status(tr.getStatus())
+                    .totalTests(tr.getTotalTests())
+                    .passedTests(tr.getPassedTests())
+                    .failedTests(tr.getFailedTests())
+                    .skippedTests(tr.getSkippedTests())
+                    .durationMs(tr.getDurationMs())
+                    .startedAt(tr.getStartedAt())
+                    .completedAt(tr.getCompletedAt())
+                    .logs(tr.getLogs())
+                    .findingsCount(findingDtos.size())
+                    .findings(findingDtos)
+                    .metrics(metricDtos)
+                    .results(resultDtos)
+                    .build();
+        }).toList();
     }
 }

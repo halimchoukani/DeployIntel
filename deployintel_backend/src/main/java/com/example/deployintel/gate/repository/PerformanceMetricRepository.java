@@ -10,5 +10,6 @@ import java.util.UUID;
 @Repository
 public interface PerformanceMetricRepository extends JpaRepository<PerformanceMetric, UUID> {
     List<PerformanceMetric> findByDeploymentId(UUID deploymentId);
+    List<PerformanceMetric> findByDeploymentIdIn(List<UUID> deploymentIds);
 }
 

@@ -1,9 +1,12 @@
 import { useState, useCallback } from "react";
+import { useQuery } from "@tanstack/react-query";
 import {
   triggerSemgrepGateCheck,
   triggerK6PerformanceCheck,
+  getProjectTestHistory,
   GateCheckResponse,
   K6CheckResponse,
+  TestRunHistoryItem,
 } from "@/lib/api/gate";
 
 export function useGateCheck(projectId: string) {
@@ -77,3 +80,18 @@ export function useK6GateCheck(projectId: string) {
     reset,
   };
 }
+
+export function useTestHistory(projectId: string) {
+  return useQuery<TestRunHistoryItem[]>({
+    queryKey: ["test-history", projectId],
+    queryFn: () => getProjectTestHistory(projectId),
+    enabled: !!projectId,
+    refetchInterval: (query) => {
+      const runs = query.state.data;
+      const isRunning = runs?.some(r => r.status === "RUNNING" || r.status === "PENDING");
+      return isRunning ? 3000 : false;
+    },
+    staleTime: 10 * 1000,
+  });
+}
+

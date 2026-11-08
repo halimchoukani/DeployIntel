@@ -3,12 +3,14 @@ package com.example.deployintel.gate.controller;
 import com.example.deployintel.auth.security.UserPrincipal;
 import com.example.deployintel.gate.dto.GateCheckResponse;
 import com.example.deployintel.gate.dto.K6CheckResponse;
+import com.example.deployintel.gate.dto.TestRunHistoryResponse;
 import com.example.deployintel.gate.service.GateService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -17,6 +19,19 @@ import java.util.UUID;
 public class GateController {
 
     private final GateService gateService;
+
+    /**
+     * Retrieves test run history for the project, ordered by newest first.
+     */
+    @GetMapping("/history")
+    public ResponseEntity<List<TestRunHistoryResponse>> getTestHistory(
+            Authentication authentication,
+            @PathVariable UUID projectId
+    ) {
+        UserPrincipal principal = (UserPrincipal) authentication.getPrincipal();
+        List<TestRunHistoryResponse> history = gateService.getTestHistoryForProject(principal, projectId);
+        return ResponseEntity.ok(history);
+    }
 
     /**
      * Executes the Semgrep security SAST gate evaluation on the project source code.

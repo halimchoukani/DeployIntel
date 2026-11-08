@@ -12,6 +12,7 @@ import java.util.UUID;
 @Repository
 public interface SecurityFindingRepository extends JpaRepository<SecurityFinding, UUID> {
     List<SecurityFinding> findByDeploymentIdOrderByCreatedAtDesc(UUID deploymentId);
+    List<SecurityFinding> findByDeploymentIdIn(List<UUID> deploymentIds);
     List<SecurityFinding> findByDeploymentIdAndSeverity(UUID deploymentId, Severity severity);
     List<SecurityFinding> findByDeploymentIdAndStatus(UUID deploymentId, FindingStatus status);
 }

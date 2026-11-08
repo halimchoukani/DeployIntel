@@ -4,6 +4,9 @@ import com.example.deployintel.auth.security.UserPrincipal;
 import com.example.deployintel.common.exception.GlobalExceptionHandler;
 import com.example.deployintel.gate.dto.GateCheckResponse;
 import com.example.deployintel.gate.dto.K6CheckResponse;
+import com.example.deployintel.gate.dto.TestRunHistoryResponse;
+import com.example.deployintel.gate.entity.TestRunStatus;
+import com.example.deployintel.gate.entity.TestRunType;
 import com.example.deployintel.gate.service.GateService;
 import com.example.deployintel.user.entity.UserRole;
 import org.junit.jupiter.api.BeforeEach;
@@ -21,11 +24,13 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import java.time.OffsetDateTime;
 import java.util.Collections;
+import java.util.List;
 import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -117,5 +122,33 @@ class GateControllerTest {
                 .andExpect(jsonPath("$.passed").value(true))
                 .andExpect(jsonPath("$.totalRequests").value(100))
                 .andExpect(jsonPath("$.p95DurationMs").value(220.0));
+    }
+
+    @Test
+    @DisplayName("GET /api/v1/projects/{projectId}/gate/history - Success")
+    void testGetTestHistory() throws Exception {
+        TestRunHistoryResponse historyItem = TestRunHistoryResponse.builder()
+                .id(UUID.randomUUID())
+                .projectId(projectId)
+                .type(TestRunType.SECURITY)
+                .status(TestRunStatus.PASSED)
+                .totalTests(10)
+                .passedTests(10)
+                .failedTests(0)
+                .releaseVersion("v1.0.0")
+                .environment("PRODUCTION")
+                .startedAt(OffsetDateTime.now())
+                .build();
+
+        when(gateService.getTestHistoryForProject(any(UserPrincipal.class), eq(projectId)))
+                .thenReturn(List.of(historyItem));
+
+        mockMvc.perform(get("/api/v1/projects/{projectId}/gate/history", projectId)
+                        .principal(authentication)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].type").value("SECURITY"))
+                .andExpect(jsonPath("$[0].status").value("PASSED"))
+                .andExpect(jsonPath("$[0].releaseVersion").value("v1.0.0"));
     }
 }

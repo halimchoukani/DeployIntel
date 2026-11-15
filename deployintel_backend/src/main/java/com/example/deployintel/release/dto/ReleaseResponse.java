@@ -23,16 +23,51 @@ public record ReleaseResponse(
         OffsetDateTime createdAt,
         UUID deploymentId,
         String testVerdict,
+        Double compositeScore,
+        Double securityScore,
+        Double performanceScore,
+        Double testScore,
+        Double regressionScore,
+        String deploymentDecision,   // "PASS", "WARN", "BLOCK"
+        String decisionReason,
         List<TestRunSummaryDto> testRuns
 ) {
     public static ReleaseResponse fromEntity(Release release) {
-        return fromEntity(release, null, null, Collections.emptyList());
+        return fromEntity(release, null, null, null, null, null, null, null, null, null, Collections.emptyList());
     }
 
     public static ReleaseResponse fromEntity(
             Release release,
             UUID deploymentId,
             String testVerdict,
+            List<TestRunSummaryDto> testRuns
+    ) {
+        return fromEntity(release, deploymentId, testVerdict, null, null, null, null, null, null, null, testRuns);
+    }
+
+    public static ReleaseResponse fromEntity(
+            Release release,
+            UUID deploymentId,
+            String testVerdict,
+            Double compositeScore,
+            String deploymentDecision,
+            String decisionReason,
+            List<TestRunSummaryDto> testRuns
+    ) {
+        return fromEntity(release, deploymentId, testVerdict, compositeScore, null, null, null, null, deploymentDecision, decisionReason, testRuns);
+    }
+
+    public static ReleaseResponse fromEntity(
+            Release release,
+            UUID deploymentId,
+            String testVerdict,
+            Double compositeScore,
+            Double securityScore,
+            Double performanceScore,
+            Double testScore,
+            Double regressionScore,
+            String deploymentDecision,
+            String decisionReason,
             List<TestRunSummaryDto> testRuns
     ) {
         return new ReleaseResponse(
@@ -48,6 +83,13 @@ public record ReleaseResponse(
                 release.getCreatedAt(),
                 deploymentId,
                 testVerdict,
+                compositeScore,
+                securityScore,
+                performanceScore,
+                testScore,
+                regressionScore,
+                deploymentDecision,
+                decisionReason,
                 testRuns != null ? testRuns : Collections.emptyList()
         );
     }

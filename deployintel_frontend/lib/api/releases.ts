@@ -30,7 +30,7 @@ async function handleResponse<T>(res: Response): Promise<T> {
 // ─── Types ───────────────────────────────────────────────────────────────────
 
 export type ReleaseEnvironment = "DEVELOPMENT" | "STAGING" | "PRODUCTION";
-export type ReleaseStatus = "PENDING" | "SUCCESS" | "FAILED" | "DRAFT";
+export type ReleaseStatus = "PENDING" | "SUCCESS" | "FAILED" | "DRAFT" | "BLOCKED";
 
 export interface TestRunSummary {
   id: string;
@@ -56,6 +56,14 @@ export interface Release {
   createdAt: string;
   deploymentId?: string;
   testVerdict?: "PASSED" | "FAILED" | "RUNNING" | "PENDING" | "NOT_RUN";
+  // Composite risk score fields (populated after both gate checks complete)
+  compositeScore?: number;
+  securityScore?: number;
+  performanceScore?: number;
+  testScore?: number;
+  regressionScore?: number;
+  deploymentDecision?: "PASS" | "WARN" | "BLOCK";
+  decisionReason?: string;
   testRuns?: TestRunSummary[];
 }
 

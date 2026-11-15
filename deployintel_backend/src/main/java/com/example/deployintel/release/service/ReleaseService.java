@@ -17,6 +17,9 @@ import com.example.deployintel.release.entity.ReleaseStatus;
 import com.example.deployintel.release.repository.ReleaseRepository;
 import com.example.deployintel.user.entity.User;
 import com.example.deployintel.user.repository.UserRepository;
+import com.example.deployintel.gate.entity.RiskAssessment;
+import com.example.deployintel.gate.entity.RiskLevel;
+import com.example.deployintel.gate.repository.RiskAssessmentRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -38,6 +41,7 @@ public class ReleaseService {
     private final DeploymentRepository deploymentRepository;
     private final TestRunRepository testRunRepository;
     private final AutomatedReleaseTestService automatedReleaseTestService;
+    private final RiskAssessmentRepository riskAssessmentRepository;
 
     /**
      * Creates a new release record and automatically triggers background gate tests.
@@ -132,9 +136,20 @@ public class ReleaseService {
             }
         }
 
+        List<RiskAssessment> allAssessments = depIds.isEmpty() ? Collections.emptyList()
+                : riskAssessmentRepository.findByDeploymentIdInOrderByCalculatedAtDesc(depIds);
+        Map<UUID, RiskAssessment> assessmentByDep = new HashMap<>();
+        for (RiskAssessment ra : allAssessments) {
+            if (ra.getDeployment() != null) {
+                // keep the latest calculation
+                assessmentByDep.putIfAbsent(ra.getDeployment().getId(), ra);
+            }
+        }
+
         return releases.stream().map(r -> {
             Deployment dep = depByRelease.get(r.getId());
             List<TestRun> runs = dep != null ? testRunsByDep.getOrDefault(dep.getId(), Collections.emptyList()) : Collections.emptyList();
+            RiskAssessment assessment = dep != null ? assessmentByDep.get(dep.getId()) : null;
 
             String testVerdict = computeTestVerdict(r.getStatus(), runs);
             List<TestRunSummaryDto> summaries = runs.stream().map(tr -> TestRunSummaryDto.builder()
@@ -148,7 +163,21 @@ public class ReleaseService {
                     .completedAt(tr.getCompletedAt())
                     .build()).toList();
 
-            return ReleaseResponse.fromEntity(r, dep != null ? dep.getId() : null, testVerdict, summaries);
+            AssessmentDetails ad = extractAssessmentDetails(r, dep, assessment);
+
+            return ReleaseResponse.fromEntity(
+                    r,
+                    dep != null ? dep.getId() : null,
+                    testVerdict,
+                    ad.compositeScore(),
+                    ad.securityScore(),
+                    ad.performanceScore(),
+                    ad.testScore(),
+                    ad.regressionScore(),
+                    ad.decision(),
+                    ad.reason(),
+                    summaries
+            );
         }).toList();
     }
 
@@ -162,6 +191,9 @@ public class ReleaseService {
             List<TestRun> runs = dep != null
                     ? testRunRepository.findByDeploymentIdOrderByStartedAtDesc(dep.getId())
                     : Collections.emptyList();
+            RiskAssessment assessment = dep != null
+                    ? riskAssessmentRepository.findFirstByDeploymentIdOrderByCalculatedAtDesc(dep.getId()).orElse(null)
+                    : null;
 
             String testVerdict = computeTestVerdict(r.getStatus(), runs);
             List<TestRunSummaryDto> summaries = runs.stream().map(tr -> TestRunSummaryDto.builder()
@@ -175,8 +207,70 @@ public class ReleaseService {
                     .completedAt(tr.getCompletedAt())
                     .build()).toList();
 
-            return ReleaseResponse.fromEntity(r, dep != null ? dep.getId() : null, testVerdict, summaries);
+            AssessmentDetails ad = extractAssessmentDetails(r, dep, assessment);
+
+            return ReleaseResponse.fromEntity(
+                    r,
+                    dep != null ? dep.getId() : null,
+                    testVerdict,
+                    ad.compositeScore(),
+                    ad.securityScore(),
+                    ad.performanceScore(),
+                    ad.testScore(),
+                    ad.regressionScore(),
+                    ad.decision(),
+                    ad.reason(),
+                    summaries
+            );
         });
+    }
+
+    private record AssessmentDetails(
+            Double compositeScore,
+            Double securityScore,
+            Double performanceScore,
+            Double testScore,
+            Double regressionScore,
+            String decision,
+            String reason
+    ) {}
+
+    private AssessmentDetails extractAssessmentDetails(Release release, Deployment dep, RiskAssessment ra) {
+        if (ra == null) {
+            if (release.getStatus() == ReleaseStatus.BLOCKED || (dep != null && "BLOCKED".equalsIgnoreCase(dep.getStatus()))) {
+                return new AssessmentDetails(null, null, null, null, null, "BLOCK", "Deployment blocked by automated gate checks.");
+            }
+            return new AssessmentDetails(null, null, null, null, null, null, null);
+        }
+
+        Double composite = ra.getFinalScore() != null ? ra.getFinalScore().doubleValue() : null;
+        Double security = ra.getSecurityScore() != null ? ra.getSecurityScore().doubleValue() : null;
+        Double perf = ra.getPerformanceScore() != null ? ra.getPerformanceScore().doubleValue() : null;
+        Double test = ra.getTestScore() != null ? ra.getTestScore().doubleValue() : null;
+        Double reg = ra.getRegressionScore() != null ? ra.getRegressionScore().doubleValue() : null;
+
+        String decision;
+        String reason;
+
+        if (release.getStatus() == ReleaseStatus.BLOCKED || (dep != null && "BLOCKED".equalsIgnoreCase(dep.getStatus()))
+                || ra.getRiskLevel() == RiskLevel.CRITICAL || (composite != null && composite < 60.0)) {
+            decision = "BLOCK";
+            reason = composite != null && composite < 60.0
+                    ? String.format("Composite risk score %.1f is below the minimum threshold of 60.", composite)
+                    : "Hard block: Critical security finding or gate failure detected.";
+        } else if ((composite != null && composite < 80.0) || ra.getRiskLevel() == RiskLevel.HIGH) {
+            decision = "WARN";
+            reason = composite != null
+                    ? String.format("Composite score %.1f is acceptable but below optimal (80). Deploy with caution.", composite)
+                    : "High risk level detected. Deploy with caution.";
+        } else {
+            decision = "PASS";
+            reason = composite != null
+                    ? String.format("Composite risk score %.1f meets all quality gates. Deployment approved.", composite)
+                    : "Deployment approved.";
+        }
+
+        return new AssessmentDetails(composite, security, perf, test, reg, decision, reason);
     }
 
     private String computeTestVerdict(ReleaseStatus releaseStatus, List<TestRun> runs) {

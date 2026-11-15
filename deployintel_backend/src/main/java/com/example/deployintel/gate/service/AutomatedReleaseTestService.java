@@ -3,6 +3,7 @@ package com.example.deployintel.gate.service;
 import com.example.deployintel.auth.security.UserPrincipal;
 import com.example.deployintel.deployment.entity.Deployment;
 import com.example.deployintel.deployment.repository.DeploymentRepository;
+import com.example.deployintel.gate.dto.DeploymentVerdict;
 import com.example.deployintel.gate.dto.GateCheckResponse;
 import com.example.deployintel.gate.dto.K6CheckResponse;
 import com.example.deployintel.project.entity.Project;
@@ -27,10 +28,14 @@ public class AutomatedReleaseTestService {
     private final ReleaseRepository releaseRepository;
     private final DeploymentRepository deploymentRepository;
     private final GateService gateService;
+    private final CompositeRiskScoreService compositeRiskScoreService;
 
     /**
      * Executes gate checks (Semgrep SAST and k6 load tests) automatically in the background
      * whenever a new release is created.
+     * <p>
+     * After both tests complete, {@link CompositeRiskScoreService} computes a weighted
+     * composite score and makes a single PASS / WARN / BLOCK deployment decision.
      */
     @Async
     public void runAutomatedTestsForRelease(UUID releaseId) {
@@ -84,42 +89,64 @@ public class AutomatedReleaseTestService {
             principal = new UserPrincipal(UUID.randomUUID(), "system@deployintel.io", UserRole.ADMIN);
         }
 
-        boolean securityPassed = false;
-        boolean k6Passed = false;
+        // ── Run gate checks, capture both results ──────────────────────────────
+        GateCheckResponse semgrepResult = null;
+        K6CheckResponse   k6Result      = null;
 
         try {
-            log.info("Executing automated Semgrep scan for release {} (project {})...", release.getVersionNumber(), project.getName());
-            GateCheckResponse semgrepRes = gateService.runSemgrepCheck(principal, project.getId(), deployment);
-            securityPassed = semgrepRes.isPassed() || "PASSED".equalsIgnoreCase(semgrepRes.getVerdict());
-            log.info("Semgrep scan finished for release {}: verdict={}, passed={}",
-                    release.getVersionNumber(), semgrepRes.getVerdict(), securityPassed);
+            log.info("Executing automated Semgrep scan for release {} (project {})...",
+                    release.getVersionNumber(), project.getName());
+            semgrepResult = gateService.runSemgrepCheck(principal, project.getId(), deployment);
+            log.info("Semgrep scan finished for release {}: verdict={}",
+                    release.getVersionNumber(), semgrepResult.getVerdict());
         } catch (Exception e) {
             log.error("Automated Semgrep test failed for release {}: {}", releaseId, e.getMessage(), e);
         }
 
         try {
-            log.info("Executing automated k6 performance test for release {} (project {})...", release.getVersionNumber(), project.getName());
-            K6CheckResponse k6Res = gateService.runK6PerformanceCheck(principal, project.getId(), deployment);
-            k6Passed = k6Res.isPassed() || "PASSED".equalsIgnoreCase(k6Res.getVerdict());
-            log.info("k6 performance test finished for release {}: verdict={}, passed={}",
-                    release.getVersionNumber(), k6Res.getVerdict(), k6Passed);
+            log.info("Executing automated k6 performance test for release {} (project {})...",
+                    release.getVersionNumber(), project.getName());
+            k6Result = gateService.runK6PerformanceCheck(principal, project.getId(), deployment);
+            log.info("k6 performance test finished for release {}: verdict={}",
+                    release.getVersionNumber(), k6Result.getVerdict());
         } catch (Exception e) {
             log.error("Automated k6 test failed for release {}: {}", releaseId, e.getMessage(), e);
         }
 
-        // Update Release and Deployment status based on gate verdict
-        if (securityPassed && k6Passed) {
-            release.setStatus(ReleaseStatus.SUCCESS);
-            deployment.setStatus("COMPLETED");
-            log.info("All automated gate checks PASSED for release {}", release.getVersionNumber());
-        } else {
-            release.setStatus(ReleaseStatus.FAILED);
-            deployment.setStatus("FAILED");
-            log.warn("Automated gate checks FAILED/BLOCKED for release {}: securityPassed={}, k6Passed={}",
-                    release.getVersionNumber(), securityPassed, k6Passed);
+        // ── Composite scoring → single PASS / WARN / BLOCK decision ───────────
+        // CompositeRiskScoreService also persists the RiskAssessment and updates deployment.status
+        try {
+            com.example.deployintel.gate.dto.DeploymentVerdict verdict =
+                    compositeRiskScoreService.computeAndPersist(project, deployment, semgrepResult, k6Result);
+
+            log.info("Composite risk assessment for release {}: score={:.1f}, verdict={}, reason={}",
+                    release.getVersionNumber(), verdict.compositeScore(), verdict.verdict(), verdict.reason());
+
+            if (verdict.isBlocked()) {
+                release.setStatus(ReleaseStatus.BLOCKED);
+                log.warn("Deployment BLOCKED for release {} — {}", release.getVersionNumber(), verdict.reason());
+            } else {
+                release.setStatus(ReleaseStatus.SUCCESS);
+                log.info("Deployment PASSED for release {} — {}", release.getVersionNumber(), verdict.reason());
+            }
+        } catch (Exception e) {
+            log.error("Composite risk scoring failed for release {}: {}", releaseId, e.getMessage(), e);
+            // Fall back to simple boolean logic if composite scoring itself errors
+            boolean semgrepOk = semgrepResult != null &&
+                    ("PASSED".equalsIgnoreCase(semgrepResult.getVerdict()) || semgrepResult.isPassed());
+            boolean k6Ok = k6Result != null &&
+                    ("PASSED".equalsIgnoreCase(k6Result.getVerdict()) || k6Result.isPassed());
+            if (semgrepOk && k6Ok) {
+                release.setStatus(ReleaseStatus.SUCCESS);
+                deployment.setStatus("PASSED");
+            } else {
+                release.setStatus(ReleaseStatus.FAILED);
+                deployment.setStatus("FAILED");
+            }
+            deploymentRepository.save(deployment);
         }
+
         releaseRepository.save(release);
-        deploymentRepository.save(deployment);
     }
 }
 

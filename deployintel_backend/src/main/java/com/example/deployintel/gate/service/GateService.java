@@ -725,36 +725,9 @@ public class GateService {
             testResultRepository.save(testResult);
         }
 
-        double secScoreVal = Math.max(0.0, 100.0 - (response.getErrorCount() * 25.0 + response.getWarningCount() * 10.0 + response.getInfoCount() * 2.0));
-        BigDecimal securityScore = BigDecimal.valueOf(Math.min(100.0, secScoreVal)).setScale(2, RoundingMode.HALF_UP);
-        BigDecimal testScore = BigDecimal.valueOf(100.00).setScale(2, RoundingMode.HALF_UP);
-        BigDecimal perfScore = BigDecimal.valueOf(100.00).setScale(2, RoundingMode.HALF_UP);
-        BigDecimal regScore = BigDecimal.valueOf(100.00).setScale(2, RoundingMode.HALF_UP);
-        BigDecimal finalScore = securityScore;
-
-        RiskLevel riskLevel;
-        if (finalScore.doubleValue() >= 80.0) {
-            riskLevel = RiskLevel.LOW;
-        } else if (finalScore.doubleValue() >= 60.0) {
-            riskLevel = RiskLevel.MEDIUM;
-        } else if (finalScore.doubleValue() >= 40.0) {
-            riskLevel = RiskLevel.HIGH;
-        } else {
-            riskLevel = RiskLevel.CRITICAL;
-        }
-
-        RiskAssessment riskAssessment = RiskAssessment.builder()
-                .deployment(deployment)
-                .securityScore(securityScore)
-                .testScore(testScore)
-                .performanceScore(perfScore)
-                .regressionScore(regScore)
-                .finalScore(finalScore)
-                .riskLevel(riskLevel)
-                .ruleVersion("v1.0")
-                .calculatedAt(now)
-                .build();
-        riskAssessmentRepository.save(riskAssessment);
+        // NOTE: RiskAssessment is now computed as a composite score by CompositeRiskScoreService
+        // after BOTH Semgrep and k6 tests have run. No standalone assessment is saved here.
+        log.debug("Semgrep persist complete for deployment {}. Composite scoring deferred to CompositeRiskScoreService.", deployment.getId());
     }
 
     private void persistK6Results(Project project, TestEnvironment targetEnv, K6CheckResponse response, double durationSeconds, String rawOutput, Deployment targetDeployment) {
@@ -836,36 +809,9 @@ public class GateService {
                 .build();
         performanceMetricRepository.save(rpsMetric);
 
-        double perfScoreVal = Math.max(0.0, 100.0 - (response.getFailedRequestRate() * 100.0 * 5.0) - (response.getP95DurationMs() > 800.0 ? 30.0 : 0.0) - (response.getChecksFailed() * 15.0));
-        BigDecimal perfScore = BigDecimal.valueOf(Math.min(100.0, perfScoreVal)).setScale(2, RoundingMode.HALF_UP);
-        BigDecimal securityScore = BigDecimal.valueOf(100.00).setScale(2, RoundingMode.HALF_UP);
-        BigDecimal testScore = BigDecimal.valueOf(response.getCheckSuccessRate()).setScale(2, RoundingMode.HALF_UP);
-        BigDecimal regScore = BigDecimal.valueOf(100.00).setScale(2, RoundingMode.HALF_UP);
-        BigDecimal finalScore = perfScore;
-
-        RiskLevel riskLevel;
-        if (finalScore.doubleValue() >= 80.0) {
-            riskLevel = RiskLevel.LOW;
-        } else if (finalScore.doubleValue() >= 60.0) {
-            riskLevel = RiskLevel.MEDIUM;
-        } else if (finalScore.doubleValue() >= 40.0) {
-            riskLevel = RiskLevel.HIGH;
-        } else {
-            riskLevel = RiskLevel.CRITICAL;
-        }
-
-        RiskAssessment riskAssessment = RiskAssessment.builder()
-                .deployment(deployment)
-                .securityScore(securityScore)
-                .testScore(testScore)
-                .performanceScore(perfScore)
-                .regressionScore(regScore)
-                .finalScore(finalScore)
-                .riskLevel(riskLevel)
-                .ruleVersion("v1.0")
-                .calculatedAt(now)
-                .build();
-        riskAssessmentRepository.save(riskAssessment);
+        // NOTE: RiskAssessment is now computed as a composite score by CompositeRiskScoreService
+        // after BOTH Semgrep and k6 tests have run. No standalone assessment is saved here.
+        log.debug("k6 persist complete for deployment {}. Composite scoring deferred to CompositeRiskScoreService.", deployment.getId());
     }
 
     private Severity mapSeverity(String severity) {

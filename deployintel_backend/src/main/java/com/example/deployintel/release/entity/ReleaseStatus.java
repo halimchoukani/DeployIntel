@@ -4,5 +4,6 @@ public enum ReleaseStatus {
     PENDING,
     SUCCESS,
     FAILED,
+    BLOCKED,
     DRAFT
 }

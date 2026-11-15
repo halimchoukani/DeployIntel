@@ -23,12 +23,20 @@ import {
   CheckCircle2,
   XCircle,
   History,
+  AlertTriangle,
+  TrendingUp,
+  TrendingDown,
+  Minus,
+  Info,
+  Ban,
 } from "lucide-react";
 
 interface ReleasesTabProps {
   project: Project;
   onNavigateToTestHistory?: () => void;
 }
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
 
 function envBadge(env: ReleaseEnvironment) {
   const map: Record<ReleaseEnvironment, string> = {
@@ -45,6 +53,8 @@ function statusIcon(status: ReleaseStatus) {
       return <PackageCheck className="w-4 h-4 text-emerald-500" />;
     case "FAILED":
       return <PackageX className="w-4 h-4 text-rose-500" />;
+    case "BLOCKED":
+      return <Ban className="w-4 h-4 text-red-600" />;
     case "DRAFT":
       return <Package className="w-4 h-4 text-zinc-400" />;
     default:
@@ -55,8 +65,9 @@ function statusIcon(status: ReleaseStatus) {
 function statusLabel(status: ReleaseStatus) {
   const map: Record<ReleaseStatus, { label: string; cls: string }> = {
     SUCCESS: { label: "Success", cls: "text-emerald-600 bg-emerald-50 border-emerald-200" },
-    FAILED: { label: "Failed", cls: "text-rose-600 bg-rose-50 border-rose-200" },
-    DRAFT: { label: "Draft", cls: "text-zinc-500 bg-zinc-50 border-zinc-200" },
+    FAILED:  { label: "Failed",  cls: "text-rose-600 bg-rose-50 border-rose-200" },
+    BLOCKED: { label: "Blocked", cls: "text-red-700 bg-red-50 border-red-300" },
+    DRAFT:   { label: "Draft",   cls: "text-zinc-500 bg-zinc-50 border-zinc-200" },
     PENDING: { label: "Pending", cls: "text-amber-600 bg-amber-50 border-amber-200" },
   };
   const s = map[status] ?? { label: status, cls: "text-zinc-500 bg-zinc-50 border-zinc-200" };
@@ -101,6 +112,107 @@ function testVerdictBadge(verdict?: string) {
   }
 }
 
+/** Deployment decision badge: PASS / WARN / BLOCK */
+function decisionBadge(decision?: string) {
+  switch (decision) {
+    case "PASS":
+      return (
+        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+          <CheckCircle2 className="w-3.5 h-3.5" />
+          PASS
+        </span>
+      );
+    case "WARN":
+      return (
+        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-50 text-amber-700 border border-amber-200">
+          <AlertTriangle className="w-3.5 h-3.5" />
+          WARN
+        </span>
+      );
+    case "BLOCK":
+      return (
+        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-red-50 text-red-700 border border-red-300">
+          <Ban className="w-3.5 h-3.5" />
+          BLOCK
+        </span>
+      );
+    default:
+      return null;
+  }
+}
+
+/** Circular score gauge (SVG) */
+function ScoreGauge({ score, decision }: { score: number; decision?: string }) {
+  const radius = 28;
+  const circumference = 2 * Math.PI * radius;
+  const pct = Math.min(100, Math.max(0, score));
+  const offset = circumference - (pct / 100) * circumference;
+
+  const color =
+    decision === "BLOCK"
+      ? "#ef4444"
+      : decision === "WARN"
+      ? "#f59e0b"
+      : "#10b981";
+
+  const textColor =
+    decision === "BLOCK"
+      ? "text-red-600"
+      : decision === "WARN"
+      ? "text-amber-600"
+      : "text-emerald-600";
+
+  return (
+    <div className="relative flex items-center justify-center w-20 h-20">
+      <svg className="w-20 h-20 -rotate-90" viewBox="0 0 72 72">
+        {/* Track */}
+        <circle cx="36" cy="36" r={radius} fill="none" stroke="#e4e4e7" strokeWidth="6" />
+        {/* Arc */}
+        <circle
+          cx="36"
+          cy="36"
+          r={radius}
+          fill="none"
+          stroke={color}
+          strokeWidth="6"
+          strokeLinecap="round"
+          strokeDasharray={circumference}
+          strokeDashoffset={offset}
+          style={{ transition: "stroke-dashoffset 0.6s ease" }}
+        />
+      </svg>
+      <span className={`absolute text-sm font-black ${textColor}`}>
+        {Math.round(pct)}
+      </span>
+    </div>
+  );
+}
+
+/** Horizontal sub-score bar */
+function ScoreBar({ label, value, icon }: { label: string; value: number; icon: React.ReactNode }) {
+  const pct = Math.min(100, Math.max(0, value));
+  const barColor =
+    pct >= 80 ? "bg-emerald-500" : pct >= 60 ? "bg-amber-400" : "bg-red-500";
+
+  return (
+    <div className="space-y-1">
+      <div className="flex items-center justify-between text-[11px]">
+        <span className="flex items-center gap-1 text-zinc-500 font-medium">
+          {icon}
+          {label}
+        </span>
+        <span className="font-bold text-zinc-700">{Math.round(pct)}</span>
+      </div>
+      <div className="h-1.5 bg-zinc-100 rounded-full overflow-hidden">
+        <div
+          className={`h-full rounded-full ${barColor} transition-all duration-500`}
+          style={{ width: `${pct}%` }}
+        />
+      </div>
+    </div>
+  );
+}
+
 function timeAgo(iso: string) {
   const diff = Date.now() - new Date(iso).getTime();
   const mins = Math.floor(diff / 60000);
@@ -116,6 +228,8 @@ function shortSha(sha: string) {
   return sha.startsWith("refs/") ? sha : sha.slice(0, 7);
 }
 
+// ── Component ─────────────────────────────────────────────────────────────────
+
 export function ReleasesTab({ project, onNavigateToTestHistory }: ReleasesTabProps) {
   const { data: releases = [], isLoading, error, refetch } = useReleases(project.id);
   const createReleaseMutation = useCreateRelease();
@@ -123,7 +237,6 @@ export function ReleasesTab({ project, onNavigateToTestHistory }: ReleasesTabPro
   const [selected, setSelected] = useState<Release | null>(null);
   const [envFilter, setEnvFilter] = useState<ReleaseEnvironment | "ALL">("ALL");
 
-  // Create Release Modal State
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [versionNumber, setVersionNumber] = useState("");
   const [environment, setEnvironment] = useState<ReleaseEnvironment>("PRODUCTION");
@@ -137,7 +250,6 @@ export function ReleasesTab({ project, onNavigateToTestHistory }: ReleasesTabPro
   );
 
   const handleOpenCreate = () => {
-    // Generate an automatic next version if releases exist, e.g. v1.0.1
     const nextVer = releases.length > 0 ? `v1.${releases.length}.0` : "v1.0.0";
     setVersionNumber(nextVer);
     setBranch(project.defaultBranch || "main");
@@ -149,10 +261,7 @@ export function ReleasesTab({ project, onNavigateToTestHistory }: ReleasesTabPro
 
   const handleCreateRelease = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!versionNumber.trim()) {
-      setCreateError("Version number is required");
-      return;
-    }
+    if (!versionNumber.trim()) { setCreateError("Version number is required"); return; }
     setCreateError(null);
     try {
       await createReleaseMutation.mutateAsync({
@@ -180,24 +289,19 @@ export function ReleasesTab({ project, onNavigateToTestHistory }: ReleasesTabPro
     );
   }
 
-  // ── Error ─────────────────────────────────────────────────────────────────
   if (error) {
     return (
       <div className="flex flex-col items-center justify-center py-24 gap-3 text-center">
         <AlertCircle className="w-8 h-8 text-rose-400" />
         <p className="text-sm font-semibold text-zinc-700">Could not load releases</p>
         <p className="text-xs text-zinc-400 max-w-xs">{(error as Error).message}</p>
-        <button
-          onClick={() => refetch()}
-          className="mt-2 text-xs font-semibold text-[#5850ec] hover:underline"
-        >
+        <button onClick={() => refetch()} className="mt-2 text-xs font-semibold text-[#5850ec] hover:underline">
           Retry
         </button>
       </div>
     );
   }
 
-  // ── Empty ─────────────────────────────────────────────────────────────────
   if (releases.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-24 gap-4 text-center">
@@ -207,7 +311,7 @@ export function ReleasesTab({ project, onNavigateToTestHistory }: ReleasesTabPro
         <div>
           <p className="text-sm font-bold text-zinc-800">No releases yet</p>
           <p className="text-xs text-zinc-400 mt-1 max-w-sm">
-            Releases trigger automatic security (Semgrep) and performance (k6) gate checks upon creation.
+            Releases trigger automatic security (Semgrep) and performance (k6) gate checks. A composite risk score determines PASS or BLOCK.
           </p>
         </div>
         <button
@@ -224,17 +328,16 @@ export function ReleasesTab({ project, onNavigateToTestHistory }: ReleasesTabPro
   // ── Table ─────────────────────────────────────────────────────────────────
   return (
     <div className="space-y-5">
-      {/* Header row */}
+      {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
           <h3 className="text-sm font-bold text-zinc-900">Release History & Gate Evaluations</h3>
           <p className="text-xs text-zinc-400 mt-0.5">
-            {releases.length} release{releases.length !== 1 ? "s" : ""} recorded • Automated tests execute on every release
+            {releases.length} release{releases.length !== 1 ? "s" : ""} recorded • Composite risk score drives PASS / BLOCK decisions
           </p>
         </div>
 
         <div className="flex items-center gap-3">
-          {/* Environment filter */}
           <div className="flex items-center gap-1.5">
             {(["ALL", "PRODUCTION", "STAGING", "DEVELOPMENT"] as const).map((env) => (
               <button
@@ -250,8 +353,6 @@ export function ReleasesTab({ project, onNavigateToTestHistory }: ReleasesTabPro
               </button>
             ))}
           </div>
-
-          {/* New Release Button */}
           <button
             onClick={handleOpenCreate}
             className="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold rounded-xl bg-[#5850ec] hover:bg-[#4d44e7] text-white shadow-xs transition-colors"
@@ -269,7 +370,8 @@ export function ReleasesTab({ project, onNavigateToTestHistory }: ReleasesTabPro
             <tr className="border-b border-zinc-100 bg-zinc-50/60 text-[11px] font-semibold text-zinc-400 uppercase tracking-wide">
               <th className="py-3 px-5 text-left">Version</th>
               <th className="py-3 px-4 text-left">Environment</th>
-              <th className="py-3 px-4 text-left">Automated Gate Check</th>
+              <th className="py-3 px-4 text-left">Risk Score</th>
+              <th className="py-3 px-4 text-left">Decision</th>
               <th className="py-3 px-4 text-left">Status</th>
               <th className="py-3 px-4 text-left">Commit</th>
               <th className="py-3 px-4 text-left">Branch / Tag</th>
@@ -280,7 +382,7 @@ export function ReleasesTab({ project, onNavigateToTestHistory }: ReleasesTabPro
           <tbody className="divide-y divide-zinc-100">
             {filtered.length === 0 ? (
               <tr>
-                <td colSpan={8} className="py-12 text-center text-zinc-400 text-xs">
+                <td colSpan={9} className="py-12 text-center text-zinc-400 text-xs">
                   No releases matching the selected environment.
                 </td>
               </tr>
@@ -308,28 +410,45 @@ export function ReleasesTab({ project, onNavigateToTestHistory }: ReleasesTabPro
                     </span>
                   </td>
 
-                  {/* Automated Gate Check State */}
+                  {/* Risk Score */}
                   <td className="py-4 px-4 whitespace-nowrap">
-                    <div className="flex items-center gap-2">
-                      {testVerdictBadge(release.testVerdict)}
-                      {release.testRuns && release.testRuns.length > 0 && (
-                        <div className="hidden sm:flex items-center gap-1 text-[11px] text-zinc-500">
-                          {release.testRuns.map((tr) => (
-                            <span
-                              key={tr.id}
-                              className={`w-2 h-2 rounded-full ${
-                                tr.status === "PASSED"
-                                  ? "bg-emerald-500"
-                                  : tr.status === "FAILED"
-                                  ? "bg-rose-500"
-                                  : "bg-amber-500 animate-pulse"
-                              }`}
-                              title={`${tr.type}: ${tr.status}`}
-                            />
-                          ))}
-                        </div>
-                      )}
-                    </div>
+                    {release.compositeScore != null ? (
+                      <div className="flex items-center gap-1.5">
+                        {/* Mini score pill */}
+                        <span
+                          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-black border ${
+                            release.deploymentDecision === "BLOCK"
+                              ? "bg-red-50 text-red-700 border-red-200"
+                              : release.deploymentDecision === "WARN"
+                              ? "bg-amber-50 text-amber-700 border-amber-200"
+                              : "bg-emerald-50 text-emerald-700 border-emerald-200"
+                          }`}
+                        >
+                          {Math.round(release.compositeScore)}
+                        </span>
+                        {/* Trend icon */}
+                        {release.compositeScore >= 80 ? (
+                          <TrendingUp className="w-3 h-3 text-emerald-500" />
+                        ) : release.compositeScore >= 60 ? (
+                          <Minus className="w-3 h-3 text-amber-500" />
+                        ) : (
+                          <TrendingDown className="w-3 h-3 text-red-500" />
+                        )}
+                      </div>
+                    ) : (
+                      <span className="text-zinc-300 text-[11px]">
+                        {release.status === "PENDING" ? (
+                          <Loader2 className="w-3.5 h-3.5 text-amber-400 animate-spin inline" />
+                        ) : "—"}
+                      </span>
+                    )}
+                  </td>
+
+                  {/* Decision */}
+                  <td className="py-4 px-4 whitespace-nowrap">
+                    {release.deploymentDecision
+                      ? decisionBadge(release.deploymentDecision)
+                      : testVerdictBadge(release.testVerdict)}
                   </td>
 
                   {/* Status */}
@@ -388,11 +507,12 @@ export function ReleasesTab({ project, onNavigateToTestHistory }: ReleasesTabPro
         </table>
       </div>
 
-      {/* Detail modal */}
+      {/* ── Detail modal ──────────────────────────────────────────────────────── */}
       {selected && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-zinc-900/40 backdrop-blur-sm animate-in fade-in duration-150">
-          <div className="bg-white rounded-2xl border border-zinc-200 shadow-2xl max-w-lg w-full p-6 space-y-5">
-            {/* Header */}
+          <div className="bg-white rounded-2xl border border-zinc-200 shadow-2xl max-w-xl w-full p-6 space-y-5 max-h-[90vh] overflow-y-auto">
+
+            {/* Modal header */}
             <div className="flex items-start justify-between border-b border-zinc-100 pb-4">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-xl bg-indigo-50 flex items-center justify-center">
@@ -411,7 +531,87 @@ export function ReleasesTab({ project, onNavigateToTestHistory }: ReleasesTabPro
               </button>
             </div>
 
-            {/* Grid of details */}
+            {/* ── Composite Risk Score Panel ───────────────────────────────────── */}
+            {selected.compositeScore != null ? (
+              <div className={`rounded-2xl border p-4 ${
+                selected.deploymentDecision === "BLOCK"
+                  ? "bg-red-50 border-red-200"
+                  : selected.deploymentDecision === "WARN"
+                  ? "bg-amber-50 border-amber-200"
+                  : "bg-emerald-50 border-emerald-200"
+              }`}>
+                <div className="flex items-center gap-4">
+                  {/* Gauge */}
+                  <ScoreGauge
+                    score={selected.compositeScore}
+                    decision={selected.deploymentDecision}
+                  />
+
+                  {/* Score summary */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="text-xs font-bold text-zinc-700">Composite Risk Score</span>
+                      {decisionBadge(selected.deploymentDecision)}
+                    </div>
+                    <p className="text-[11px] text-zinc-500 leading-relaxed line-clamp-2">
+                      {selected.decisionReason ?? "Risk assessment completed."}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Weight breakdown bars */}
+                <div className="mt-4 grid grid-cols-2 gap-x-6 gap-y-3">
+                  <ScoreBar
+                    label="Security (40%)"
+                    value={selected.securityScore ?? selected.compositeScore ?? 0}
+                    icon={<Shield className="w-3 h-3 text-purple-500" />}
+                  />
+                  <ScoreBar
+                    label="Performance (35%)"
+                    value={selected.performanceScore ?? selected.compositeScore ?? 0}
+                    icon={<Zap className="w-3 h-3 text-amber-500" />}
+                  />
+                  <ScoreBar
+                    label="Test Checks (15%)"
+                    value={selected.testScore ?? selected.compositeScore ?? 0}
+                    icon={<CheckCircle2 className="w-3 h-3 text-sky-500" />}
+                  />
+                  <ScoreBar
+                    label="Regression (10%)"
+                    value={selected.regressionScore ?? 100}
+                    icon={<TrendingUp className="w-3 h-3 text-emerald-500" />}
+                  />
+                </div>
+
+                {/* Formula note */}
+                <p className="mt-3 text-[10px] text-zinc-400 font-mono">
+                  composite = sec×0.40 + perf×0.35 + tests×0.15 + reg×0.10
+                </p>
+              </div>
+            ) : (
+              /* No score yet — show pending state */
+              <div className="rounded-2xl border border-zinc-100 bg-zinc-50 p-4 flex items-center gap-3">
+                {selected.status === "PENDING" ? (
+                  <>
+                    <Loader2 className="w-5 h-5 text-amber-500 animate-spin shrink-0" />
+                    <div>
+                      <p className="text-xs font-semibold text-zinc-700">Gate checks in progress…</p>
+                      <p className="text-[11px] text-zinc-400">Composite risk score will appear once both Semgrep and k6 tests complete.</p>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <Info className="w-5 h-5 text-zinc-400 shrink-0" />
+                    <div>
+                      <p className="text-xs font-semibold text-zinc-700">No risk score available</p>
+                      <p className="text-[11px] text-zinc-400">Gate checks may not have run for this release.</p>
+                    </div>
+                  </>
+                )}
+              </div>
+            )}
+
+            {/* Release metadata grid */}
             <div className="grid grid-cols-2 gap-3 text-xs">
               <div className="bg-zinc-50 p-3 rounded-xl border border-zinc-200/70">
                 <p className="text-zinc-400 font-medium mb-1">Release Status</p>
@@ -441,7 +641,7 @@ export function ReleasesTab({ project, onNavigateToTestHistory }: ReleasesTabPro
               </div>
             </div>
 
-            {/* Test Runs Section */}
+            {/* Test Runs */}
             {selected.testRuns && selected.testRuns.length > 0 && (
               <div className="space-y-2 pt-1 border-t border-zinc-100">
                 <h4 className="text-xs font-bold text-zinc-900 flex items-center gap-1.5">
@@ -484,13 +684,11 @@ export function ReleasesTab({ project, onNavigateToTestHistory }: ReleasesTabPro
               </div>
             )}
 
+            {/* Footer */}
             <div className="pt-2 flex items-center justify-between">
               {onNavigateToTestHistory && (
                 <button
-                  onClick={() => {
-                    setSelected(null);
-                    onNavigateToTestHistory();
-                  }}
+                  onClick={() => { setSelected(null); onNavigateToTestHistory(); }}
                   className="text-xs font-semibold text-[#5850ec] hover:underline flex items-center gap-1"
                 >
                   <History className="w-3.5 h-3.5" />
@@ -510,7 +708,7 @@ export function ReleasesTab({ project, onNavigateToTestHistory }: ReleasesTabPro
         </div>
       )}
 
-      {/* Create New Release Modal */}
+      {/* ── Create Release Modal ────────────────────────────────────────────── */}
       {isCreateOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-zinc-900/40 backdrop-blur-sm animate-in fade-in duration-150">
           <div className="bg-white rounded-2xl border border-zinc-200 shadow-2xl max-w-md w-full p-6 space-y-4">
@@ -519,16 +717,14 @@ export function ReleasesTab({ project, onNavigateToTestHistory }: ReleasesTabPro
                 <Rocket className="w-5 h-5 text-[#5850ec]" />
                 <h3 className="text-sm font-bold text-zinc-900">Create New Release</h3>
               </div>
-              <button
-                onClick={() => setIsCreateOpen(false)}
-                className="text-zinc-400 hover:text-zinc-600 p-1 rounded-lg"
-              >
+              <button onClick={() => setIsCreateOpen(false)} className="text-zinc-400 hover:text-zinc-600 p-1 rounded-lg">
                 <X className="w-4 h-4" />
               </button>
             </div>
 
             <p className="text-xs text-zinc-500">
-              When created, DeployIntel will automatically trigger the Semgrep security scan and k6 performance gate check.
+              When created, DeployIntel will automatically run Semgrep SAST and k6 performance checks,
+              then compute a <strong>composite risk score</strong> to decide PASS or BLOCK.
             </p>
 
             {createError && (
@@ -586,6 +782,15 @@ export function ReleasesTab({ project, onNavigateToTestHistory }: ReleasesTabPro
                 </div>
               </div>
 
+              {/* Scoring info panel */}
+              <div className="bg-indigo-50 border border-indigo-100 rounded-xl p-3 text-[11px] text-indigo-700 space-y-1">
+                <p className="font-bold flex items-center gap-1"><Shield className="w-3 h-3" /> Risk Score Formula</p>
+                <p className="font-mono text-[10px] text-indigo-500">
+                  score = Security×40% + Performance×35% + Tests×15% + Regression×10%
+                </p>
+                <p>Score ≥ 80 → <strong>PASS</strong> &nbsp;|&nbsp; 60–79 → <strong>WARN</strong> &nbsp;|&nbsp; &lt;60 or critical finding → <strong>BLOCK</strong></p>
+              </div>
+
               <div className="pt-3 flex justify-end gap-2">
                 <button
                   type="button"
@@ -602,7 +807,7 @@ export function ReleasesTab({ project, onNavigateToTestHistory }: ReleasesTabPro
                   {createReleaseMutation.isPending ? (
                     <>
                       <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                      <span>Creating & Triggering Tests...</span>
+                      <span>Creating & Running Tests…</span>
                     </>
                   ) : (
                     <>

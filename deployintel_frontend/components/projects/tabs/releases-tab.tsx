@@ -29,6 +29,11 @@ import {
   Minus,
   Info,
   Ban,
+  CircleCheckBig,
+  CircleX,
+  TriangleAlert,
+  Sparkles,
+  BarChart2,
 } from "lucide-react";
 
 interface ReleasesTabProps {
@@ -118,21 +123,21 @@ function decisionBadge(decision?: string) {
     case "PASS":
       return (
         <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
-          <CheckCircle2 className="w-3.5 h-3.5" />
+          <CircleCheckBig className="w-3.5 h-3.5" />
           PASS
         </span>
       );
     case "WARN":
       return (
         <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-50 text-amber-700 border border-amber-200">
-          <AlertTriangle className="w-3.5 h-3.5" />
+          <TriangleAlert className="w-3.5 h-3.5" />
           WARN
         </span>
       );
     case "BLOCK":
       return (
         <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-red-50 text-red-700 border border-red-300">
-          <Ban className="w-3.5 h-3.5" />
+          <CircleX className="w-3.5 h-3.5" />
           BLOCK
         </span>
       );
@@ -141,9 +146,17 @@ function decisionBadge(decision?: string) {
   }
 }
 
-/** Circular score gauge (SVG) */
-function ScoreGauge({ score, decision }: { score: number; decision?: string }) {
-  const radius = 28;
+/** Risk level badge with semantic meaning */
+function riskLevelBadge(score: number) {
+  if (score >= 80) return { level: "LOW", color: "emerald", icon: CircleCheckBig, desc: "Safe to deploy" };
+  if (score >= 60) return { level: "MEDIUM", color: "amber", icon: TriangleAlert, desc: "Review recommended" };
+  if (score >= 40) return { level: "HIGH", color: "orange", icon: AlertTriangle, desc: "Significant risk" };
+  return { level: "CRITICAL", color: "red", icon: CircleX, desc: "Do not deploy" };
+}
+
+/** Enhanced circular score gauge with animated progress and risk level */
+function ScoreGauge({ score, decision, size = 72 }: { score: number; decision?: string; size?: number }) {
+  const radius = size / 2 - 6;
   const circumference = 2 * Math.PI * radius;
   const pct = Math.min(100, Math.max(0, score));
   const offset = circumference - (pct / 100) * circumference;
@@ -162,52 +175,160 @@ function ScoreGauge({ score, decision }: { score: number; decision?: string }) {
       ? "text-amber-600"
       : "text-emerald-600";
 
+  const risk = riskLevelBadge(score);
+
   return (
-    <div className="relative flex items-center justify-center w-20 h-20">
-      <svg className="w-20 h-20 -rotate-90" viewBox="0 0 72 72">
-        {/* Track */}
-        <circle cx="36" cy="36" r={radius} fill="none" stroke="#e4e4e7" strokeWidth="6" />
-        {/* Arc */}
-        <circle
-          cx="36"
-          cy="36"
-          r={radius}
-          fill="none"
-          stroke={color}
-          strokeWidth="6"
-          strokeLinecap="round"
-          strokeDasharray={circumference}
-          strokeDashoffset={offset}
-          style={{ transition: "stroke-dashoffset 0.6s ease" }}
-        />
-      </svg>
-      <span className={`absolute text-sm font-black ${textColor}`}>
-        {Math.round(pct)}
-      </span>
+    <div className="relative flex flex-col items-center justify-center">
+      <div className="relative flex items-center justify-center" style={{ width: size, height: size }}>
+        <svg className="w-full h-full -rotate-90" viewBox={`0 0 ${size} ${size}`}>
+          {/* Track */}
+          <circle
+            cx={size / 2}
+            cy={size / 2}
+            r={radius}
+            fill="none"
+            stroke="#e4e4e7"
+            strokeWidth="6"
+          />
+          {/* Arc with gradient */}
+          <defs>
+            <linearGradient id="gauge-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor={color} stopOpacity="0.9" />
+              <stop offset="100%" stopColor={color} stopOpacity="1" />
+            </linearGradient>
+          </defs>
+          <circle
+            cx={size / 2}
+            cy={size / 2}
+            r={radius}
+            fill="none"
+            stroke="url(#gauge-gradient)"
+            strokeWidth="6"
+            strokeLinecap="round"
+            strokeDasharray={circumference}
+            strokeDashoffset={offset}
+            style={{ transition: "stroke-dashoffset 0.8s cubic-bezier(0.4, 0, 0.2, 1)" }}
+            filter="drop-shadow(0 2px 4px rgba(0,0,0,0.1))"
+          />
+        </svg>
+        <div className="absolute flex flex-col items-center justify-center">
+          <span className={`text-2xl font-black ${textColor}`} style={{ lineHeight: 1 }}>
+            {Math.round(pct)}
+          </span>
+          <span className={`text-[10px] font-bold uppercase tracking-wide ${textColor}`}>
+            {risk.level}
+          </span>
+        </div>
+      </div>
+      <div className="mt-2 text-center">
+        <span
+          className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold ${
+            risk.color === "emerald" ? "bg-emerald-50 text-emerald-700" :
+            risk.color === "amber" ? "bg-amber-50 text-amber-700" :
+            risk.color === "orange" ? "bg-orange-50 text-orange-700" :
+            "bg-red-50 text-red-700"
+          }`}
+        >
+          <risk.icon className="w-3 h-3" />
+          {risk.desc}
+        </span>
+      </div>
     </div>
   );
 }
 
-/** Horizontal sub-score bar */
-function ScoreBar({ label, value, icon }: { label: string; value: number; icon: React.ReactNode }) {
+/** Horizontal sub-score bar with better visual design */
+function ScoreBar({ label, value, icon, weight }: { label: string; value: number; icon: React.ReactNode; weight?: string }) {
   const pct = Math.min(100, Math.max(0, value));
   const barColor =
-    pct >= 80 ? "bg-emerald-500" : pct >= 60 ? "bg-amber-400" : "bg-red-500";
+    pct >= 80 ? "bg-emerald-500" : pct >= 60 ? "bg-amber-400" : pct >= 40 ? "bg-orange-400" : "bg-red-500";
+
+  const labelColor =
+    pct >= 80 ? "text-emerald-700" : pct >= 60 ? "text-amber-700" : pct >= 40 ? "text-orange-700" : "text-red-700";
+
+  const bgColor =
+    pct >= 80 ? "bg-emerald-50" : pct >= 60 ? "bg-amber-50" : pct >= 40 ? "bg-orange-50" : "bg-red-50";
 
   return (
-    <div className="space-y-1">
+    <div className="space-y-1.5">
       <div className="flex items-center justify-between text-[11px]">
-        <span className="flex items-center gap-1 text-zinc-500 font-medium">
+        <span className={`flex items-center gap-1.5 font-medium ${labelColor}`}>
           {icon}
           {label}
         </span>
-        <span className="font-bold text-zinc-700">{Math.round(pct)}</span>
+        <div className="flex items-center gap-1.5">
+          <span className={`font-bold ${labelColor}`}>{Math.round(pct)}</span>
+          {weight && <span className="text-[10px] text-zinc-400 font-mono">{weight}</span>}
+        </div>
       </div>
-      <div className="h-1.5 bg-zinc-100 rounded-full overflow-hidden">
+      <div className="h-2 bg-zinc-100 rounded-full overflow-hidden relative">
         <div
-          className={`h-full rounded-full ${barColor} transition-all duration-500`}
+          className={`h-full rounded-full ${barColor} transition-all duration-700 ease-out`}
           style={{ width: `${pct}%` }}
         />
+        {/* Threshold markers */}
+        <div className="absolute top-0 bottom-0 left-[60%] w-px bg-zinc-300/50" />
+        <div className="absolute top-0 bottom-0 left-[80%] w-px bg-zinc-300/50" />
+      </div>
+      <div className="flex justify-between text-[9px] text-zinc-400">
+        <span>Needs Review</span>
+        <span>Acceptable</span>
+        <span>Good</span>
+      </div>
+    </div>
+  );
+}
+
+/** Risk factor card for detailed breakdown */
+function RiskFactorCard({
+  title,
+  score,
+  icon,
+  description,
+  findings,
+  weight,
+}: {
+  title: string;
+  score: number;
+  icon: React.ReactNode;
+  description: string;
+  findings?: { critical: number; high: number; medium: number; low: number };
+  weight?: string;
+}) {
+  const pct = Math.min(100, Math.max(0, score));
+  const color = pct >= 80 ? "emerald" : pct >= 60 ? "amber" : pct >= 40 ? "orange" : "red";
+
+  return (
+    <div className="bg-white border border-zinc-200 rounded-xl p-4 hover:border-zinc-300 transition-colors">
+      <div className="flex items-start gap-3">
+        <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${color === "emerald" ? "bg-emerald-50 text-emerald-600" : color === "amber" ? "bg-amber-50 text-amber-600" : color === "orange" ? "bg-orange-50 text-orange-600" : "bg-red-50 text-red-600"}`}>
+          {icon}
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center justify-between gap-2">
+            <h5 className="text-sm font-semibold text-zinc-900">{title}</h5>
+            <span className={`text-sm font-bold ${color === "emerald" ? "text-emerald-600" : color === "amber" ? "text-amber-600" : color === "orange" ? "text-orange-600" : "text-red-600"}`}>
+              {Math.round(pct)}
+            </span>
+          </div>
+          <p className="text-[11px] text-zinc-500 mt-0.5 line-clamp-2">{description}</p>
+          {weight && (
+            <span className="inline-block mt-1.5 px-2 py-0.5 text-[10px] font-mono text-zinc-400 bg-zinc-50 rounded">
+              Weight: {weight}
+            </span>
+          )}
+          {findings && (
+            <div className="mt-3 flex items-center gap-2 text-[10px]">
+              {findings.critical > 0 && <span className="px-1.5 py-0.5 rounded bg-red-50 text-red-700 font-medium">{findings.critical} Critical</span>}
+              {findings.high > 0 && <span className="px-1.5 py-0.5 rounded bg-orange-50 text-orange-700 font-medium">{findings.high} High</span>}
+              {findings.medium > 0 && <span className="px-1.5 py-0.5 rounded bg-amber-50 text-amber-700 font-medium">{findings.medium} Medium</span>}
+              {findings.low > 0 && <span className="px-1.5 py-0.5 rounded bg-zinc-50 text-zinc-700 font-medium">{findings.low} Low</span>}
+              {(findings.critical + findings.high + findings.medium + findings.low) === 0 && (
+                <span className="text-zinc-400">No findings</span>
+              )}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
@@ -338,15 +459,15 @@ export function ReleasesTab({ project, onNavigateToTestHistory }: ReleasesTabPro
         </div>
 
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-1.5 bg-zinc-50 rounded-lg p-1 border border-zinc-100">
             {(["ALL", "PRODUCTION", "STAGING", "DEVELOPMENT"] as const).map((env) => (
               <button
                 key={env}
                 onClick={() => setEnvFilter(env)}
-                className={`px-3 py-1.5 rounded-lg text-[11px] font-semibold border transition-all ${
+                className={`px-3 py-1.5 rounded-md text-[11px] font-semibold transition-all ${
                   envFilter === env
-                    ? "bg-[#5850ec] text-white border-[#5850ec] shadow-xs"
-                    : "bg-white text-zinc-500 border-zinc-200 hover:border-zinc-300 hover:text-zinc-700"
+                    ? "bg-white text-[#5850ec] shadow-sm"
+                    : "text-zinc-500 hover:text-zinc-700"
                 }`}
               >
                 {env === "ALL" ? "All" : env.charAt(0) + env.slice(1).toLowerCase()}
@@ -413,8 +534,8 @@ export function ReleasesTab({ project, onNavigateToTestHistory }: ReleasesTabPro
                   {/* Risk Score */}
                   <td className="py-4 px-4 whitespace-nowrap">
                     {release.compositeScore != null ? (
-                      <div className="flex items-center gap-1.5">
-                        {/* Mini score pill */}
+                      <div className="flex items-center gap-2">
+                        {/* Score pill with risk level */}
                         <span
                           className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-black border ${
                             release.deploymentDecision === "BLOCK"
@@ -426,14 +547,21 @@ export function ReleasesTab({ project, onNavigateToTestHistory }: ReleasesTabPro
                         >
                           {Math.round(release.compositeScore)}
                         </span>
-                        {/* Trend icon */}
-                        {release.compositeScore >= 80 ? (
-                          <TrendingUp className="w-3 h-3 text-emerald-500" />
-                        ) : release.compositeScore >= 60 ? (
-                          <Minus className="w-3 h-3 text-amber-500" />
-                        ) : (
-                          <TrendingDown className="w-3 h-3 text-red-500" />
-                        )}
+                        {/* Risk level badge */}
+                        {(() => {
+                          const risk = riskLevelBadge(release.compositeScore);
+                          return (
+                            <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                              risk.color === "emerald" ? "bg-emerald-50 text-emerald-700" :
+                              risk.color === "amber" ? "bg-amber-50 text-amber-700" :
+                              risk.color === "orange" ? "bg-orange-50 text-orange-700" :
+                              "bg-red-50 text-red-700"
+                            }`}>
+                              <risk.icon className="w-3 h-3" />
+                              {risk.level}
+                            </span>
+                          );
+                        })()}
                       </div>
                     ) : (
                       <span className="text-zinc-300 text-[11px]">
@@ -510,7 +638,7 @@ export function ReleasesTab({ project, onNavigateToTestHistory }: ReleasesTabPro
       {/* ── Detail modal ──────────────────────────────────────────────────────── */}
       {selected && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-zinc-900/40 backdrop-blur-sm animate-in fade-in duration-150">
-          <div className="bg-white rounded-2xl border border-zinc-200 shadow-2xl max-w-xl w-full p-6 space-y-5 max-h-[90vh] overflow-y-auto">
+          <div className="bg-white rounded-2xl border border-zinc-200 shadow-2xl max-w-3xl w-full p-6 space-y-5 max-h-[90vh] overflow-y-auto">
 
             {/* Modal header */}
             <div className="flex items-start justify-between border-b border-zinc-100 pb-4">
@@ -533,60 +661,73 @@ export function ReleasesTab({ project, onNavigateToTestHistory }: ReleasesTabPro
 
             {/* ── Composite Risk Score Panel ───────────────────────────────────── */}
             {selected.compositeScore != null ? (
-              <div className={`rounded-2xl border p-4 ${
+              <div className={`rounded-2xl border p-5 ${
                 selected.deploymentDecision === "BLOCK"
                   ? "bg-red-50 border-red-200"
                   : selected.deploymentDecision === "WARN"
                   ? "bg-amber-50 border-amber-200"
                   : "bg-emerald-50 border-emerald-200"
               }`}>
-                <div className="flex items-center gap-4">
+                <div className="flex flex-col md:flex-row items-center md:items-start gap-6">
                   {/* Gauge */}
                   <ScoreGauge
                     score={selected.compositeScore}
                     decision={selected.deploymentDecision}
+                    size={88}
                   />
 
-                  {/* Score summary */}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="text-xs font-bold text-zinc-700">Composite Risk Score</span>
-                      {decisionBadge(selected.deploymentDecision)}
+                  {/* Score summary & breakdown */}
+                  <div className="flex-1 min-w-0 md:grid md:grid-cols-3 gap-4">
+                    {/* Main summary */}
+                    <div className="md:col-span-2">
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="text-xs font-bold text-zinc-700">Composite Risk Score</span>
+                        {decisionBadge(selected.deploymentDecision)}
+                      </div>
+                      <p className="text-[11px] text-zinc-500 leading-relaxed line-clamp-2">
+                        {selected.decisionReason ?? "Risk assessment completed."}
+                      </p>
+
+                      {/* Formula & thresholds */}
+                      <div className="mt-3 flex flex-wrap items-center gap-3 text-[10px] text-zinc-400">
+                        <span className="font-mono bg-white/70 px-2 py-0.5 rounded border border-zinc-200">
+                          composite = sec×0.40 + perf×0.35 + tests×0.15 + reg×0.10
+                        </span>
+                        <span className="px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 font-medium">≥80 PASS</span>
+                        <span className="px-2 py-0.5 rounded bg-amber-50 text-amber-700 font-medium">60–79 WARN</span>
+                        <span className="px-2 py-0.5 rounded bg-red-50 text-red-700 font-medium">{"<"}60 BLOCK</span>
+                      </div>
                     </div>
-                    <p className="text-[11px] text-zinc-500 leading-relaxed line-clamp-2">
-                      {selected.decisionReason ?? "Risk assessment completed."}
-                    </p>
+
+                    {/* Quick score bars */}
+                    <div className="space-y-2 md:col-span-1">
+                      <ScoreBar
+                        label="Security"
+                        value={selected.securityScore ?? selected.compositeScore ?? 0}
+                        icon={<Shield className="w-3 h-3 text-purple-500" />}
+                        weight="40%"
+                      />
+                      <ScoreBar
+                        label="Performance"
+                        value={selected.performanceScore ?? selected.compositeScore ?? 0}
+                        icon={<Zap className="w-3 h-3 text-amber-500" />}
+                        weight="35%"
+                      />
+                      <ScoreBar
+                        label="Test Checks"
+                        value={selected.testScore ?? selected.compositeScore ?? 0}
+                        icon={<CheckCircle2 className="w-3 h-3 text-sky-500" />}
+                        weight="15%"
+                      />
+                      <ScoreBar
+                        label="Regression"
+                        value={selected.regressionScore ?? 100}
+                        icon={<TrendingUp className="w-3 h-3 text-emerald-500" />}
+                        weight="10%"
+                      />
+                    </div>
                   </div>
                 </div>
-
-                {/* Weight breakdown bars */}
-                <div className="mt-4 grid grid-cols-2 gap-x-6 gap-y-3">
-                  <ScoreBar
-                    label="Security (40%)"
-                    value={selected.securityScore ?? selected.compositeScore ?? 0}
-                    icon={<Shield className="w-3 h-3 text-purple-500" />}
-                  />
-                  <ScoreBar
-                    label="Performance (35%)"
-                    value={selected.performanceScore ?? selected.compositeScore ?? 0}
-                    icon={<Zap className="w-3 h-3 text-amber-500" />}
-                  />
-                  <ScoreBar
-                    label="Test Checks (15%)"
-                    value={selected.testScore ?? selected.compositeScore ?? 0}
-                    icon={<CheckCircle2 className="w-3 h-3 text-sky-500" />}
-                  />
-                  <ScoreBar
-                    label="Regression (10%)"
-                    value={selected.regressionScore ?? 100}
-                    icon={<TrendingUp className="w-3 h-3 text-emerald-500" />}
-                  />
-                </div>
-
-                {/* Formula note */}
-                <p className="mt-3 text-[10px] text-zinc-400 font-mono">
-                  composite = sec×0.40 + perf×0.35 + tests×0.15 + reg×0.10
-                </p>
               </div>
             ) : (
               /* No score yet — show pending state */
@@ -611,8 +752,54 @@ export function ReleasesTab({ project, onNavigateToTestHistory }: ReleasesTabPro
               </div>
             )}
 
+            {/* ── Detailed Risk Factor Cards ───────────────────────────────────── */}
+            {selected.compositeScore != null && (
+              <div className="space-y-3 pt-1">
+                <h4 className="text-xs font-bold text-zinc-900 flex items-center gap-1.5">
+                  <BarChart2 className="w-3.5 h-3.5 text-[#5850ec]" />
+                  Risk Factor Breakdown
+                </h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <RiskFactorCard
+                    title="Security (Semgrep SAST)"
+                    score={selected.securityScore ?? selected.compositeScore ?? 0}
+                    icon={<Shield className="w-5 h-5" />}
+                    description="Static analysis findings mapped to CWE/OWASP categories. Critical and high severity findings heavily penalize the score."
+                    weight="40%"
+                  />
+                  <RiskFactorCard
+                    title="Performance (k6 Load Test)"
+                    score={selected.performanceScore ?? selected.compositeScore ?? 0}
+                    icon={<Zap className="w-5 h-5" />}
+                    description="Load test results measuring request rate, p95 latency, and error rate against defined thresholds."
+                    weight="35%"
+                  />
+                  <RiskFactorCard
+                    title="Test Checks"
+                    score={selected.testScore ?? selected.compositeScore ?? 0}
+                    icon={<CheckCircle2 className="w-5 h-5" />}
+                    description="Overall test suite pass rate across all executed test runs for this release."
+                    findings={selected.testRuns ? {
+                      critical: 0,
+                      high: selected.testRuns.filter((t: any) => t.status === "FAILED").length,
+                      medium: selected.testRuns.filter((t: any) => t.status === "RUNNING").length,
+                      low: selected.testRuns.filter((t: any) => t.status === "PASSED").length,
+                    } : undefined}
+                    weight="15%"
+                  />
+                  <RiskFactorCard
+                    title="Regression Risk"
+                    score={selected.regressionScore ?? 100}
+                    icon={<TrendingUp className="w-5 h-5" />}
+                    description="Comparison against baseline to detect performance or functional regressions. Defaults to 100 (no regression detected)."
+                    weight="10%"
+                  />
+                </div>
+              </div>
+            )}
+
             {/* Release metadata grid */}
-            <div className="grid grid-cols-2 gap-3 text-xs">
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-3 text-xs pt-2 border-t border-zinc-100">
               <div className="bg-zinc-50 p-3 rounded-xl border border-zinc-200/70">
                 <p className="text-zinc-400 font-medium mb-1">Release Status</p>
                 {statusLabel(selected.status)}
@@ -653,9 +840,13 @@ export function ReleasesTab({ project, onNavigateToTestHistory }: ReleasesTabPro
                     <div key={tr.id} className="p-3 flex items-center justify-between text-xs">
                       <div className="flex items-center gap-2">
                         {tr.type === "SECURITY" ? (
-                          <Shield className="w-4 h-4 text-purple-600" />
+                          <div className="w-8 h-8 rounded-lg bg-purple-50 flex items-center justify-center">
+                            <Shield className="w-4 h-4 text-purple-600" />
+                          </div>
                         ) : (
-                          <Zap className="w-4 h-4 text-amber-500" />
+                          <div className="w-8 h-8 rounded-lg bg-amber-50 flex items-center justify-center">
+                            <Zap className="w-4 h-4 text-amber-500" />
+                          </div>
                         )}
                         <div>
                           <span className="font-semibold text-zinc-800">
@@ -784,11 +975,11 @@ export function ReleasesTab({ project, onNavigateToTestHistory }: ReleasesTabPro
 
               {/* Scoring info panel */}
               <div className="bg-indigo-50 border border-indigo-100 rounded-xl p-3 text-[11px] text-indigo-700 space-y-1">
-                <p className="font-bold flex items-center gap-1"><Shield className="w-3 h-3" /> Risk Score Formula</p>
+                <p className="font-bold flex items-center gap-1"><Sparkles className="w-3 h-3" /> Risk Score Formula</p>
                 <p className="font-mono text-[10px] text-indigo-500">
                   score = Security×40% + Performance×35% + Tests×15% + Regression×10%
                 </p>
-                <p>Score ≥ 80 → <strong>PASS</strong> &nbsp;|&nbsp; 60–79 → <strong>WARN</strong> &nbsp;|&nbsp; &lt;60 or critical finding → <strong>BLOCK</strong></p>
+                <p>Score ≥ 80 → <strong>PASS</strong> &nbsp;|&nbsp; 60–79 → <strong>WARN</strong> &nbsp;|&nbsp; {"<"}60 or critical finding → <strong>BLOCK</strong></p>
               </div>
 
               <div className="pt-3 flex justify-end gap-2">

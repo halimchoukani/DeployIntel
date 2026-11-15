@@ -17,6 +17,7 @@ import com.example.deployintel.deployment.entity.Deployment;
 import com.example.deployintel.deployment.repository.DeploymentRepository;
 import com.example.deployintel.gate.entity.*;
 import com.example.deployintel.gate.repository.*;
+import com.example.deployintel.release.entity.Release;
 import com.example.deployintel.user.entity.UserRole;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -47,6 +48,33 @@ public class GateService {
     private final PerformanceMetricRepository performanceMetricRepository;
     private final RiskAssessmentRepository riskAssessmentRepository;
     private final RiskRuleRepository riskRuleRepository;
+
+    /**
+     * Updates the user repository in the project's test environment container to the specific
+     * release revision (fetching commits/tags/branch and checking out the release code)
+     * before running any gate checks.
+     */
+    @Transactional
+    public boolean updateEnvironmentRepositoryForRelease(UserPrincipal currentUser, Project project, Release release) {
+        if (!dockerService.isDockerAvailable()) {
+            log.warn("Docker daemon is unreachable. Cannot update repository for release {}", release.getVersionNumber());
+            return false;
+        }
+
+        TestEnvironment targetEnv = findOrCreateEnvironment(currentUser, project.getId());
+        if (targetEnv == null || targetEnv.getContainerId() == null) {
+            log.warn("No active test environment container available for project {} to update repository", project.getId());
+            return false;
+        }
+
+        return environmentService.syncWorkspaceRepository(
+                targetEnv,
+                project,
+                release.getBranch(),
+                release.getCommitSha(),
+                release.getTag()
+        );
+    }
 
     @Transactional
     public GateCheckResponse runSemgrepCheck(UserPrincipal currentUser, UUID projectId) {
@@ -95,6 +123,19 @@ public class GateService {
             try {
                 Thread.sleep(1000);
             } catch (InterruptedException ignored) {}
+        }
+
+        // Ensure user repo is updated to the deployment release version before running the scan
+        if (targetDeployment != null && targetDeployment.getRelease() != null) {
+            Release release = targetDeployment.getRelease();
+            log.info("Ensuring repository is updated for release {} in container {}...", release.getVersionNumber(), containerId);
+            environmentService.syncWorkspaceRepository(
+                    targetEnv,
+                    project,
+                    release.getBranch(),
+                    release.getCommitSha(),
+                    release.getTag()
+            );
         }
 
         // Ensure Semgrep is available in the container

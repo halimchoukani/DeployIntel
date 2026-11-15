@@ -89,7 +89,18 @@ public class AutomatedReleaseTestService {
             principal = new UserPrincipal(UUID.randomUUID(), "system@deployintel.io", UserRole.ADMIN);
         }
 
-        // ── Run gate checks, capture both results ──────────────────────────────
+        // ── 1. Update user repo in test environment before starting tests ────
+        try {
+            log.info("Updating test environment repository for release {} (branch: {}, commit: {}, tag: {})...",
+                    release.getVersionNumber(), release.getBranch(), release.getCommitSha(), release.getTag());
+            boolean repoUpdated = gateService.updateEnvironmentRepositoryForRelease(principal, project, release);
+            log.info("Repository sync in test environment for release {}: {}",
+                    release.getVersionNumber(), repoUpdated ? "SUCCESS" : "SKIPPED_OR_FAILED");
+        } catch (Exception e) {
+            log.warn("Failed to update test environment repository for release {}: {}", releaseId, e.getMessage(), e);
+        }
+
+        // ── 2. Run gate checks, capture both results ──────────────────────────
         GateCheckResponse semgrepResult = null;
         K6CheckResponse   k6Result      = null;
 
@@ -119,8 +130,8 @@ public class AutomatedReleaseTestService {
             com.example.deployintel.gate.dto.DeploymentVerdict verdict =
                     compositeRiskScoreService.computeAndPersist(project, deployment, semgrepResult, k6Result);
 
-            log.info("Composite risk assessment for release {}: score={:.1f}, verdict={}, reason={}",
-                    release.getVersionNumber(), verdict.compositeScore(), verdict.verdict(), verdict.reason());
+            log.info("Composite risk assessment for release {}: score={}, verdict={}, reason={}",
+                    release.getVersionNumber(), String.format("%.1f", verdict.compositeScore()), verdict.verdict(), verdict.reason());
 
             if (verdict.isBlocked()) {
                 release.setStatus(ReleaseStatus.BLOCKED);

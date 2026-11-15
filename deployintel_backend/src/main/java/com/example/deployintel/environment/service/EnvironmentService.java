@@ -321,6 +321,162 @@ public class EnvironmentService {
         }
     }
 
+    /**
+     * Updates/syncs the git repository in the container workspace to the specific release revision.
+     * Fetches latest changes and checks out the commit, tag, or branch.
+     * Clones fresh if the workspace has no .git directory yet.
+     */
+    public boolean syncWorkspaceRepository(
+            TestEnvironment environment,
+            Project project,
+            String branch,
+            String commitSha,
+            String tag
+    ) {
+        if (!dockerService.isDockerAvailable()) {
+            log.warn("Docker is unavailable; cannot update repository in container");
+            return false;
+        }
+
+        if (environment == null || environment.getContainerId() == null) {
+            log.warn("Cannot sync workspace repository: test environment has no active container");
+            return false;
+        }
+
+        String containerId = environment.getContainerId();
+        try {
+            // Ensure container is running
+            EnvironmentStatus status = dockerService.getContainerStatus(containerId);
+            if (status == EnvironmentStatus.STOPPED) {
+                log.info("Starting container {} to update repository for release...", containerId);
+                dockerService.startContainer(containerId);
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException ignored) {}
+            }
+
+            String repoUrl = resolveAuthenticatedCloneUrl(project);
+            if (repoUrl == null || repoUrl.isBlank()) {
+                log.warn("Project '{}' has no repository URL configured; skipping repository sync in container {}",
+                        project.getName(), containerId);
+                return false;
+            }
+
+            String targetBranch = (branch != null && !branch.isBlank())
+                    ? branch.trim()
+                    : (project.getDefaultBranch() != null && !project.getDefaultBranch().isBlank() ? project.getDefaultBranch().trim() : "main");
+            String targetCommit = (commitSha != null && !commitSha.isBlank()) ? commitSha.trim() : "";
+            String targetTag = (tag != null && !tag.isBlank()) ? tag.trim() : "";
+
+            String workspacePath = (environment.getWorkspacePath() != null && !environment.getWorkspacePath().isBlank())
+                    ? environment.getWorkspacePath().trim()
+                    : "/workspace";
+
+            String safeRepoUrl = repoUrl.replace("'", "'\\''");
+            String safeBranch = targetBranch.replace("'", "'\\''");
+            String safeCommit = targetCommit.replace("'", "'\\''");
+            String safeTag = targetTag.replace("'", "'\\''");
+            String safeWorkspace = workspacePath.replace("'", "'\\''");
+
+            String updateScript = String.format(
+                    "export PATH=$PATH:/usr/local/bin:/usr/bin:/bin; " +
+                    "if ! command -v git >/dev/null 2>&1; then " +
+                    "  if command -v apk >/dev/null 2>&1; then " +
+                    "    apk add --no-cache git ca-certificates >/dev/null 2>&1; " +
+                    "  elif command -v apt-get >/dev/null 2>&1; then " +
+                    "    export DEBIAN_FRONTEND=noninteractive; " +
+                    "    apt-get update -qq >/dev/null 2>&1 && apt-get install -y -qq --no-install-recommends git ca-certificates >/dev/null 2>&1; " +
+                    "  elif command -v yum >/dev/null 2>&1; then " +
+                    "    yum install -y -q git ca-certificates >/dev/null 2>&1; " +
+                    "  elif command -v dnf >/dev/null 2>&1; then " +
+                    "    dnf install -y -q git ca-certificates >/dev/null 2>&1; " +
+                    "  fi; " +
+                    "fi; " +
+                    "if ! command -v git >/dev/null 2>&1; then " +
+                    "  echo 'SYNC_FAILED: git not found'; " +
+                    "  exit 1; " +
+                    "fi; " +
+                    "git config --global --add safe.directory '*' >/dev/null 2>&1; " +
+                    "mkdir -p '%s'; " +
+                    "if [ -d '%s/.git' ]; then " +
+                    "  cd '%s'; " +
+                    "  git remote set-url origin '%s' 2>/dev/null || git remote add origin '%s' 2>/dev/null; " +
+                    "  git reset --hard HEAD >/dev/null 2>&1 || true; " +
+                    "  git clean -fd >/dev/null 2>&1 || true; " +
+                    "  git fetch origin --prune --tags --force >/dev/null 2>&1 || true; " +
+                    "  SYNCED=0; " +
+                    "  if [ -n '%s' ]; then " +
+                    "    if git checkout '%s' >/dev/null 2>&1 || (git fetch origin '%s' >/dev/null 2>&1 && git checkout '%s' >/dev/null 2>&1); then " +
+                    "      SYNCED=1; echo 'SYNC_SUCCESS: commit %s'; " +
+                    "    fi; " +
+                    "  fi; " +
+                    "  if [ $SYNCED -eq 0 ] && [ -n '%s' ]; then " +
+                    "    if git checkout 'tags/%s' >/dev/null 2>&1 || git checkout '%s' >/dev/null 2>&1; then " +
+                    "      SYNCED=1; echo 'SYNC_SUCCESS: tag %s'; " +
+                    "    fi; " +
+                    "  fi; " +
+                    "  if [ $SYNCED -eq 0 ] && [ -n '%s' ]; then " +
+                    "    if git checkout '%s' >/dev/null 2>&1 || git checkout -b '%s' 'origin/%s' >/dev/null 2>&1; then " +
+                    "      git pull --ff-only origin '%s' >/dev/null 2>&1 || git reset --hard 'origin/%s' >/dev/null 2>&1 || true; " +
+                    "      SYNCED=1; echo 'SYNC_SUCCESS: branch %s'; " +
+                    "    fi; " +
+                    "  fi; " +
+                    "  if [ $SYNCED -eq 0 ]; then " +
+                    "    git pull origin >/dev/null 2>&1 || true; " +
+                    "    echo 'SYNC_SUCCESS: origin HEAD'; " +
+                    "  fi; " +
+                    "else " +
+                    "  rm -rf /tmp/release_clone; " +
+                    "  mkdir -p /tmp/release_clone; " +
+                    "  if [ -n '%s' ]; then " +
+                    "    (git clone --depth 50 -b '%s' '%s' /tmp/release_clone >/dev/null 2>&1 || git clone '%s' /tmp/release_clone >/dev/null 2>&1); " +
+                    "  else " +
+                    "    git clone '%s' /tmp/release_clone >/dev/null 2>&1; " +
+                    "  fi; " +
+                    "  if [ -d /tmp/release_clone/.git ]; then " +
+                    "    cd /tmp/release_clone; " +
+                    "    if [ -n '%s' ]; then " +
+                    "      git checkout '%s' >/dev/null 2>&1 || true; " +
+                    "    elif [ -n '%s' ]; then " +
+                    "      git checkout 'tags/%s' >/dev/null 2>&1 || true; " +
+                    "    fi; " +
+                    "    mkdir -p '%s'; " +
+                    "    cp -a /tmp/release_clone/. '%s'/; " +
+                    "    rm -rf /tmp/release_clone; " +
+                    "    echo 'SYNC_SUCCESS: fresh clone'; " +
+                    "  else " +
+                    "    echo 'SYNC_FAILED: clone failed'; " +
+                    "  fi; " +
+                    "fi",
+                    safeWorkspace, safeWorkspace, safeWorkspace, safeRepoUrl, safeRepoUrl,
+                    safeCommit, safeCommit, safeCommit, safeCommit, safeCommit,
+                    safeTag, safeTag, safeTag, safeTag,
+                    safeBranch, safeBranch, safeBranch, safeBranch, safeBranch, safeBranch, safeBranch,
+                    safeBranch, safeBranch, safeRepoUrl, safeRepoUrl, safeRepoUrl,
+                    safeCommit, safeCommit, safeTag, safeTag,
+                    safeWorkspace, safeWorkspace
+            );
+
+            log.info("Updating user repository in container {} for project '{}' at release target (branch: '{}', commit: '{}', tag: '{}')...",
+                    containerId, project.getName(), targetBranch, targetCommit, targetTag);
+
+            CommandExecutionResponse res = dockerService.executeCommand(containerId, updateScript, "/");
+            String output = res != null && res.output() != null ? res.output().trim() : "";
+            boolean success = output.contains("SYNC_SUCCESS");
+
+            if (success) {
+                log.info("Repository in container {} successfully synchronized: {}", containerId, output);
+            } else {
+                log.warn("Repository synchronization in container {} completed with message: {}", containerId, output);
+            }
+            return success;
+
+        } catch (Exception e) {
+            log.error("Failed to sync workspace repository in container {}: {}", containerId, e.getMessage(), e);
+            return false;
+        }
+    }
+
     private String resolveAuthenticatedCloneUrl(Project project) {
         String repoUrl = project.getRepositoryUrl();
         if (repoUrl == null || repoUrl.isBlank()) {

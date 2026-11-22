@@ -16,6 +16,7 @@ import { SettingsTab } from "@/components/projects/tabs/settings-tab";
 import { ReleasesTab } from "@/components/projects/tabs/releases-tab";
 import { EnvironmentsTab } from "@/components/projects/tabs/environments-tab";
 import { TestHistoryTab } from "@/components/projects/tabs/test-history-tab";
+import { MembersTab } from "@/components/projects/tabs/members-tab";
 import { AnalysisModal } from "@/components/projects/analysis-modal";
 import { GateCheckModal } from "@/components/projects/gate-check-modal";
 import {
@@ -28,6 +29,7 @@ import {
   Tag,
   Box,
   History,
+  Users,
 } from "lucide-react";
 
 export default function ProjectDetailsPage({
@@ -49,7 +51,7 @@ export default function ProjectDetailsPage({
       const urlTab = new URLSearchParams(window.location.search).get("tab");
       if (
         urlTab &&
-        ["overview", "commits", "deployments", "releases", "test-history", "environments", "insights", "policies", "settings"].includes(urlTab)
+        ["overview", "commits", "deployments", "releases", "test-history", "environments", "insights", "policies", "members", "settings"].includes(urlTab)
       ) {
         setActiveTab(urlTab);
       }
@@ -80,6 +82,7 @@ export default function ProjectDetailsPage({
     { id: "environments", label: "Test Environments", icon: Box },
     { id: "insights", label: "AI Blast Radius", icon: Sparkles },
     { id: "policies", label: "Gate Guardrails", icon: Sliders },
+    { id: "members", label: "Team & Members", icon: Users },
     { id: "settings", label: "CI/CD & Settings", icon: Settings },
   ];
 
@@ -87,8 +90,8 @@ export default function ProjectDetailsPage({
     return (
       <div className="px-8 py-12 max-w-[1400px]">
         <div className="flex flex-col items-center justify-center py-24 gap-3">
-          <div className="w-8 h-8 border-3 border-zinc-200 border-t-[#5850ec] rounded-full animate-spin" />
-          <p className="text-xs text-zinc-500 font-medium">Loading project telemetry & gate policies…</p>
+          <div className="w-8 h-8 border-3 border-card-border border-t-[#5850ec] rounded-full animate-spin" />
+          <p className="text-xs text-muted-foreground font-medium">Loading project telemetry & gate policies…</p>
         </div>
       </div>
     );
@@ -112,7 +115,7 @@ export default function ProjectDetailsPage({
       />
 
       {/* 3. Navigation Tabs */}
-      <div className="border-b border-zinc-200 mb-6 flex items-center justify-between gap-4 overflow-x-auto scrollbar-none">
+      <div className="border-b border-card-border mb-6 flex items-center justify-between gap-4 overflow-x-auto scrollbar-none">
         <div className="flex items-center gap-1 -mb-px">
           {tabs.map((tab) => {
             const Icon = tab.icon;
@@ -123,16 +126,16 @@ export default function ProjectDetailsPage({
                 onClick={() => setActiveTab(tab.id)}
                 className={`flex items-center gap-2 py-3 px-4 text-xs font-semibold border-b-2 transition-all whitespace-nowrap ${
                   isActive
-                    ? "border-[#5850ec] text-[#5850ec]"
-                    : "border-transparent text-zinc-500 hover:text-zinc-800 hover:border-zinc-300"
+                    ? "border-[#5850ec] dark:border-indigo-400 text-[#5850ec] dark:text-indigo-400"
+                    : "border-transparent text-muted-foreground hover:text-foreground hover:border-zinc-400"
                 }`}
               >
-                <Icon className={`w-4 h-4 ${isActive ? "text-[#5850ec]" : "text-zinc-400"}`} />
+                <Icon className={`w-4 h-4 ${isActive ? "text-[#5850ec] dark:text-indigo-400" : "text-muted-foreground"}`} />
                 <span>{tab.label}</span>
                 {tab.count !== undefined && (
                   <span
                     className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold ${
-                      isActive ? "bg-indigo-50 text-[#5850ec]" : "bg-zinc-100 text-zinc-500"
+                      isActive ? "bg-indigo-50 dark:bg-indigo-950/60 text-[#5850ec] dark:text-indigo-400" : "bg-muted text-muted-foreground border border-card-border"
                     }`}
                   >
                     {tab.count}
@@ -144,7 +147,7 @@ export default function ProjectDetailsPage({
         </div>
 
         {/* Live sync indicator */}
-        <div className="hidden sm:flex items-center gap-1.5 text-xs text-zinc-400 pb-2">
+        <div className="hidden sm:flex items-center gap-1.5 text-xs text-muted-foreground pb-2">
           <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
           <span>Real-time telemetry connected</span>
         </div>
@@ -181,6 +184,7 @@ export default function ProjectDetailsPage({
         {activeTab === "environments" && <EnvironmentsTab project={project} />}
         {activeTab === "insights" && <InsightsTab project={project} />}
         {activeTab === "policies" && <PoliciesTab project={project} />}
+        {activeTab === "members" && <MembersTab project={project} />}
         {activeTab === "settings" && <SettingsTab project={project} />}
       </div>
 

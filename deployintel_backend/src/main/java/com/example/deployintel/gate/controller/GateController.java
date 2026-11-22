@@ -58,4 +58,18 @@ public class GateController {
         K6CheckResponse response = gateService.runK6PerformanceCheck(principal, projectId);
         return ResponseEntity.ok(response);
     }
+
+    /**
+     * Generates or regenerates AI diagnostic suggestions from local Ollama for a specific test run.
+     */
+    @PostMapping("/runs/{testRunId}/ai-help")
+    public ResponseEntity<TestRunHistoryResponse> generateAiHelpForRun(
+            Authentication authentication,
+            @PathVariable UUID projectId,
+            @PathVariable UUID testRunId
+    ) {
+        UserPrincipal principal = (UserPrincipal) authentication.getPrincipal();
+        TestRunHistoryResponse response = gateService.generateAiHelpForRun(principal, projectId, testRunId);
+        return ResponseEntity.ok(response);
+    }
 }

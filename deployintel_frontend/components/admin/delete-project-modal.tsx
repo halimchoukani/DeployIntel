@@ -63,7 +63,7 @@ export function DeleteProjectModal({ project, onClose, onSuccess }: DeleteProjec
             value={confirmText}
             onChange={(e) => setConfirmText(e.target.value)}
             placeholder={project.name}
-            className="w-full text-xs px-3 py-2 rounded-lg border border-rose-200 bg-white text-zinc-900 placeholder:text-zinc-300 focus:outline-none focus:ring-1 focus:ring-rose-500"
+            className="w-full text-xs px-3 py-2 rounded-lg border border-rose-200 dark:border-rose-800/80 bg-card text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-rose-500"
           />
         </div>
 

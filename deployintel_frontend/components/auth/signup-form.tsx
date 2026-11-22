@@ -28,9 +28,9 @@ export function SignupForm({ onSuccess }: SignupFormProps) {
     <form onSubmit={handleSubmit} className="mt-6 space-y-4" noValidate>
       {/* General Error Alert */}
       {generalError && (
-        <div className="rounded-lg bg-red-50 p-3 text-xs text-red-700 border border-red-200/80 flex items-start gap-2">
+        <div className="rounded-lg bg-destructive/10 p-3 text-xs text-destructive border border-destructive/20 dark:bg-destructive/20 dark:border-destructive/30 flex items-start gap-2">
           <svg
-            className="h-4 w-4 text-red-500 shrink-0 mt-0.5"
+            className="h-4 w-4 text-destructive shrink-0 mt-0.5"
             viewBox="0 0 20 20"
             fill="currentColor"
           >
@@ -46,9 +46,9 @@ export function SignupForm({ onSuccess }: SignupFormProps) {
 
       {/* Success Alert */}
       {successMessage && (
-        <div className="rounded-lg bg-emerald-50 p-3 text-xs text-emerald-800 border border-emerald-200/80 flex items-start gap-2">
+        <div className="rounded-lg bg-success/10 p-3 text-xs text-success border border-success/20 dark:bg-success/20 dark:border-success/30 flex items-start gap-2">
           <svg
-            className="h-4 w-4 text-emerald-600 shrink-0 mt-0.5"
+            className="h-4 w-4 text-success shrink-0 mt-0.5"
             viewBox="0 0 20 20"
             fill="currentColor"
           >
@@ -68,7 +68,7 @@ export function SignupForm({ onSuccess }: SignupFormProps) {
         <div>
           <label
             htmlFor="firstName"
-            className="block text-[11px] font-semibold uppercase tracking-wider text-zinc-600 mb-1.5"
+            className="block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-1.5"
           >
             FIRST NAME
           </label>
@@ -79,14 +79,14 @@ export function SignupForm({ onSuccess }: SignupFormProps) {
             onChange={(e) => handleChange("firstName", e.target.value)}
             placeholder="Alex"
             autoComplete="given-name"
-            className={`w-full h-10 rounded-lg border bg-white px-3 text-sm text-zinc-900 placeholder:text-zinc-400 focus:outline-none transition-all ${
+            className={`w-full h-10 rounded-lg border bg-muted/40 px-3 text-sm text-foreground placeholder:text-muted-foreground focus:bg-card focus:outline-none transition-all ${
               fieldErrors.firstName
-                ? "border-red-300 focus:border-red-500 focus:ring-2 focus:ring-red-200"
-                : "border-zinc-200 focus:border-[#5850ec] focus:ring-2 focus:ring-[#5850ec]/15"
+                ? "border-destructive focus:border-destructive focus:ring-2 focus:ring-destructive/20"
+                : "border-card-border focus:border-ring focus:ring-2 focus:ring-ring/15"
             }`}
           />
           {fieldErrors.firstName && (
-            <p className="mt-1 text-[11px] text-red-600">
+            <p className="mt-1 text-[11px] text-destructive">
               {fieldErrors.firstName}
             </p>
           )}
@@ -96,7 +96,7 @@ export function SignupForm({ onSuccess }: SignupFormProps) {
         <div>
           <label
             htmlFor="lastName"
-            className="block text-[11px] font-semibold uppercase tracking-wider text-zinc-600 mb-1.5"
+            className="block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-1.5"
           >
             LAST NAME
           </label>
@@ -107,14 +107,14 @@ export function SignupForm({ onSuccess }: SignupFormProps) {
             onChange={(e) => handleChange("lastName", e.target.value)}
             placeholder="Martin"
             autoComplete="family-name"
-            className={`w-full h-10 rounded-lg border bg-white px-3 text-sm text-zinc-900 placeholder:text-zinc-400 focus:outline-none transition-all ${
+            className={`w-full h-10 rounded-lg border bg-muted/40 px-3 text-sm text-foreground placeholder:text-muted-foreground focus:bg-card focus:outline-none transition-all ${
               fieldErrors.lastName
-                ? "border-red-300 focus:border-red-500 focus:ring-2 focus:ring-red-200"
-                : "border-zinc-200 focus:border-[#5850ec] focus:ring-2 focus:ring-[#5850ec]/15"
+                ? "border-destructive focus:border-destructive focus:ring-2 focus:ring-destructive/20"
+                : "border-card-border focus:border-ring focus:ring-2 focus:ring-ring/15"
             }`}
           />
           {fieldErrors.lastName && (
-            <p className="mt-1 text-[11px] text-red-600">{fieldErrors.lastName}</p>
+            <p className="mt-1 text-[11px] text-destructive">{fieldErrors.lastName}</p>
           )}
         </div>
       </div>
@@ -123,7 +123,7 @@ export function SignupForm({ onSuccess }: SignupFormProps) {
       <div>
         <label
           htmlFor="email"
-          className="block text-[11px] font-semibold uppercase tracking-wider text-zinc-600 mb-1.5"
+          className="block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-1.5"
         >
           WORK EMAIL
         </label>
@@ -134,14 +134,14 @@ export function SignupForm({ onSuccess }: SignupFormProps) {
           onChange={(e) => handleChange("email", e.target.value)}
           placeholder="alex.martin@acme-cloud.io"
           autoComplete="email"
-          className={`w-full h-10 rounded-lg border bg-white px-3 text-sm text-zinc-900 placeholder:text-zinc-400 focus:outline-none transition-all ${
+          className={`w-full h-10 rounded-lg border bg-muted/40 px-3 text-sm text-foreground placeholder:text-muted-foreground focus:bg-card focus:outline-none transition-all ${
             fieldErrors.email
-              ? "border-red-300 focus:border-red-500 focus:ring-2 focus:ring-red-200"
-              : "border-zinc-200 focus:border-[#5850ec] focus:ring-2 focus:ring-[#5850ec]/15"
+              ? "border-destructive focus:border-destructive focus:ring-2 focus:ring-destructive/20"
+              : "border-card-border focus:border-ring focus:ring-2 focus:ring-ring/15"
           }`}
         />
         {fieldErrors.email && (
-          <p className="mt-1 text-[11px] text-red-600">{fieldErrors.email}</p>
+          <p className="mt-1 text-[11px] text-destructive">{fieldErrors.email}</p>
         )}
       </div>
 
@@ -149,7 +149,7 @@ export function SignupForm({ onSuccess }: SignupFormProps) {
       <div>
         <label
           htmlFor="password"
-          className="block text-[11px] font-semibold uppercase tracking-wider text-zinc-600 mb-1.5"
+          className="block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-1.5"
         >
           PASSWORD
         </label>
@@ -161,10 +161,10 @@ export function SignupForm({ onSuccess }: SignupFormProps) {
             onChange={(e) => handleChange("password", e.target.value)}
             placeholder="••••••••••••"
             autoComplete="new-password"
-            className={`w-full h-10 rounded-lg border bg-white pl-3 pr-10 text-sm text-zinc-900 placeholder:text-zinc-400 focus:outline-none transition-all ${
+            className={`w-full h-10 rounded-lg border bg-muted/40 pl-3 pr-10 text-sm text-foreground placeholder:text-muted-foreground focus:bg-card focus:outline-none transition-all ${
               fieldErrors.password
-                ? "border-red-300 focus:border-red-500 focus:ring-2 focus:ring-red-200"
-                : "border-zinc-200 focus:border-[#5850ec] focus:ring-2 focus:ring-[#5850ec]/15"
+                ? "border-destructive focus:border-destructive focus:ring-2 focus:ring-destructive/20"
+                : "border-card-border focus:border-ring focus:ring-2 focus:ring-ring/15"
             }`}
           />
           <button
@@ -172,7 +172,7 @@ export function SignupForm({ onSuccess }: SignupFormProps) {
             onClick={toggleShowPassword}
             tabIndex={-1}
             aria-label={showPassword ? "Hide password" : "Show password"}
-            className="absolute inset-y-0 right-0 flex items-center pr-3 text-zinc-400 hover:text-zinc-600 focus:outline-none cursor-pointer"
+            className="absolute inset-y-0 right-0 flex items-center pr-3 text-muted-foreground hover:text-foreground focus:outline-none cursor-pointer"
           >
             {showPassword ? (
               <svg
@@ -206,7 +206,7 @@ export function SignupForm({ onSuccess }: SignupFormProps) {
           </button>
         </div>
         {fieldErrors.password && (
-          <p className="mt-1 text-[11px] text-red-600">{fieldErrors.password}</p>
+          <p className="mt-1 text-[11px] text-destructive">{fieldErrors.password}</p>
         )}
       </div>
 
@@ -220,7 +220,7 @@ export function SignupForm({ onSuccess }: SignupFormProps) {
       <div>
         <label
           htmlFor="confirmPassword"
-          className="block text-[11px] font-semibold uppercase tracking-wider text-zinc-600 mb-1.5"
+          className="block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-1.5"
         >
           CONFIRM PASSWORD
         </label>
@@ -231,14 +231,14 @@ export function SignupForm({ onSuccess }: SignupFormProps) {
           onChange={(e) => handleChange("confirmPassword", e.target.value)}
           placeholder="••••••••••••"
           autoComplete="new-password"
-          className={`w-full h-10 rounded-lg border bg-white px-3 text-sm text-zinc-900 placeholder:text-zinc-400 focus:outline-none transition-all ${
+          className={`w-full h-10 rounded-lg border bg-muted/40 px-3 text-sm text-foreground placeholder:text-muted-foreground focus:bg-card focus:outline-none transition-all ${
             fieldErrors.confirmPassword
-              ? "border-red-300 focus:border-red-500 focus:ring-2 focus:ring-red-200"
-              : "border-zinc-200 focus:border-[#5850ec] focus:ring-2 focus:ring-[#5850ec]/15"
+              ? "border-destructive focus:border-destructive focus:ring-2 focus:ring-destructive/20"
+              : "border-card-border focus:border-ring focus:ring-2 focus:ring-ring/15"
           }`}
         />
         {fieldErrors.confirmPassword && (
-          <p className="mt-1 text-[11px] text-red-600">
+          <p className="mt-1 text-[11px] text-destructive">
             {fieldErrors.confirmPassword}
           </p>
         )}
@@ -251,20 +251,20 @@ export function SignupForm({ onSuccess }: SignupFormProps) {
             type="checkbox"
             checked={values.agreeToTerms}
             onChange={(e) => handleChange("agreeToTerms", e.target.checked)}
-            className="mt-0.5 h-4 w-4 rounded border-zinc-300 text-[#5850ec] focus:ring-[#5850ec]/20 cursor-pointer accent-[#5850ec]"
+            className="mt-0.5 h-4 w-4 rounded border-input-border text-ring focus:ring-ring/20 cursor-pointer accent-ring"
           />
-          <span className="text-xs text-zinc-600 leading-snug">
+          <span className="text-xs text-muted-foreground leading-snug">
             I agree to the{" "}
             <Link
               href="/terms"
-              className="font-medium text-[#5850ec] hover:underline"
+              className="font-medium text-ring hover:underline"
             >
               Terms of Service
             </Link>{" "}
             and{" "}
             <Link
               href="/privacy"
-              className="font-medium text-[#5850ec] hover:underline"
+              className="font-medium text-ring hover:underline"
             >
               Privacy Policy
             </Link>
@@ -272,7 +272,7 @@ export function SignupForm({ onSuccess }: SignupFormProps) {
           </span>
         </label>
         {fieldErrors.agreeToTerms && (
-          <p className="mt-1 text-[11px] text-red-600">
+          <p className="mt-1 text-[11px] text-destructive">
             {fieldErrors.agreeToTerms}
           </p>
         )}
@@ -282,12 +282,12 @@ export function SignupForm({ onSuccess }: SignupFormProps) {
       <button
         type="submit"
         disabled={isSubmitting || isSuccess}
-        className="w-full h-11 bg-[#5850ec] hover:bg-[#4d44e7] active:bg-[#4338ca] disabled:opacity-70 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg shadow-sm flex items-center justify-center gap-1.5 transition-all cursor-pointer mt-2"
+        className="w-full h-11 bg-accent hover:bg-accent-hover active:bg-accent-hover/90 disabled:opacity-70 disabled:cursor-not-allowed text-accent-foreground text-sm font-medium rounded-lg shadow-sm flex items-center justify-center gap-1.5 transition-all cursor-pointer mt-2"
       >
         {isSubmitting ? (
           <>
             <svg
-              className="h-4 w-4 animate-spin text-white"
+              className="h-4 w-4 animate-spin text-accent-foreground"
               viewBox="0 0 24 24"
               fill="none"
             >

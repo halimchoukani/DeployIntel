@@ -1,4 +1,4 @@
-﻿import { getAuthToken, performAutoLogout } from "@/lib/auth/session";
+import { getAuthToken, performAutoLogout } from "@/lib/auth/session";
 
 function getToken(): string {
   const token = getAuthToken();
@@ -32,6 +32,17 @@ async function handleResponse<T>(res: Response): Promise<T> {
 
 export type ProjectStatus = "ACTIVE" | "ARCHIVED";
 
+export type ProjectRole = "OWNER" | "MAINTAINER" | "DEVELOPER" | "VIEWER";
+
+export type ProjectPermission =
+  | "VIEW_PROJECT"
+  | "TRIGGER_GATES"
+  | "MANAGE_RELEASES"
+  | "MANAGE_ENVIRONMENTS"
+  | "MANAGE_MEMBERS"
+  | "MANAGE_SETTINGS"
+  | "DELETE_PROJECT";
+
 export interface Project {
   id: string;
   name: string;
@@ -43,6 +54,10 @@ export interface Project {
   status: ProjectStatus;
   createdAt: string;
   updatedAt: string;
+  /** The calling user's role in this specific project (null = not a member / owner by default) */
+  currentUserRole?: ProjectRole | null;
+  /** The calling user's effective permissions in this specific project */
+  currentUserPermissions?: ProjectPermission[];
 }
 
 export interface GithubRepo {

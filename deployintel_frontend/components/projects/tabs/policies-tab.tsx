@@ -80,27 +80,27 @@ export function PoliciesTab({ project }: PoliciesTabProps) {
   return (
     <div className="space-y-6">
       {/* 1. Risk Threshold Slider Card */}
-      <div className="bg-white rounded-2xl border border-zinc-200 p-6 shadow-xs">
+      <div className="bg-card text-foreground rounded-2xl border border-card-border p-6 shadow-xs">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
           <div>
             <div className="flex items-center gap-2">
               <Sliders className="w-4 h-4 text-[#5850ec]" />
-              <h3 className="text-sm font-bold text-zinc-900 uppercase tracking-wider">
+              <h3 className="text-sm font-bold text-foreground uppercase tracking-wider">
                 Risk Tolerance Threshold
               </h3>
             </div>
-            <p className="text-xs text-zinc-500 mt-1">
+            <p className="text-xs text-muted-foreground mt-1">
               Deployments scoring above this threshold will be quarantined and blocked automatically.
             </p>
           </div>
           <div className="flex items-center gap-3">
-            <span className="text-xs font-semibold text-zinc-500">Threshold:</span>
+            <span className="text-xs font-semibold text-muted-foreground">Threshold:</span>
             <span className={`text-sm font-bold px-3 py-1 rounded-lg border ${
               riskThreshold <= 40
-                ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/20"
                 : riskThreshold <= 70
-                ? "bg-amber-50 text-amber-700 border-amber-200"
-                : "bg-rose-50 text-rose-700 border-rose-200"
+                ? "bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/20"
+                : "bg-rose-500/15 text-rose-600 dark:text-rose-400 border-rose-500/20"
             }`}>
               {riskThreshold} / 100
             </span>
@@ -115,9 +115,9 @@ export function PoliciesTab({ project }: PoliciesTabProps) {
             max={90}
             value={riskThreshold}
             onChange={(e) => setRiskThreshold(Number(e.target.value))}
-            className="w-full h-2 bg-zinc-200 rounded-lg appearance-none cursor-pointer accent-[#5850ec]"
+            className="w-full h-2 bg-muted rounded-lg appearance-none cursor-pointer accent-[#5850ec]"
           />
-          <div className="flex justify-between text-[11px] font-semibold text-zinc-400">
+          <div className="flex justify-between text-[11px] font-semibold text-muted-foreground">
             <span>Strict (10)</span>
             <span>Balanced (50)</span>
             <span>Permissive (90)</span>
@@ -126,11 +126,11 @@ export function PoliciesTab({ project }: PoliciesTabProps) {
       </div>
 
       {/* 2. Guardrail Rules List */}
-      <div className="bg-white rounded-2xl border border-zinc-200 shadow-xs overflow-hidden">
-        <div className="p-6 border-b border-zinc-100 flex items-center justify-between">
+      <div className="bg-card text-foreground rounded-2xl border border-card-border shadow-xs overflow-hidden">
+        <div className="p-6 border-b border-card-border flex items-center justify-between">
           <div>
-            <h3 className="text-sm font-bold text-zinc-900">Configured Sentinel Guardrails</h3>
-            <p className="text-xs text-zinc-500 mt-0.5">Toggle active protection policies for {project.name}</p>
+            <h3 className="text-sm font-bold text-foreground">Configured Sentinel Guardrails</h3>
+            <p className="text-xs text-muted-foreground mt-0.5">Toggle active protection policies for {project.name}</p>
           </div>
           <button
             onClick={handleSave}
@@ -150,28 +150,28 @@ export function PoliciesTab({ project }: PoliciesTabProps) {
           </button>
         </div>
 
-        <div className="divide-y divide-zinc-100">
+        <div className="divide-y divide-card-border">
           {policies.map((policy) => (
             <div
               key={policy.id}
-              className="p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-zinc-50/60 transition-colors"
+              className="p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-muted/40 transition-colors"
             >
               <div className="space-y-1">
                 <div className="flex items-center gap-2">
-                  <h4 className="text-xs font-bold text-zinc-900">{policy.name}</h4>
+                  <h4 className="text-xs font-bold text-foreground">{policy.name}</h4>
                   <span
                     className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
                       policy.type === "BLOCK"
-                        ? "bg-rose-50 text-rose-700 border-rose-200"
+                        ? "bg-rose-500/15 text-rose-600 dark:text-rose-400 border-rose-500/20"
                         : policy.type === "ROLLBACK"
-                        ? "bg-purple-50 text-purple-700 border-purple-200"
-                        : "bg-amber-50 text-amber-700 border-amber-200"
+                        ? "bg-purple-500/15 text-purple-600 dark:text-purple-400 border-purple-500/20"
+                        : "bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/20"
                     }`}
                   >
                     {policy.type}
                   </span>
                 </div>
-                <p className="text-xs text-zinc-500 max-w-2xl leading-relaxed">
+                <p className="text-xs text-muted-foreground max-w-2xl leading-relaxed">
                   {policy.description}
                 </p>
               </div>
@@ -181,7 +181,7 @@ export function PoliciesTab({ project }: PoliciesTabProps) {
                 type="button"
                 onClick={() => togglePolicy(policy.id)}
                 className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
-                  policy.enabled ? "bg-[#5850ec]" : "bg-zinc-200"
+                  policy.enabled ? "bg-[#5850ec]" : "bg-muted"
                 }`}
               >
                 <span

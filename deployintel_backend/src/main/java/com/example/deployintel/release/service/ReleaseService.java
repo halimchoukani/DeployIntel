@@ -161,6 +161,8 @@ public class ReleaseService {
                     .failedTests(tr.getFailedTests())
                     .durationMs(tr.getDurationMs())
                     .completedAt(tr.getCompletedAt())
+                    .aiSuggestion(tr.getAiSuggestion())
+                    .aiModel(tr.getAiModel())
                     .build()).toList();
 
             AssessmentDetails ad = extractAssessmentDetails(r, dep, assessment);
@@ -205,6 +207,8 @@ public class ReleaseService {
                     .failedTests(tr.getFailedTests())
                     .durationMs(tr.getDurationMs())
                     .completedAt(tr.getCompletedAt())
+                    .aiSuggestion(tr.getAiSuggestion())
+                    .aiModel(tr.getAiModel())
                     .build()).toList();
 
             AssessmentDetails ad = extractAssessmentDetails(r, dep, assessment);

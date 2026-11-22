@@ -1,5 +1,6 @@
 package com.example.deployintel.gate.service;
 
+import com.example.deployintel.ai.service.OllamaService;
 import com.example.deployintel.auth.security.UserPrincipal;
 import com.example.deployintel.deployment.entity.Deployment;
 import com.example.deployintel.deployment.repository.DeploymentRepository;
@@ -29,6 +30,7 @@ public class AutomatedReleaseTestService {
     private final DeploymentRepository deploymentRepository;
     private final GateService gateService;
     private final CompositeRiskScoreService compositeRiskScoreService;
+    private final OllamaService ollamaService;
 
     /**
      * Executes gate checks (Semgrep SAST and k6 load tests) automatically in the background
@@ -155,6 +157,24 @@ public class AutomatedReleaseTestService {
                 deployment.setStatus("FAILED");
             }
             deploymentRepository.save(deployment);
+        }
+
+        // ── 3. Request release-level AI advisory from local Ollama ────────────
+        try {
+            String releaseAi = ollamaService.analyzeReleaseReport(
+                    project,
+                    release,
+                    semgrepResult,
+                    k6Result,
+                    release.getStatus().name(),
+                    deployment.getStatus() != null && "PASSED".equalsIgnoreCase(deployment.getStatus()) ? 85.0 : 45.0
+            );
+            if (releaseAi != null && !releaseAi.isBlank()) {
+                release.setAiSuggestion(releaseAi);
+                log.info("Attached Ollama release gate advisory to Release {}", release.getVersionNumber());
+            }
+        } catch (Exception e) {
+            log.warn("Failed to generate AI release advisory for release {}: {}", releaseId, e.getMessage());
         }
 
         releaseRepository.save(release);

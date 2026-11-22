@@ -7,6 +7,7 @@ import com.example.deployintel.common.exception.UserNotFoundException;
 import com.example.deployintel.project.dto.*;
 import com.example.deployintel.project.entity.Project;
 import com.example.deployintel.project.entity.ProjectStatus;
+import com.example.deployintel.project.member.repository.ProjectMemberRepository;
 import com.example.deployintel.project.repository.ProjectRepository;
 import com.example.deployintel.user.entity.User;
 import com.example.deployintel.user.entity.UserRole;
@@ -34,6 +35,9 @@ class ProjectServiceTest {
 
     @Mock
     private ProjectRepository projectRepository;
+
+    @Mock
+    private ProjectMemberRepository projectMemberRepository;
 
     @Mock
     private UserRepository userRepository;
@@ -261,7 +265,7 @@ class ProjectServiceTest {
     @Test
     @DisplayName("getUserProjects should filter by status when provided")
     void testGetUserProjectsWithStatus() {
-        when(projectRepository.findByOwnerIdAndStatusOrderByCreatedAtDesc(owner.getId(), ProjectStatus.ACTIVE))
+        when(projectRepository.findAccessibleProjectsWithStatus(owner.getId(), ProjectStatus.ACTIVE))
                 .thenReturn(List.of(project));
 
         List<ProjectResponse> result = projectService.getUserProjects(owner.getId(), ProjectStatus.ACTIVE);

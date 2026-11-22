@@ -30,10 +30,10 @@ export function AdminGuard({ children }: AdminGuardProps) {
     return (
       <div className="min-h-[75vh] flex items-center justify-center p-6">
         <div className="max-w-md w-full bg-white border border-zinc-200 rounded-3xl p-8 shadow-sm text-center">
-          <div className="w-14 h-14 rounded-2xl bg-rose-50 border border-rose-100 flex items-center justify-center text-rose-600 mx-auto mb-4">
+          <div className="w-14 h-14 rounded-2xl bg-rose-50 dark:bg-rose-950/50 border border-rose-100 dark:border-rose-800 flex items-center justify-center text-rose-600 dark:text-rose-400 mx-auto mb-4">
             <ShieldAlert className="w-7 h-7" />
           </div>
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-rose-50 text-rose-700 border border-rose-200/60 mb-2">
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 border border-rose-200/60 dark:border-rose-800 mb-2">
             <Lock className="w-3 h-3" />
             Restricted Zone
           </span>
@@ -43,7 +43,7 @@ export function AdminGuard({ children }: AdminGuardProps) {
           <p className="text-sm text-zinc-500 mt-2 leading-relaxed">
             This administration console is restricted to platform administrators. Your account is
             currently assigned the{" "}
-            <span className="font-semibold text-zinc-700 font-mono text-xs bg-zinc-100 px-1.5 py-0.5 rounded">
+            <span className="font-semibold text-zinc-700 font-mono text-xs bg-muted px-1.5 py-0.5 rounded border border-card-border text-foreground">
               {user?.role || "GUEST"}
             </span>{" "}
             role.

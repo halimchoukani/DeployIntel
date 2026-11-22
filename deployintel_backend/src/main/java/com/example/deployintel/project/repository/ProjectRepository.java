@@ -22,6 +22,14 @@ public interface ProjectRepository extends JpaRepository<Project, UUID> {
 
     List<Project> findByOwnerIdAndStatusOrderByCreatedAtDesc(UUID ownerId, ProjectStatus status);
 
+    @Query("SELECT DISTINCT p FROM Project p LEFT JOIN ProjectMember pm ON pm.project = p " +
+           "WHERE p.owner.id = :userId OR pm.user.id = :userId ORDER BY p.createdAt DESC")
+    List<Project> findAccessibleProjects(@Param("userId") UUID userId);
+
+    @Query("SELECT DISTINCT p FROM Project p LEFT JOIN ProjectMember pm ON pm.project = p " +
+           "WHERE (p.owner.id = :userId OR pm.user.id = :userId) AND p.status = :status ORDER BY p.createdAt DESC")
+    List<Project> findAccessibleProjectsWithStatus(@Param("userId") UUID userId, @Param("status") ProjectStatus status);
+
     Optional<Project> findByIdAndOwnerId(UUID id, UUID ownerId);
 
     boolean existsByNameIgnoreCaseAndOwnerId(String name, UUID ownerId);

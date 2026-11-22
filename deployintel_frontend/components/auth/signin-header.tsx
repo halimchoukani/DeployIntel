@@ -16,9 +16,9 @@ export function SigninHeader({
       {/* Brand row */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2.5">
-          <div className="relative flex h-8 w-8 items-center justify-center rounded-lg bg-[#0b0f19] text-white shadow-sm ring-1 ring-white/10">
+          <div className="relative flex h-8 w-8 items-center justify-center rounded-lg bg-accent text-white shadow-sm ring-1 ring-accent/20">
             <svg
-              className="h-4 w-4 text-indigo-400"
+              className="h-4 w-4"
               viewBox="0 0 24 24"
               fill="none"
               stroke="currentColor"
@@ -31,21 +31,21 @@ export function SigninHeader({
               <path d="m8 12 4-4 4 4" />
             </svg>
           </div>
-          <span className="text-[15px] font-semibold tracking-tight text-zinc-900">
+          <span className="text-[15px] font-semibold tracking-tight text-foreground">
             DeployIntel
           </span>
         </div>
-        <span className="rounded-md border border-zinc-200/80 bg-zinc-100/80 px-2 py-0.5 font-mono text-[11px] font-medium text-zinc-500">
+        <span className="rounded-md border border-card-border bg-muted/60 px-2 py-0.5 font-mono text-[11px] font-medium text-muted-foreground">
           {version}
         </span>
       </div>
 
       {/* Title */}
       <div className="mt-6">
-        <h1 className="text-[26px] sm:text-[28px] font-bold tracking-tight text-zinc-900">
+        <h1 className="text-[26px] sm:text-[28px] font-bold tracking-tight text-foreground">
           {title}
         </h1>
-        <p className="mt-1 text-[13.5px] sm:text-sm text-zinc-500">
+        <p className="mt-1 text-[13.5px] sm:text-sm text-muted-foreground">
           {subtitle}
         </p>
       </div>

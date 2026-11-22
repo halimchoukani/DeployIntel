@@ -10,12 +10,12 @@ export const metadata: Metadata = {
 
 export default function SettingsLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="min-h-screen bg-[#f8fafc]">
+    <div className="min-h-screen bg-background">
       <Sidebar />
       <DashboardTopbar />
       <main className="ml-[220px] pt-14 min-h-[calc(100vh-3.5rem)] flex">
         <SettingsSidebar />
-        <div className="flex-1 bg-[#fcfcfc] border-l border-zinc-200">
+        <div className="flex-1 bg-card border-l border-card-border">
           {children}
         </div>
       </main>

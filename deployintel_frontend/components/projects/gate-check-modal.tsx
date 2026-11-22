@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import type { Project } from "@/lib/api/project";
 import { useGateCheck, useK6GateCheck } from "@/hooks/use-gate";
 import type { SemgrepFinding } from "@/lib/api/gate";
+import { AiSuggestionCard } from "@/components/projects/ai-suggestion-card";
 import {
   ShieldAlert,
   ShieldCheck,
@@ -96,13 +97,13 @@ export function GateCheckModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-zinc-950/60 backdrop-blur-xs animate-in fade-in duration-200">
-      <div className="bg-white rounded-2xl border border-zinc-200 shadow-2xl max-w-3xl w-full max-h-[90vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
+      <div className="bg-card text-foreground rounded-2xl border border-card-border shadow-2xl max-w-3xl w-full max-h-[90vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
         
         {/* Header with Project info and Tab Switcher */}
-        <div className="px-6 py-4 border-b border-zinc-200 bg-zinc-50/80 space-y-3">
+        <div className="px-6 py-4 border-b border-card-border bg-muted/40 space-y-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-indigo-50 border border-indigo-100 text-[#5850ec] flex items-center justify-center shrink-0">
+              <div className="w-10 h-10 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-[#5850ec] flex items-center justify-center shrink-0">
                 {activeTab === "semgrep" ? (
                   <Shield className="w-5 h-5 text-[#5850ec]" />
                 ) : (
@@ -111,16 +112,16 @@ export function GateCheckModal({
               </div>
               <div>
                 <div className="flex items-center gap-2">
-                  <h3 className="text-base font-bold text-zinc-900">
+                  <h3 className="text-base font-bold text-foreground">
                     {activeTab === "semgrep"
                       ? "Semgrep SAST Security Gate"
                       : "Grafana k6 Performance Gate"}
                   </h3>
-                  <span className="text-[10px] font-mono uppercase px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 font-semibold border border-indigo-200/60">
+                  <span className="text-[10px] font-mono uppercase px-2 py-0.5 rounded-full bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 font-semibold border border-indigo-200/60 dark:border-indigo-800">
                     Pre-Flight Gate
                   </span>
                 </div>
-                <p className="text-xs text-zinc-500 mt-0.5">
+                <p className="text-xs text-muted-foreground mt-0.5">
                   Target: <span className="font-medium text-zinc-700">{project.name}</span>
                   {project.language && <span> • {project.language}</span>}
                 </p>
@@ -129,7 +130,7 @@ export function GateCheckModal({
 
             <button
               onClick={onClose}
-              className="text-zinc-400 hover:text-zinc-600 p-2 rounded-xl hover:bg-zinc-100 transition-colors"
+              className="text-muted-foreground hover:text-foreground p-2 rounded-xl hover:bg-muted transition-colors"
               title="Close modal"
             >
               <X className="w-5 h-5" />
@@ -145,8 +146,8 @@ export function GateCheckModal({
               }}
               className={`flex items-center gap-2 px-3.5 py-2 text-xs font-semibold rounded-xl border transition-all ${
                 activeTab === "semgrep"
-                  ? "bg-white text-indigo-900 border-indigo-200 shadow-xs"
-                  : "bg-zinc-100/70 text-zinc-600 border-transparent hover:text-zinc-900 hover:bg-zinc-100"
+                  ? "bg-card text-indigo-600 dark:text-indigo-400 border-indigo-200 dark:border-indigo-800 shadow-xs"
+                  : "bg-muted/50 text-muted-foreground border-transparent hover:text-foreground hover:bg-muted"
               }`}
             >
               <Shield className={`w-3.5 h-3.5 ${activeTab === "semgrep" ? "text-[#5850ec]" : "text-zinc-400"}`} />
@@ -155,10 +156,10 @@ export function GateCheckModal({
                 <span
                   className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold ${
                     semgrep.data.verdict === "BLOCKED"
-                      ? "bg-red-100 text-red-700"
+                      ? "bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800"
                       : semgrep.data.verdict === "WARNING"
-                      ? "bg-amber-100 text-amber-700"
-                      : "bg-emerald-100 text-emerald-700"
+                      ? "bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800"
+                      : "bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800"
                   }`}
                 >
                   {semgrep.data.verdict}
@@ -173,8 +174,8 @@ export function GateCheckModal({
               }}
               className={`flex items-center gap-2 px-3.5 py-2 text-xs font-semibold rounded-xl border transition-all ${
                 activeTab === "k6"
-                  ? "bg-white text-amber-900 border-amber-200 shadow-xs"
-                  : "bg-zinc-100/70 text-zinc-600 border-transparent hover:text-zinc-900 hover:bg-zinc-100"
+                  ? "bg-card text-amber-600 dark:text-amber-400 border-amber-200 dark:border-amber-800 shadow-xs"
+                  : "bg-muted/50 text-muted-foreground border-transparent hover:text-foreground hover:bg-muted"
               }`}
             >
               <Zap className={`w-3.5 h-3.5 ${activeTab === "k6" ? "text-amber-500 fill-amber-400" : "text-zinc-400"}`} />
@@ -183,10 +184,10 @@ export function GateCheckModal({
                 <span
                   className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold ${
                     k6.data.verdict === "BLOCKED"
-                      ? "bg-red-100 text-red-700"
+                      ? "bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800"
                       : k6.data.verdict === "WARNING"
-                      ? "bg-amber-100 text-amber-700"
-                      : "bg-emerald-100 text-emerald-700"
+                      ? "bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800"
+                      : "bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800"
                   }`}
                 >
                   {k6.data.verdict}
@@ -214,8 +215,8 @@ export function GateCheckModal({
                   </div>
 
                   <div>
-                    <h4 className="text-sm font-bold text-zinc-900">Executing Semgrep SAST Static Analysis...</h4>
-                    <p className="text-xs text-zinc-500 max-w-md mt-1">
+                    <h4 className="text-sm font-bold text-foreground">Executing Semgrep SAST Static Analysis...</h4>
+                    <p className="text-xs text-muted-foreground max-w-md mt-1">
                       Inspecting AST, secrets, and deployment pipelines for security vulnerabilities.
                     </p>
                   </div>
@@ -264,51 +265,51 @@ export function GateCheckModal({
                 <>
                   {/* Verdict Banner */}
                   {semgrep.data.verdict === "BLOCKED" && (
-                    <div className="p-5 rounded-2xl bg-red-50/90 border border-red-200/90 text-xs space-y-2">
+                    <div className="p-5 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-xs space-y-2">
                       <div className="flex items-center justify-between">
-                        <span className="font-bold text-red-900 flex items-center gap-2 text-xs tracking-wider uppercase">
+                        <span className="font-bold text-rose-700 dark:text-rose-300 flex items-center gap-2 text-xs tracking-wider uppercase">
                           <ShieldAlert className="w-5 h-5 text-red-600" />
                           VERDICT: GATE BLOCKED (DEPLOYMENT REJECTED)
                         </span>
-                        <span className="text-[11px] font-mono font-bold text-red-700 bg-red-100 px-2.5 py-0.5 rounded-full border border-red-200">
+                        <span className="text-[11px] font-mono font-bold text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/60 px-2.5 py-0.5 rounded-full border border-rose-200 dark:border-rose-800">
                           {semgrep.data.errorCount} Blocking Vulnerabilit{semgrep.data.errorCount === 1 ? "y" : "ies"}
                         </span>
                       </div>
-                      <p className="text-red-700 text-xs leading-relaxed">
+                      <p className="text-rose-600 dark:text-rose-400 text-xs leading-relaxed">
                         {semgrep.data.summaryMessage}
                       </p>
                     </div>
                   )}
 
                   {semgrep.data.verdict === "WARNING" && (
-                    <div className="p-5 rounded-2xl bg-amber-50/90 border border-amber-200/90 text-xs space-y-2">
+                    <div className="p-5 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-xs space-y-2">
                       <div className="flex items-center justify-between">
-                        <span className="font-bold text-amber-900 flex items-center gap-2 text-xs tracking-wider uppercase">
+                        <span className="font-bold text-amber-700 dark:text-amber-300 flex items-center gap-2 text-xs tracking-wider uppercase">
                           <AlertTriangle className="w-5 h-5 text-amber-600" />
                           VERDICT: GATE PASSED WITH WARNINGS
                         </span>
-                        <span className="text-[11px] font-mono font-bold text-amber-700 bg-amber-100 px-2.5 py-0.5 rounded-full border border-amber-200">
+                        <span className="text-[11px] font-mono font-bold text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/60 px-2.5 py-0.5 rounded-full border border-amber-200 dark:border-amber-800">
                           {semgrep.data.warningCount} Non-blocking Warning{semgrep.data.warningCount === 1 ? "" : "s"}
                         </span>
                       </div>
-                      <p className="text-amber-800 text-xs leading-relaxed">
+                      <p className="text-amber-600 dark:text-amber-400 text-xs leading-relaxed">
                         {semgrep.data.summaryMessage}
                       </p>
                     </div>
                   )}
 
                   {semgrep.data.verdict === "PASSED" && (
-                    <div className="p-5 rounded-2xl bg-emerald-50/90 border border-emerald-200/90 text-xs space-y-2">
+                    <div className="p-5 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-xs space-y-2">
                       <div className="flex items-center justify-between">
-                        <span className="font-bold text-emerald-900 flex items-center gap-2 text-xs tracking-wider uppercase">
+                        <span className="font-bold text-emerald-700 dark:text-emerald-300 flex items-center gap-2 text-xs tracking-wider uppercase">
                           <ShieldCheck className="w-5 h-5 text-emerald-600" />
                           VERDICT: GATE PASSED (DEPLOYMENT APPROVED)
                         </span>
-                        <span className="text-[11px] font-mono font-bold text-emerald-700 bg-emerald-100 px-2.5 py-0.5 rounded-full border border-emerald-200">
+                        <span className="text-[11px] font-mono font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 px-2.5 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800">
                           100% Compliant
                         </span>
                       </div>
-                      <p className="text-emerald-700 text-xs leading-relaxed">
+                      <p className="text-emerald-600 dark:text-emerald-400 text-xs leading-relaxed">
                         {semgrep.data.summaryMessage}
                       </p>
                     </div>
@@ -316,61 +317,70 @@ export function GateCheckModal({
 
                   {/* Database Persistence Status */}
                   {semgrep.data.testRunId && (
-                    <div className="flex items-center justify-between px-3.5 py-2 rounded-xl bg-zinc-50 border border-zinc-200/90 text-[11px] font-mono">
+                    <div className="flex items-center justify-between px-3.5 py-2 rounded-xl bg-muted/40 border border-card-border text-[11px] font-mono">
                       <span className="flex items-center gap-2 text-zinc-700">
                         <Database className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-                        <span>Saved to Database: <span className="font-semibold text-zinc-900">{semgrep.data.testRunId}</span></span>
+                        <span>Saved to Database: <span className="font-semibold text-foreground">{semgrep.data.testRunId}</span></span>
                       </span>
                       {semgrep.data.deploymentId && (
-                        <span className="text-zinc-500">
-                          Deployment: <span className="text-zinc-800 font-semibold">{semgrep.data.deploymentId.slice(0, 8)}...</span>
+                        <span className="text-muted-foreground">
+                          Deployment: <span className="text-foreground font-semibold">{semgrep.data.deploymentId.slice(0, 8)}...</span>
                         </span>
                       )}
                     </div>
                   )}
 
+                  {/* Ollama AI Security Advice */}
+                  {semgrep.data.aiSuggestion && (
+                    <AiSuggestionCard
+                      suggestion={semgrep.data.aiSuggestion}
+                      model={semgrep.data.aiModel || "qwen2.5-coder:7b"}
+                      title="Ollama AI Security Analysis & Fixes"
+                    />
+                  )}
+
                   {/* Summary KPIs */}
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                    <div className="p-3.5 rounded-xl bg-zinc-50 border border-zinc-200">
+                    <div className="p-3.5 rounded-xl bg-card border border-card-border">
                       <div className="flex items-center justify-between">
-                        <span className="text-[11px] font-medium text-zinc-500">Total Findings</span>
+                        <span className="text-[11px] font-medium text-muted-foreground">Total Findings</span>
                         <Layers className="w-3.5 h-3.5 text-zinc-400" />
                       </div>
                       <div className="mt-1 flex items-baseline gap-1.5">
-                        <span className="text-lg font-bold text-zinc-900">{semgrep.data.totalFindings}</span>
+                        <span className="text-lg font-bold text-foreground">{semgrep.data.totalFindings}</span>
                         {semgrep.data.errorCount > 0 && (
                           <span className="text-[11px] font-semibold text-red-600">({semgrep.data.errorCount} errors)</span>
                         )}
                       </div>
                     </div>
 
-                    <div className="p-3.5 rounded-xl bg-zinc-50 border border-zinc-200">
+                    <div className="p-3.5 rounded-xl bg-card border border-card-border">
                       <div className="flex items-center justify-between">
-                        <span className="text-[11px] font-medium text-zinc-500">Files Scanned</span>
+                        <span className="text-[11px] font-medium text-muted-foreground">Files Scanned</span>
                         <FileCode2 className="w-3.5 h-3.5 text-zinc-400" />
                       </div>
                       <div className="mt-1">
-                        <span className="text-lg font-bold text-zinc-900">{semgrep.data.scannedFilesCount || 39}</span>
+                        <span className="text-lg font-bold text-foreground">{semgrep.data.scannedFilesCount || 39}</span>
                       </div>
                     </div>
 
-                    <div className="p-3.5 rounded-xl bg-zinc-50 border border-zinc-200">
+                    <div className="p-3.5 rounded-xl bg-card border border-card-border">
                       <div className="flex items-center justify-between">
-                        <span className="text-[11px] font-medium text-zinc-500">Rules Evaluated</span>
+                        <span className="text-[11px] font-medium text-muted-foreground">Rules Evaluated</span>
                         <Code2 className="w-3.5 h-3.5 text-zinc-400" />
                       </div>
                       <div className="mt-1">
-                        <span className="text-lg font-bold text-zinc-900">{semgrep.data.rulesCount || 254}</span>
+                        <span className="text-lg font-bold text-foreground">{semgrep.data.rulesCount || 254}</span>
                       </div>
                     </div>
 
-                    <div className="p-3.5 rounded-xl bg-zinc-50 border border-zinc-200">
+                    <div className="p-3.5 rounded-xl bg-card border border-card-border">
                       <div className="flex items-center justify-between">
-                        <span className="text-[11px] font-medium text-zinc-500">Scan Duration</span>
+                        <span className="text-[11px] font-medium text-muted-foreground">Scan Duration</span>
                         <Clock className="w-3.5 h-3.5 text-zinc-400" />
                       </div>
                       <div className="mt-1">
-                        <span className="text-lg font-bold text-zinc-900 font-mono">
+                        <span className="text-lg font-bold text-foreground font-mono">
                           {semgrep.data.scanDurationSeconds ? `${semgrep.data.scanDurationSeconds.toFixed(1)}s` : "4.2s"}
                         </span>
                       </div>
@@ -380,13 +390,13 @@ export function GateCheckModal({
                   {/* Findings Explorer */}
                   <div className="space-y-3 pt-1">
                     <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-                      <div className="flex items-center gap-1.5 p-1 bg-zinc-100 rounded-xl">
+                      <div className="flex items-center gap-1.5 p-1 bg-muted rounded-xl">
                         <button
                           onClick={() => setFilterSeverity("ALL")}
                           className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors ${
                             filterSeverity === "ALL"
-                              ? "bg-white text-zinc-900 shadow-xs"
-                              : "text-zinc-600 hover:text-zinc-900"
+                              ? "bg-card text-foreground shadow-xs"
+                              : "text-muted-foreground hover:text-foreground"
                           }`}
                         >
                           All ({semgrepFindings.length})
@@ -395,7 +405,7 @@ export function GateCheckModal({
                           onClick={() => setFilterSeverity("ERROR")}
                           className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors ${
                             filterSeverity === "ERROR"
-                              ? "bg-white text-red-700 shadow-xs"
+                              ? "bg-card text-rose-600 dark:text-rose-400 shadow-xs"
                               : "text-zinc-600 hover:text-red-600"
                           }`}
                         >
@@ -405,7 +415,7 @@ export function GateCheckModal({
                           onClick={() => setFilterSeverity("WARNING")}
                           className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors ${
                             filterSeverity === "WARNING"
-                              ? "bg-white text-amber-700 shadow-xs"
+                              ? "bg-card text-amber-600 dark:text-amber-400 shadow-xs"
                               : "text-zinc-600 hover:text-amber-600"
                           }`}
                         >
@@ -420,7 +430,7 @@ export function GateCheckModal({
                           placeholder="Search rule or file..."
                           value={searchQuery}
                           onChange={(e) => setSearchQuery(e.target.value)}
-                          className="w-full pl-8 pr-3 py-1.5 text-xs rounded-xl border border-zinc-200 bg-zinc-50/70 focus:bg-white focus:outline-hidden focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 transition-all"
+                          className="w-full pl-8 pr-3 py-1.5 text-xs rounded-xl border border-card-border bg-muted/40 focus:bg-card text-foreground placeholder:text-muted-foreground focus:outline-hidden focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 transition-all"
                         />
                       </div>
                     </div>
@@ -432,8 +442,8 @@ export function GateCheckModal({
                             key={idx}
                             className={`p-4 rounded-xl border text-xs transition-all ${
                               finding.severity === "ERROR"
-                                ? "bg-red-50/30 border-red-200/90 hover:border-red-300"
-                                : "bg-zinc-50/60 border-zinc-200 hover:border-zinc-300"
+                                ? "bg-rose-500/5 border-rose-500/20 hover:border-rose-500/40"
+                                : "bg-card border-card-border hover:border-muted-foreground/30"
                             }`}
                           >
                             <div className="flex flex-wrap items-center justify-between gap-2">
@@ -441,13 +451,13 @@ export function GateCheckModal({
                                 <span
                                   className={`px-2 py-0.5 rounded-full font-mono text-[10px] font-bold ${
                                     finding.severity === "ERROR"
-                                      ? "bg-red-100 text-red-800 border border-red-200"
-                                      : "bg-amber-100 text-amber-800 border border-amber-200"
+                                      ? "bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800"
+                                      : "bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800"
                                   }`}
                                 >
                                   {finding.severity}
                                 </span>
-                                <span className="font-mono text-xs font-bold text-zinc-900 break-all">
+                                <span className="font-mono text-xs font-bold text-foreground break-all">
                                   {finding.checkId}
                                 </span>
                               </div>
@@ -481,14 +491,14 @@ export function GateCheckModal({
                             {(finding.owasp.length > 0 || finding.cwe.length > 0 || finding.category) && (
                               <div className="flex flex-wrap items-center gap-1.5 mt-2.5">
                                 {finding.category && (
-                                  <span className="text-[10px] px-2 py-0.5 rounded-md bg-zinc-100 text-zinc-600 font-medium">
+                                  <span className="text-[10px] px-2 py-0.5 rounded-md bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-700 font-medium">
                                     Category: {finding.category}
                                   </span>
                                 )}
                                 {finding.owasp.slice(0, 2).map((o, i) => (
                                   <span
                                     key={i}
-                                    className="text-[10px] px-2 py-0.5 rounded-md bg-purple-50 text-purple-700 border border-purple-200/60 font-medium"
+                                    className="text-[10px] px-2 py-0.5 rounded-md bg-purple-50 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 border border-purple-200/60 dark:border-purple-800 font-medium"
                                   >
                                     {o}
                                   </span>
@@ -496,7 +506,7 @@ export function GateCheckModal({
                                 {finding.cwe.slice(0, 2).map((c, i) => (
                                   <span
                                     key={i}
-                                    className="text-[10px] px-2 py-0.5 rounded-md bg-blue-50 text-blue-700 border border-blue-200/60 font-medium"
+                                    className="text-[10px] px-2 py-0.5 rounded-md bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 border border-blue-200/60 dark:border-blue-800 font-medium"
                                   >
                                     {c}
                                   </span>
@@ -507,9 +517,9 @@ export function GateCheckModal({
                         ))}
                       </div>
                     ) : (
-                      <div className="p-8 rounded-xl bg-zinc-50 border border-zinc-200 text-center space-y-2">
+                      <div className="p-8 rounded-xl bg-muted/30 border border-card-border text-center space-y-2">
                         <CheckCircle2 className="w-8 h-8 text-emerald-500 mx-auto" />
-                        <p className="text-xs font-semibold text-zinc-800">
+                        <p className="text-xs font-semibold text-foreground">
                           {searchQuery
                             ? "No findings matching your search filter."
                             : "No security issues found for the selected filter."}
@@ -520,13 +530,13 @@ export function GateCheckModal({
 
                   {/* Raw CLI output */}
                   {semgrep.data.rawOutput && (
-                    <div className="border border-zinc-200 rounded-xl overflow-hidden">
+                    <div className="border border-card-border rounded-xl overflow-hidden">
                       <button
                         onClick={() => setShowSemgrepRaw(!showSemgrepRaw)}
-                        className="w-full px-4 py-2.5 bg-zinc-50 hover:bg-zinc-100/80 text-xs font-semibold text-zinc-700 flex items-center justify-between transition-colors"
+                        className="w-full px-4 py-2.5 bg-muted/40 hover:bg-muted/70 text-xs font-semibold text-foreground flex items-center justify-between transition-colors"
                       >
                         <span className="flex items-center gap-2">
-                          <Terminal className="w-3.5 h-3.5 text-zinc-500" />
+                          <Terminal className="w-3.5 h-3.5 text-muted-foreground" />
                           <span>Raw Semgrep CLI Output</span>
                         </span>
                         {showSemgrepRaw ? <ChevronUp className="w-4 h-4 text-zinc-400" /> : <ChevronDown className="w-4 h-4 text-zinc-400" />}
@@ -559,8 +569,8 @@ export function GateCheckModal({
                   </div>
 
                   <div>
-                    <h4 className="text-sm font-bold text-zinc-900">Executing Grafana k6 Performance Benchmark...</h4>
-                    <p className="text-xs text-zinc-500 max-w-md mt-1">
+                    <h4 className="text-sm font-bold text-foreground">Executing Grafana k6 Performance Benchmark...</h4>
+                    <p className="text-xs text-muted-foreground max-w-md mt-1">
                       Spawning virtual users (5 VUs) to generate continuous HTTP load and assess latency percentiles (p90, p95).
                     </p>
                   </div>
@@ -609,51 +619,51 @@ export function GateCheckModal({
                 <>
                   {/* Verdict Banner */}
                   {k6.data.verdict === "PASSED" && (
-                    <div className="p-5 rounded-2xl bg-emerald-50/90 border border-emerald-200/90 text-xs space-y-2">
+                    <div className="p-5 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-xs space-y-2">
                       <div className="flex items-center justify-between">
-                        <span className="font-bold text-emerald-900 flex items-center gap-2 text-xs tracking-wider uppercase">
+                        <span className="font-bold text-emerald-700 dark:text-emerald-300 flex items-center gap-2 text-xs tracking-wider uppercase">
                           <CheckCircle2 className="w-5 h-5 text-emerald-600" />
                           VERDICT: PERFORMANCE GATE PASSED
                         </span>
-                        <span className="text-[11px] font-mono font-bold text-emerald-700 bg-emerald-100 px-2.5 py-0.5 rounded-full border border-emerald-200">
+                        <span className="text-[11px] font-mono font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 px-2.5 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800">
                           p95: {k6.data.p95DurationMs.toFixed(1)}ms
                         </span>
                       </div>
-                      <p className="text-emerald-700 text-xs leading-relaxed">
+                      <p className="text-emerald-600 dark:text-emerald-400 text-xs leading-relaxed">
                         {k6.data.summaryMessage}
                       </p>
                     </div>
                   )}
 
                   {k6.data.verdict === "WARNING" && (
-                    <div className="p-5 rounded-2xl bg-amber-50/90 border border-amber-200/90 text-xs space-y-2">
+                    <div className="p-5 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-xs space-y-2">
                       <div className="flex items-center justify-between">
-                        <span className="font-bold text-amber-900 flex items-center gap-2 text-xs tracking-wider uppercase">
+                        <span className="font-bold text-amber-700 dark:text-amber-300 flex items-center gap-2 text-xs tracking-wider uppercase">
                           <AlertTriangle className="w-5 h-5 text-amber-600" />
                           VERDICT: PERFORMANCE GATE WARNING (DEGRADED)
                         </span>
-                        <span className="text-[11px] font-mono font-bold text-amber-700 bg-amber-100 px-2.5 py-0.5 rounded-full border border-amber-200">
+                        <span className="text-[11px] font-mono font-bold text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/60 px-2.5 py-0.5 rounded-full border border-amber-200 dark:border-amber-800">
                           p95: {k6.data.p95DurationMs.toFixed(1)}ms
                         </span>
                       </div>
-                      <p className="text-amber-800 text-xs leading-relaxed">
+                      <p className="text-amber-600 dark:text-amber-400 text-xs leading-relaxed">
                         {k6.data.summaryMessage}
                       </p>
                     </div>
                   )}
 
                   {k6.data.verdict === "BLOCKED" && (
-                    <div className="p-5 rounded-2xl bg-red-50/90 border border-red-200/90 text-xs space-y-2">
+                    <div className="p-5 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-xs space-y-2">
                       <div className="flex items-center justify-between">
-                        <span className="font-bold text-red-900 flex items-center gap-2 text-xs tracking-wider uppercase">
+                        <span className="font-bold text-rose-700 dark:text-rose-300 flex items-center gap-2 text-xs tracking-wider uppercase">
                           <AlertOctagon className="w-5 h-5 text-red-600" />
                           VERDICT: PERFORMANCE GATE BLOCKED
                         </span>
-                        <span className="text-[11px] font-mono font-bold text-red-700 bg-red-100 px-2.5 py-0.5 rounded-full border border-red-200">
+                        <span className="text-[11px] font-mono font-bold text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/60 px-2.5 py-0.5 rounded-full border border-rose-200 dark:border-rose-800">
                           {(k6.data.failedRequestRate * 100).toFixed(1)}% Error Rate
                         </span>
                       </div>
-                      <p className="text-red-700 text-xs leading-relaxed">
+                      <p className="text-rose-600 dark:text-rose-400 text-xs leading-relaxed">
                         {k6.data.summaryMessage}
                       </p>
                     </div>
@@ -661,48 +671,57 @@ export function GateCheckModal({
 
                   {/* Database Persistence Status */}
                   {k6.data.testRunId && (
-                    <div className="flex items-center justify-between px-3.5 py-2 rounded-xl bg-zinc-50 border border-zinc-200/90 text-[11px] font-mono">
+                    <div className="flex items-center justify-between px-3.5 py-2 rounded-xl bg-muted/40 border border-card-border text-[11px] font-mono">
                       <span className="flex items-center gap-2 text-zinc-700">
                         <Database className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-                        <span>Saved to Database: <span className="font-semibold text-zinc-900">{k6.data.testRunId}</span></span>
+                        <span>Saved to Database: <span className="font-semibold text-foreground">{k6.data.testRunId}</span></span>
                       </span>
                       {k6.data.deploymentId && (
-                        <span className="text-zinc-500">
-                          Deployment: <span className="text-zinc-800 font-semibold">{k6.data.deploymentId.slice(0, 8)}...</span>
+                        <span className="text-muted-foreground">
+                          Deployment: <span className="text-foreground font-semibold">{k6.data.deploymentId.slice(0, 8)}...</span>
                         </span>
                       )}
                     </div>
                   )}
 
+                  {/* Ollama AI Performance Advice */}
+                  {k6.data.aiSuggestion && (
+                    <AiSuggestionCard
+                      suggestion={k6.data.aiSuggestion}
+                      model={k6.data.aiModel || "qwen2.5-coder:7b"}
+                      title="Ollama AI Performance Diagnostics & Tuning"
+                    />
+                  )}
+
                   {/* Performance KPIs Grid */}
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                    <div className="p-3.5 rounded-xl bg-zinc-50 border border-zinc-200">
+                    <div className="p-3.5 rounded-xl bg-card border border-card-border">
                       <div className="flex items-center justify-between">
-                        <span className="text-[11px] font-medium text-zinc-500">p95 Latency</span>
+                        <span className="text-[11px] font-medium text-muted-foreground">p95 Latency</span>
                         <Zap className="w-3.5 h-3.5 text-amber-500" />
                       </div>
                       <div className="mt-1">
-                        <span className="text-lg font-bold text-zinc-900 font-mono">
+                        <span className="text-lg font-bold text-foreground font-mono">
                           {k6.data.p95DurationMs.toFixed(1)}ms
                         </span>
                       </div>
                     </div>
 
-                    <div className="p-3.5 rounded-xl bg-zinc-50 border border-zinc-200">
+                    <div className="p-3.5 rounded-xl bg-card border border-card-border">
                       <div className="flex items-center justify-between">
-                        <span className="text-[11px] font-medium text-zinc-500">Throughput</span>
+                        <span className="text-[11px] font-medium text-muted-foreground">Throughput</span>
                         <TrendingUp className="w-3.5 h-3.5 text-emerald-500" />
                       </div>
                       <div className="mt-1">
-                        <span className="text-lg font-bold text-zinc-900 font-mono">
+                        <span className="text-lg font-bold text-foreground font-mono">
                           {k6.data.requestsPerSecond.toFixed(1)} req/s
                         </span>
                       </div>
                     </div>
 
-                    <div className="p-3.5 rounded-xl bg-zinc-50 border border-zinc-200">
+                    <div className="p-3.5 rounded-xl bg-card border border-card-border">
                       <div className="flex items-center justify-between">
-                        <span className="text-[11px] font-medium text-zinc-500">Error Rate</span>
+                        <span className="text-[11px] font-medium text-muted-foreground">Error Rate</span>
                         <Activity className="w-3.5 h-3.5 text-zinc-400" />
                       </div>
                       <div className="mt-1">
@@ -712,13 +731,13 @@ export function GateCheckModal({
                       </div>
                     </div>
 
-                    <div className="p-3.5 rounded-xl bg-zinc-50 border border-zinc-200">
+                    <div className="p-3.5 rounded-xl bg-card border border-card-border">
                       <div className="flex items-center justify-between">
-                        <span className="text-[11px] font-medium text-zinc-500">Total Requests</span>
+                        <span className="text-[11px] font-medium text-muted-foreground">Total Requests</span>
                         <Radio className="w-3.5 h-3.5 text-indigo-500" />
                       </div>
                       <div className="mt-1">
-                        <span className="text-lg font-bold text-zinc-900 font-mono">
+                        <span className="text-lg font-bold text-foreground font-mono">
                           {k6.data.totalRequests}
                         </span>
                       </div>
@@ -726,29 +745,29 @@ export function GateCheckModal({
                   </div>
 
                   {/* Latency Percentile Breakdown */}
-                  <div className="p-4 rounded-xl bg-zinc-50 border border-zinc-200 space-y-3">
+                  <div className="p-4 rounded-xl bg-card border border-card-border space-y-3">
                     <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold text-zinc-900 flex items-center gap-1.5">
-                        <Gauge className="w-4 h-4 text-zinc-500" />
+                      <span className="text-xs font-bold text-foreground flex items-center gap-1.5">
+                        <Gauge className="w-4 h-4 text-muted-foreground" />
                         Response Time Percentiles
                       </span>
-                      <span className="text-[11px] text-zinc-500 font-mono">
+                      <span className="text-[11px] text-muted-foreground font-mono">
                         Target: {k6.data.targetUrl}
                       </span>
                     </div>
 
                     <div className="grid grid-cols-3 sm:grid-cols-5 gap-2 text-center text-xs">
-                      <div className="p-2.5 rounded-lg bg-white border border-zinc-200/80">
+                      <div className="p-2.5 rounded-lg bg-card border border-card-border">
                         <div className="text-[10px] text-zinc-400 font-medium">Min</div>
-                        <div className="font-mono font-bold text-zinc-800 mt-0.5">{k6.data.minDurationMs.toFixed(1)}ms</div>
+                        <div className="font-mono font-bold text-foreground mt-0.5">{k6.data.minDurationMs.toFixed(1)}ms</div>
                       </div>
-                      <div className="p-2.5 rounded-lg bg-white border border-zinc-200/80">
+                      <div className="p-2.5 rounded-lg bg-card border border-card-border">
                         <div className="text-[10px] text-zinc-400 font-medium">Median</div>
-                        <div className="font-mono font-bold text-zinc-800 mt-0.5">{k6.data.medDurationMs.toFixed(1)}ms</div>
+                        <div className="font-mono font-bold text-foreground mt-0.5">{k6.data.medDurationMs.toFixed(1)}ms</div>
                       </div>
-                      <div className="p-2.5 rounded-lg bg-white border border-zinc-200/80">
+                      <div className="p-2.5 rounded-lg bg-card border border-card-border">
                         <div className="text-[10px] text-zinc-400 font-medium">Avg</div>
-                        <div className="font-mono font-bold text-zinc-800 mt-0.5">{k6.data.avgDurationMs.toFixed(1)}ms</div>
+                        <div className="font-mono font-bold text-foreground mt-0.5">{k6.data.avgDurationMs.toFixed(1)}ms</div>
                       </div>
                       <div className="p-2.5 rounded-lg bg-indigo-50/70 border border-indigo-200/80">
                         <div className="text-[10px] text-indigo-600 font-medium">p(90)</div>
@@ -763,7 +782,7 @@ export function GateCheckModal({
 
                   {/* Assertion Checks List */}
                   <div className="space-y-2">
-                    <h4 className="text-xs font-bold text-zinc-900 flex items-center gap-1.5">
+                    <h4 className="text-xs font-bold text-foreground flex items-center gap-1.5">
                       <CheckCircle2 className="w-4 h-4 text-emerald-600" />
                       Assertion Checks & Policy Guardrails
                     </h4>
@@ -772,7 +791,7 @@ export function GateCheckModal({
                       {k6.data.checks.map((check, idx) => (
                         <div
                           key={idx}
-                          className="flex items-center justify-between p-3 rounded-xl bg-zinc-50 border border-zinc-200/80 text-xs"
+                          className="flex items-center justify-between p-3 rounded-xl bg-muted/40 border border-card-border text-xs"
                         >
                           <div className="flex items-center gap-2">
                             {check.passed ? (
@@ -780,7 +799,7 @@ export function GateCheckModal({
                             ) : (
                               <XCircle className="w-4 h-4 text-red-600 shrink-0" />
                             )}
-                            <span className="font-medium text-zinc-800 font-mono text-[11.5px]">{check.name}</span>
+                            <span className="font-medium text-foreground font-mono text-[11.5px]">{check.name}</span>
                           </div>
 
                           <div className="flex items-center gap-3 text-[11px] font-mono">
@@ -796,13 +815,13 @@ export function GateCheckModal({
 
                   {/* Raw k6 CLI output */}
                   {k6.data.rawOutput && (
-                    <div className="border border-zinc-200 rounded-xl overflow-hidden">
+                    <div className="border border-card-border rounded-xl overflow-hidden">
                       <button
                         onClick={() => setShowK6Raw(!showK6Raw)}
-                        className="w-full px-4 py-2.5 bg-zinc-50 hover:bg-zinc-100/80 text-xs font-semibold text-zinc-700 flex items-center justify-between transition-colors"
+                        className="w-full px-4 py-2.5 bg-muted/40 hover:bg-muted/70 text-xs font-semibold text-foreground flex items-center justify-between transition-colors"
                       >
                         <span className="flex items-center gap-2">
-                          <Terminal className="w-3.5 h-3.5 text-zinc-500" />
+                          <Terminal className="w-3.5 h-3.5 text-muted-foreground" />
                           <span>Raw Grafana k6 CLI Terminal Output</span>
                         </span>
                         {showK6Raw ? <ChevronUp className="w-4 h-4 text-zinc-400" /> : <ChevronDown className="w-4 h-4 text-zinc-400" />}
@@ -821,7 +840,7 @@ export function GateCheckModal({
         </div>
 
         {/* Footer */}
-        <div className="px-6 py-4 border-t border-zinc-200 bg-zinc-50/80 flex items-center justify-between">
+        <div className="px-6 py-4 border-t border-card-border bg-muted/40 flex items-center justify-between">
           <div className="text-[11px] text-zinc-400 font-medium">
             {activeTab === "semgrep"
               ? "Semgrep OSS Engine • AST & Rule Verification"
@@ -838,7 +857,7 @@ export function GateCheckModal({
                 }
               }}
               disabled={activeTab === "semgrep" ? semgrep.isLoading : k6.isLoading}
-              className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold text-zinc-700 bg-white hover:bg-zinc-100 border border-zinc-200 rounded-xl transition-all shadow-xs disabled:opacity-60"
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold text-foreground bg-card hover:bg-muted border border-card-border rounded-xl transition-all shadow-xs disabled:opacity-60"
             >
               <RefreshCw
                 className={`w-3.5 h-3.5 ${

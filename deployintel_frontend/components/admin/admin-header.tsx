@@ -41,7 +41,7 @@ export function AdminHeader({ onRefresh, isRefreshing }: AdminHeaderProps) {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5">
           <div>
             <div className="flex items-center gap-2 mb-1.5">
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-indigo-50 text-[#5850ec] border border-indigo-100">
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-indigo-50 dark:bg-indigo-950/60 text-[#5850ec] dark:text-indigo-300 border border-indigo-100 dark:border-indigo-800">
                 <ShieldCheck className="w-3 h-3" />
                 Root Authority
               </span>

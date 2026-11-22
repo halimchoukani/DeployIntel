@@ -12,16 +12,22 @@ export function PasswordStrengthIndicator({
 }: PasswordStrengthIndicatorProps) {
   const { score, label, criteria } = strength;
 
+  const barColors = {
+    1: "bg-destructive",
+    2: "bg-warning",
+    3: "bg-success",
+  };
+
   return (
-    <div className="rounded-xl border border-zinc-100 bg-[#f9fafb] p-3 sm:p-3.5 transition-all">
+    <div className="rounded-xl border border-card-border bg-muted/30 p-3 sm:p-3.5 transition-all">
       {/* Top Header */}
       <div className="flex items-center justify-between text-xs">
-        <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-500">
+        <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
           PASSWORD STRENGTH
         </span>
         <span
           className={`text-xs font-semibold transition-colors duration-200 ${
-            hasPasswordInput ? strength.colorClass : "text-zinc-400"
+            hasPasswordInput ? strength.colorClass : "text-muted-foreground"
           }`}
         >
           {hasPasswordInput ? label : "Strong"}
@@ -36,7 +42,7 @@ export function PasswordStrengthIndicator({
             <div
               key={barIndex}
               className={`h-1 flex-1 rounded-full transition-colors duration-300 ${
-                isActive ? "bg-[#5850ec]" : "bg-zinc-200"
+                isActive ? barColors[barIndex as keyof typeof barColors] : "bg-muted"
               }`}
             />
           );
@@ -49,15 +55,15 @@ export function PasswordStrengthIndicator({
         <div
           className={`flex items-center gap-1 transition-colors duration-200 ${
             criteria.hasMinLength || !hasPasswordInput
-              ? "text-zinc-600"
-              : "text-zinc-400"
+              ? "text-success"
+              : "text-muted-foreground"
           }`}
         >
           <svg
             className={`h-3.5 w-3.5 transition-colors ${
               criteria.hasMinLength || !hasPasswordInput
-                ? "text-[#5850ec]"
-                : "text-zinc-400"
+                ? "text-success"
+                : "text-muted-foreground"
             }`}
             viewBox="0 0 20 20"
             fill="currentColor"
@@ -75,15 +81,15 @@ export function PasswordStrengthIndicator({
         <div
           className={`flex items-center gap-1 transition-colors duration-200 ${
             criteria.hasUppercase || !hasPasswordInput
-              ? "text-zinc-600"
-              : "text-zinc-400"
+              ? "text-success"
+              : "text-muted-foreground"
           }`}
         >
           <svg
             className={`h-3.5 w-3.5 transition-colors ${
               criteria.hasUppercase || !hasPasswordInput
-                ? "text-[#5850ec]"
-                : "text-zinc-400"
+                ? "text-success"
+                : "text-muted-foreground"
             }`}
             viewBox="0 0 20 20"
             fill="currentColor"
@@ -101,15 +107,15 @@ export function PasswordStrengthIndicator({
         <div
           className={`flex items-center gap-1 transition-colors duration-200 ${
             criteria.hasNumberAndSymbol || !hasPasswordInput
-              ? "text-zinc-600"
-              : "text-zinc-400"
+              ? "text-success"
+              : "text-muted-foreground"
           }`}
         >
           <svg
             className={`h-3.5 w-3.5 transition-colors ${
               criteria.hasNumberAndSymbol || !hasPasswordInput
-                ? "text-[#5850ec]"
-                : "text-zinc-400"
+                ? "text-success"
+                : "text-muted-foreground"
             }`}
             viewBox="0 0 20 20"
             fill="currentColor"

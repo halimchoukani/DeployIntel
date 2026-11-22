@@ -1,5 +1,7 @@
 package com.example.deployintel.gate.service;
 
+import com.example.deployintel.ai.config.OllamaProperties;
+import com.example.deployintel.ai.service.OllamaService;
 import com.example.deployintel.auth.security.UserPrincipal;
 import com.example.deployintel.common.exception.ProjectAccessDeniedException;
 import com.example.deployintel.common.exception.ProjectNotFoundException;
@@ -12,6 +14,7 @@ import com.example.deployintel.environment.service.DockerService;
 import com.example.deployintel.environment.service.EnvironmentService;
 import com.example.deployintel.gate.dto.*;
 import com.example.deployintel.project.entity.Project;
+import com.example.deployintel.project.member.repository.ProjectMemberRepository;
 import com.example.deployintel.project.repository.ProjectRepository;
 import com.example.deployintel.deployment.entity.Deployment;
 import com.example.deployintel.deployment.repository.DeploymentRepository;
@@ -37,6 +40,7 @@ import java.util.*;
 public class GateService {
 
     private final ProjectRepository projectRepository;
+    private final ProjectMemberRepository projectMemberRepository;
     private final TestEnvironmentRepository testEnvironmentRepository;
     private final DockerService dockerService;
     private final EnvironmentService environmentService;
@@ -48,6 +52,8 @@ public class GateService {
     private final PerformanceMetricRepository performanceMetricRepository;
     private final RiskAssessmentRepository riskAssessmentRepository;
     private final RiskRuleRepository riskRuleRepository;
+    private final OllamaService ollamaService;
+    private final OllamaProperties ollamaProperties;
 
     /**
      * Updates the user repository in the project's test environment container to the specific
@@ -664,7 +670,8 @@ public class GateService {
 
         boolean isOwner = project.getOwner() != null && project.getOwner().getId().equals(currentUser.getId());
         boolean isAdmin = currentUser.getRole() == UserRole.ADMIN;
-        if (!isOwner && !isAdmin) {
+        boolean isMember = projectMemberRepository.existsByProjectIdAndUserId(projectId, currentUser.getId());
+        if (!isOwner && !isAdmin && !isMember) {
             throw new ProjectAccessDeniedException("You do not have permission to access project: " + projectId);
         }
         return project;
@@ -766,6 +773,21 @@ public class GateService {
             testResultRepository.save(testResult);
         }
 
+        // Request AI diagnostic suggestions from local Ollama
+        try {
+            String aiSuggestion = ollamaService.analyzeSecurityReport(project, response);
+            if (aiSuggestion != null && !aiSuggestion.isBlank()) {
+                testRun.setAiSuggestion(aiSuggestion);
+                testRun.setAiModel(ollamaProperties.getModel());
+                testRunRepository.save(testRun);
+                response.setAiSuggestion(aiSuggestion);
+                response.setAiModel(ollamaProperties.getModel());
+                log.info("Attached Ollama AI security suggestions to TestRun {}", testRun.getId());
+            }
+        } catch (Exception e) {
+            log.warn("Failed to generate AI security suggestions for TestRun {}: {}", testRun.getId(), e.getMessage());
+        }
+
         // NOTE: RiskAssessment is now computed as a composite score by CompositeRiskScoreService
         // after BOTH Semgrep and k6 tests have run. No standalone assessment is saved here.
         log.debug("Semgrep persist complete for deployment {}. Composite scoring deferred to CompositeRiskScoreService.", deployment.getId());
@@ -849,6 +871,21 @@ public class GateService {
                 .status(MetricStatus.PASSED)
                 .build();
         performanceMetricRepository.save(rpsMetric);
+
+        // Request AI diagnostic suggestions from local Ollama
+        try {
+            String aiSuggestion = ollamaService.analyzePerformanceReport(project, response);
+            if (aiSuggestion != null && !aiSuggestion.isBlank()) {
+                testRun.setAiSuggestion(aiSuggestion);
+                testRun.setAiModel(ollamaProperties.getModel());
+                testRunRepository.save(testRun);
+                response.setAiSuggestion(aiSuggestion);
+                response.setAiModel(ollamaProperties.getModel());
+                log.info("Attached Ollama AI performance suggestions to TestRun {}", testRun.getId());
+            }
+        } catch (Exception e) {
+            log.warn("Failed to generate AI performance suggestions for TestRun {}: {}", testRun.getId(), e.getMessage());
+        }
 
         // NOTE: RiskAssessment is now computed as a composite score by CompositeRiskScoreService
         // after BOTH Semgrep and k6 tests have run. No standalone assessment is saved here.
@@ -967,7 +1004,98 @@ public class GateService {
                     .findings(findingDtos)
                     .metrics(metricDtos)
                     .results(resultDtos)
+                    .aiSuggestion(tr.getAiSuggestion())
+                    .aiModel(tr.getAiModel())
                     .build();
         }).toList();
+    }
+
+    /**
+     * Generates or regenerates AI diagnostic suggestions on-demand for an existing test run.
+     */
+    @Transactional
+    public TestRunHistoryResponse generateAiHelpForRun(UserPrincipal currentUser, UUID projectId, UUID testRunId) {
+        Project project = getProjectAndValidateAccess(currentUser, projectId);
+        TestRun testRun = testRunRepository.findById(testRunId)
+                .orElseThrow(() -> new IllegalArgumentException("Test run not found with id: " + testRunId));
+
+        if (testRun.getType() == TestRunType.SECURITY) {
+            List<SecurityFinding> findings = testRun.getDeployment() != null
+                    ? securityFindingRepository.findByDeploymentId(testRun.getDeployment().getId())
+                    : Collections.emptyList();
+
+            GateCheckResponse pseudoReport = GateCheckResponse.builder()
+                    .projectId(projectId.toString())
+                    .projectName(project.getName())
+                    .verdict(testRun.getStatus() == TestRunStatus.PASSED ? "PASSED" : "FAILED")
+                    .totalFindings(findings.size())
+                    .errorCount((int) findings.stream().filter(f -> f.getSeverity() == Severity.CRITICAL || f.getSeverity() == Severity.HIGH).count())
+                    .warningCount((int) findings.stream().filter(f -> f.getSeverity() == Severity.MEDIUM).count())
+                    .infoCount((int) findings.stream().filter(f -> f.getSeverity() == Severity.LOW).count())
+                    .scanDurationSeconds(testRun.getDurationMs() != null ? testRun.getDurationMs() / 1000.0 : 1.0)
+                    .findings(findings.stream().map(f -> SemgrepFinding.builder()
+                            .checkId(f.getRuleId() != null ? f.getRuleId() : f.getTitle())
+                            .path(f.getFilePath() != null ? f.getFilePath() : "src/")
+                            .startLine(f.getLineNumber() != null ? f.getLineNumber() : 1)
+                            .message(f.getDescription() != null ? f.getDescription() : f.getTitle())
+                            .severity(f.getSeverity() != null ? f.getSeverity().name() : "MEDIUM")
+                            .shortlink(f.getRemediation())
+                            .build()).toList())
+                    .build();
+
+            String suggestion = ollamaService.analyzeSecurityReport(project, pseudoReport);
+            if (suggestion != null) {
+                testRun.setAiSuggestion(suggestion);
+                testRun.setAiModel(ollamaProperties.getModel());
+                testRunRepository.save(testRun);
+            }
+        } else if (testRun.getType() == TestRunType.PERFORMANCE) {
+            List<PerformanceMetric> metrics = testRun.getDeployment() != null
+                    ? performanceMetricRepository.findByDeploymentId(testRun.getDeployment().getId())
+                    : Collections.emptyList();
+
+            double p95 = metrics.stream()
+                    .filter(m -> "RESPONSE_TIME".equalsIgnoreCase(m.getMetricName()))
+                    .findFirst()
+                    .map(m -> m.getCurrentValue() != null ? m.getCurrentValue().doubleValue() : 0.0)
+                    .orElse(0.0);
+
+            double errorRate = metrics.stream()
+                    .filter(m -> "ERROR_RATE".equalsIgnoreCase(m.getMetricName()))
+                    .findFirst()
+                    .map(m -> m.getCurrentValue() != null ? m.getCurrentValue().doubleValue() / 100.0 : 0.0)
+                    .orElse(0.0);
+
+            double rps = metrics.stream()
+                    .filter(m -> "THROUGHPUT".equalsIgnoreCase(m.getMetricName()))
+                    .findFirst()
+                    .map(m -> m.getCurrentValue() != null ? m.getCurrentValue().doubleValue() : 0.0)
+                    .orElse(0.0);
+
+            K6CheckResponse pseudoReport = K6CheckResponse.builder()
+                    .projectId(projectId.toString())
+                    .projectName(project.getName())
+                    .verdict(testRun.getStatus() == TestRunStatus.PASSED ? "PASSED" : "FAILED")
+                    .totalRequests(testRun.getTotalTests() > 0 ? testRun.getTotalTests() : 100)
+                    .vus(5)
+                    .testDurationSeconds(testRun.getDurationMs() != null ? testRun.getDurationMs() / 1000.0 : 3.0)
+                    .p95DurationMs(p95)
+                    .requestsPerSecond(rps)
+                    .failedRequestRate(errorRate)
+                    .checks(Collections.emptyList())
+                    .build();
+
+            String suggestion = ollamaService.analyzePerformanceReport(project, pseudoReport);
+            if (suggestion != null) {
+                testRun.setAiSuggestion(suggestion);
+                testRun.setAiModel(ollamaProperties.getModel());
+                testRunRepository.save(testRun);
+            }
+        }
+
+        return getTestHistoryForProject(currentUser, projectId).stream()
+                .filter(r -> r.getId().equals(testRunId))
+                .findFirst()
+                .orElseThrow(() -> new IllegalStateException("Test run history could not be retrieved"));
     }
 }

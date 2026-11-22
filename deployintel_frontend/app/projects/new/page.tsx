@@ -365,7 +365,7 @@ function NewProjectPageContent() {
               <div className="flex items-center gap-2 flex-wrap">
                 <span className="text-sm font-semibold text-zinc-900">{selectedRepo.fullName}</span>
                 {selectedRepo.isPrivate && (
-                  <span className="text-[10px] font-semibold bg-zinc-200 text-zinc-600 px-1.5 py-0.5 rounded-full">
+                  <span className="text-[10px] font-semibold bg-zinc-200 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 border border-zinc-300/60 dark:border-zinc-700 px-1.5 py-0.5 rounded-full">
                     Private
                   </span>
                 )}
@@ -667,7 +667,7 @@ function RepoRow({
             {repo.fullName}
           </span>
           {repo.isPrivate && (
-            <span className="text-[10px] font-semibold bg-zinc-100 text-zinc-500 px-1.5 py-0.5 rounded-full">
+            <span className="text-[10px] font-semibold bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-300 border border-zinc-200/60 dark:border-zinc-700 px-1.5 py-0.5 rounded-full">
               Private
             </span>
           )}

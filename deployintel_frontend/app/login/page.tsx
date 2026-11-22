@@ -9,10 +9,10 @@ export const metadata: Metadata = {
 
 export default function LoginPage() {
   return (
-    <main className="min-h-screen w-full flex items-center justify-center p-4 sm:p-6 md:p-8 bg-[#f8fafc]">
+    <main className="min-h-screen w-full flex items-center justify-center p-4 sm:p-6 md:p-8 bg-background">
       <Suspense fallback={
         <div className="relative h-12 w-12">
-          <div className="absolute inset-0 rounded-full border-4 border-zinc-200" />
+          <div className="absolute inset-0 rounded-full border-4 border-card-border" />
           <div className="absolute inset-0 animate-spin rounded-full border-4 border-transparent border-t-[#5850ec]" />
         </div>
       }>

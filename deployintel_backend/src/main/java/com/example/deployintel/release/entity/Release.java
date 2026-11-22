@@ -49,6 +49,9 @@ public class Release {
     @Column(nullable = false, length = 20)
     private ReleaseStatus status;
 
+    @Column(name = "ai_suggestion", columnDefinition = "TEXT")
+    private String aiSuggestion;
+
     @Column(name = "created_at", nullable = false)
     private OffsetDateTime createdAt;
 

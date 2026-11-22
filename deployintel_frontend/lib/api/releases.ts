@@ -41,6 +41,8 @@ export interface TestRunSummary {
   failedTests: number;
   durationMs?: number;
   completedAt?: string;
+  aiSuggestion?: string;
+  aiModel?: string;
 }
 
 export interface Release {
@@ -64,6 +66,7 @@ export interface Release {
   regressionScore?: number;
   deploymentDecision?: "PASS" | "WARN" | "BLOCK";
   decisionReason?: string;
+  aiSuggestion?: string;
   testRuns?: TestRunSummary[];
 }
 

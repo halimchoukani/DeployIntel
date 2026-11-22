@@ -5,6 +5,7 @@ import com.example.deployintel.deployment.repository.DeploymentRepository;
 import com.example.deployintel.gate.entity.TestRun;
 import com.example.deployintel.gate.entity.TestRunStatus;
 import com.example.deployintel.gate.entity.TestRunType;
+import com.example.deployintel.gate.repository.RiskAssessmentRepository;
 import com.example.deployintel.gate.repository.TestRunRepository;
 import com.example.deployintel.gate.service.AutomatedReleaseTestService;
 import com.example.deployintel.project.entity.Project;
@@ -55,6 +56,9 @@ class ReleaseServiceTest {
 
     @Mock
     private TestRunRepository testRunRepository;
+
+    @Mock
+    private RiskAssessmentRepository riskAssessmentRepository;
 
     @Mock
     private AutomatedReleaseTestService automatedReleaseTestService;

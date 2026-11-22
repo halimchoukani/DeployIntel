@@ -43,5 +43,7 @@ public class K6CheckResponse {
     private String containerId;
     private OffsetDateTime timestamp;
     private String rawOutput;
+    private String aiSuggestion;
+    private String aiModel;
 }
 

@@ -249,8 +249,8 @@ export default function AdminUsersPage() {
                             title="Click to toggle between ADMIN and DEVELOPER"
                             className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold border transition-all ${
                               u.role === "ADMIN"
-                                ? "bg-indigo-50 text-[#5850ec] border-indigo-200 hover:bg-indigo-100"
-                                : "bg-zinc-100 text-zinc-700 border-zinc-200 hover:bg-zinc-200"
+                                ? "bg-indigo-50 dark:bg-indigo-950/60 text-[#5850ec] dark:text-indigo-300 border-indigo-200 dark:border-indigo-800 hover:bg-indigo-100 dark:hover:bg-indigo-900/50"
+                                : "bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 border-zinc-200 dark:border-zinc-700 hover:bg-zinc-200 dark:hover:bg-zinc-700"
                             }`}
                           >
                             {u.role === "ADMIN" ? (
@@ -265,19 +265,19 @@ export default function AdminUsersPage() {
                         {/* Status */}
                         <td className="py-3.5 px-4">
                           {u.status === "ACTIVE" && (
-                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
                               <CheckCircle2 className="w-3 h-3 text-emerald-500" />
                               Active
                             </span>
                           )}
                           {u.status === "BLOCKED" && (
-                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-rose-50 text-rose-700 border border-rose-200">
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800">
                               <Ban className="w-3 h-3 text-rose-500" />
                               Blocked
                             </span>
                           )}
                           {u.status === "INACTIVE" && (
-                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-zinc-100 text-zinc-600 border border-zinc-200">
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-700">
                               <Clock className="w-3 h-3 text-zinc-400" />
                               Inactive
                             </span>
@@ -286,7 +286,7 @@ export default function AdminUsersPage() {
 
                         {/* Projects */}
                         <td className="py-3.5 px-4 text-center">
-                          <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-semibold bg-zinc-100 text-zinc-700">
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-semibold bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-700">
                             {u.projectCount}
                           </span>
                         </td>

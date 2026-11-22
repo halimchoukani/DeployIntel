@@ -32,5 +32,7 @@ public class GateCheckResponse {
     private OffsetDateTime timestamp;
     private List<SemgrepFinding> findings;
     private String rawOutput;
+    private String aiSuggestion;
+    private String aiModel;
 }
 

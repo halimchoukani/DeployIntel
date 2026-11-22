@@ -137,17 +137,17 @@ export function Sidebar() {
   const isAdmin = user?.role === "ADMIN";
 
   return (
-    <aside className="fixed left-0 top-0 h-screen w-[220px] bg-white border-r border-zinc-200 flex flex-col z-30">
+    <aside className="fixed left-0 top-0 h-screen w-[220px] bg-sidebar-bg border-r border-sidebar-border flex flex-col z-30">
       {/* Logo */}
-      <div className="flex items-center gap-2.5 px-5 py-4 border-b border-zinc-100">
-        <div className="w-7 h-7 rounded-lg bg-[#5850ec] flex items-center justify-center shadow-sm">
+      <div className="flex items-center gap-2.5 px-5 py-4 border-b border-sidebar-border">
+        <div className="w-7 h-7 rounded-lg bg-accent flex items-center justify-center shadow-sm">
           <svg viewBox="0 0 20 20" fill="white" className="w-4 h-4">
             <path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z" />
           </svg>
         </div>
         <div className="flex items-center gap-1.5">
-          <span className="text-sm font-bold text-zinc-900 tracking-tight">DeployIntel</span>
-          <span className="text-[10px] font-semibold text-zinc-400 bg-zinc-100 px-1.5 py-0.5 rounded-full">v2.4</span>
+          <span className="text-sm font-bold text-foreground tracking-tight">DeployIntel</span>
+          <span className="text-[10px] font-semibold text-muted-foreground bg-muted px-1.5 py-0.5 rounded-full">v2.4</span>
         </div>
       </div>
 
@@ -162,20 +162,21 @@ export function Sidebar() {
                 <li key={item.href}>
                   <Link
                     href={item.href}
-                    className={`flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-all group ${isActive
-                      ? "bg-[#5850ec] text-white shadow-sm"
-                      : "text-zinc-600 hover:bg-zinc-50 hover:text-zinc-900"
+                    className={`flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-all group ${
+                      isActive
+                        ? "bg-accent text-accent-foreground shadow-sm"
+                        : "text-muted-foreground hover:bg-muted hover:text-foreground"
                       }`}
                   >
-                    <span className={isActive ? "text-white" : "text-zinc-400 group-hover:text-zinc-600"}>{item.icon}</span>
+                    <span className={isActive ? "text-accent-foreground" : "text-muted-foreground group-hover:text-muted-foreground"}>{item.icon}</span>
                     <span className="flex-1 font-medium">{item.label}</span>
                     {item.badge && (
-                      <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full ${isActive ? "bg-white/20 text-white" : "bg-zinc-100 text-zinc-500"}`}>
+                      <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full ${isActive ? "bg-accent-foreground/20 text-accent-foreground" : "bg-muted text-muted-foreground"}`}>
                         {item.badge}
                       </span>
                     )}
                     {item.dot && !item.badge && (
-                      <span className="w-1.5 h-1.5 rounded-full bg-[#5850ec]" />
+                      <span className="w-1.5 h-1.5 rounded-full bg-accent" />
                     )}
                   </Link>
                 </li>
@@ -186,12 +187,12 @@ export function Sidebar() {
 
         {/* Administration Section (Only visible for ADMIN users) */}
         {isAdmin && (
-          <div className="pt-2 border-t border-zinc-100">
+          <div className="pt-2 border-t border-sidebar-border">
             <div className="px-3 mb-1.5 flex items-center justify-between">
-              <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider">
+              <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
                 Administration
               </span>
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" title="Admin Active" />
+              <span className="w-1.5 h-1.5 rounded-full bg-success animate-pulse" title="Admin Active" />
             </div>
             <ul className="space-y-0.5">
               {adminNavItems.map((item) => {
@@ -205,11 +206,11 @@ export function Sidebar() {
                       href={item.href}
                       className={`flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-all group ${
                         isActive
-                          ? "bg-slate-900 text-white shadow-sm font-semibold"
-                          : "text-zinc-600 hover:bg-zinc-50 hover:text-zinc-900"
+                          ? "bg-muted text-foreground shadow-sm font-semibold"
+                          : "text-muted-foreground hover:bg-muted hover:text-foreground"
                       }`}
                     >
-                      <span className={isActive ? "text-white" : "text-zinc-400 group-hover:text-zinc-600"}>
+                      <span className={isActive ? "text-foreground" : "text-muted-foreground group-hover:text-muted-foreground"}>
                         {item.icon}
                       </span>
                       <span className="flex-1 font-medium text-xs">{item.label}</span>

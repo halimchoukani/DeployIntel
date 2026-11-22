@@ -56,6 +56,8 @@ export interface GateCheckResponse {
   timestamp: string;
   findings: SemgrepFinding[];
   rawOutput?: string;
+  aiSuggestion?: string;
+  aiModel?: string;
 }
 
 // ── k6 Performance Types ─────────────────────────────────────────────────
@@ -125,6 +127,8 @@ export interface TestRunHistoryItem {
   findings?: SecurityFindingHistoryDto[];
   metrics?: PerformanceMetricHistoryDto[];
   results?: TestResultHistoryDto[];
+  aiSuggestion?: string;
+  aiModel?: string;
 }
 
 export interface K6CheckResponse {
@@ -157,6 +161,8 @@ export interface K6CheckResponse {
   containerId?: string;
   timestamp: string;
   rawOutput?: string;
+  aiSuggestion?: string;
+  aiModel?: string;
 }
 
 // ── API Functions ────────────────────────────────────────────────────────
@@ -539,5 +545,23 @@ export async function getProjectTestHistory(projectId: string): Promise<TestRunH
   } catch {
     return [];
   }
+}
+
+/**
+ * Triggers or regenerates Ollama AI analysis and suggestions for a test run.
+ */
+export async function generateAiHelpForRun(
+  projectId: string,
+  testRunId: string
+): Promise<TestRunHistoryItem> {
+  const res = await fetch(`/api/v1/projects/${projectId}/gate/runs/${testRunId}/ai-help`, {
+    method: "POST",
+    headers: apiHeaders(),
+  });
+  if (!res.ok) {
+    const errText = await res.text().catch(() => "");
+    throw new Error(errText || "Failed to generate AI suggestions from local Ollama");
+  }
+  return (await res.json()) as TestRunHistoryItem;
 }
 

@@ -6,3 +6,10 @@ spring:
 
 docker:
   host: ${DOCKER_HOST:}
+
+ollama:
+  enabled: ${OLLAMA_ENABLED:true}
+  base-url: ${OLLAMA_BASE_URL:http://localhost:11434}
+  model: ${OLLAMA_MODEL:qwen2.5-coder:7b}
+  connect-timeout-ms: ${OLLAMA_CONNECT_TIMEOUT_MS:5000}
+  read-timeout-ms: ${OLLAMA_READ_TIMEOUT_MS:60000}

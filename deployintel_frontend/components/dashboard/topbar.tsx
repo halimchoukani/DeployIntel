@@ -3,6 +3,7 @@
 import React from "react";
 import { usePathname } from "next/navigation";
 import { useAuthUser } from "@/hooks/use-auth-user";
+import { ThemeToggle } from "@/components/ui/theme-toggle";
 
 export function DashboardTopbar() {
   const pathname = usePathname();
@@ -26,14 +27,14 @@ export function DashboardTopbar() {
   }
 
   return (
-    <header className="fixed top-0 left-[220px] right-0 h-14 bg-white border-b border-zinc-200 flex items-center justify-between px-6 z-20">
+    <header className="fixed top-0 left-[220px] right-0 h-14 bg-topbar-bg border-b border-topbar-border flex items-center justify-between px-6 z-20 transition-colors">
       {/* Breadcrumbs (Left) */}
       <div className="flex items-center gap-2 text-sm">
         {isAdminRoute ? (
           <>
-            <span className="text-zinc-400 font-medium">Administration</span>
-            <span className="text-zinc-300">/</span>
-            <span className="text-zinc-900 font-semibold tracking-tight">
+            <span className="text-muted-foreground font-medium">Administration</span>
+            <span className="text-muted-foreground/50">/</span>
+            <span className="text-foreground font-semibold tracking-tight">
               {pathname === "/admin"
                 ? "Platform Overview"
                 : pathname.startsWith("/admin/users")
@@ -45,21 +46,21 @@ export function DashboardTopbar() {
           </>
         ) : (
           <>
-            <span className="text-zinc-400">Projects</span>
-            <span className="text-zinc-300">/</span>
-            <span className="text-zinc-900 font-semibold tracking-tight">Platform Infrastructure</span>
+            <span className="text-muted-foreground">Projects</span>
+            <span className="text-muted-foreground/50">/</span>
+            <span className="text-foreground font-semibold tracking-tight">Platform Infrastructure</span>
           </>
         )}
       </div>
 
-      {/* Right side (Search + Actions + Avatar) */}
-      <div className="flex items-center gap-4">
+      {/* Right side (Search + ThemeToggle + Actions + Avatar) */}
+      <div className="flex items-center gap-3">
         {/* Search */}
         <div className="relative w-64">
           <svg
             viewBox="0 0 20 20"
             fill="currentColor"
-            className="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-zinc-400"
+            className="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground"
           >
             <path
               fillRule="evenodd"
@@ -70,15 +71,18 @@ export function DashboardTopbar() {
           <input
             type="text"
             placeholder="Search deployments, risks..."
-            className="w-full h-8 pl-8 pr-10 rounded-lg border border-zinc-200 bg-zinc-50 text-xs text-zinc-700 placeholder:text-zinc-400 focus:outline-none focus:border-[#5850ec] focus:ring-1 focus:ring-[#5850ec]/20 transition-all"
+            className="w-full h-8 pl-8 pr-10 rounded-lg border border-input-border bg-input-bg text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-ring dark:focus:border-ring focus:ring-1 focus:ring-ring/20 transition-all"
           />
-          <kbd className="absolute right-2 top-1/2 -translate-y-1/2 text-[9px] font-semibold text-zinc-400 bg-zinc-100 border border-zinc-200 px-1 py-0.5 rounded">
-            ?K
+          <kbd className="absolute right-2 top-1/2 -translate-y-1/2 text-[9px] font-semibold text-muted-foreground bg-muted border border-card-border px-1 py-0.5 rounded">
+            ⌘K
           </kbd>
         </div>
 
+        {/* Theme toggle */}
+        <ThemeToggle />
+
         {/* Separator */}
-        <div className="h-4 w-px bg-zinc-200" />
+        <div className="h-4 w-px bg-card-border" />
 
         {/* User avatar and role badge */}
         <div className="flex items-center gap-2 cursor-pointer group">
@@ -90,11 +94,11 @@ export function DashboardTopbar() {
             )}
           </div>
           <div className="flex items-center gap-1.5">
-            <span className="text-xs font-medium text-zinc-700 group-hover:text-zinc-900 transition-colors truncate max-w-[120px]">
+            <span className="text-xs font-medium text-foreground group-hover:text-accent transition-colors truncate max-w-[120px]">
               {displayName}
             </span>
             {user?.role === "ADMIN" && (
-              <span className="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.2 rounded bg-indigo-50 text-[#5850ec] border border-indigo-200">
+              <span className="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.2 rounded bg-accent/10 text-accent border border-accent/20 dark:bg-accent/20 dark:border-accent/30">
                 Admin
               </span>
             )}

@@ -9,6 +9,10 @@ import com.example.deployintel.project.dto.ProjectResponse;
 import com.example.deployintel.project.dto.UpdateProjectRequest;
 import com.example.deployintel.project.entity.Project;
 import com.example.deployintel.project.entity.ProjectStatus;
+import com.example.deployintel.project.member.entity.ProjectMember;
+import com.example.deployintel.project.member.entity.ProjectPermission;
+import com.example.deployintel.project.member.entity.ProjectRole;
+import com.example.deployintel.project.member.repository.ProjectMemberRepository;
 import com.example.deployintel.project.repository.ProjectRepository;
 import com.example.deployintel.user.entity.User;
 import com.example.deployintel.user.entity.UserRole;
@@ -19,7 +23,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.OffsetDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import com.example.deployintel.auth.security.JwtService;
 import com.example.deployintel.project.dto.CreateProjectFromGithubRequest;
@@ -38,6 +44,7 @@ public class ProjectService {
     private final GithubRepositoryService githubRepositoryService;
     private final GithubWorkflowService githubWorkflowService;
     private final JwtService jwtService;
+    private final ProjectMemberRepository projectMemberRepository;
 
     @Transactional
     public ProjectResponse createProject(UUID ownerId, CreateProjectRequest request) {
@@ -54,6 +61,11 @@ public class ProjectService {
         );
 
         Project savedProject = projectRepository.save(project);
+
+        // Automatically register owner as OWNER member of the project
+        ProjectMember ownerMember = ProjectMember.create(savedProject, owner, ProjectRole.OWNER);
+        projectMemberRepository.save(ownerMember);
+
         return ProjectResponse.fromEntity(savedProject);
     }
 
@@ -83,22 +95,48 @@ public class ProjectService {
         Project project = projectRepository.findById(projectId)
                 .orElseThrow(() -> new ProjectNotFoundException("Project not found with id: " + projectId));
 
-        validateOwnershipOrAdmin(currentUser, project);
+        validateViewAccess(currentUser, project);
 
-        return ProjectResponse.fromEntity(project);
+        ProjectRole role = resolveUserProjectRole(currentUser.getId(), project);
+        return ProjectResponse.fromEntity(project, role, role.getPermissions());
     }
 
     @Transactional(readOnly = true)
     public List<ProjectResponse> getUserProjects(UUID userId, ProjectStatus status) {
         List<Project> projects;
         if (status != null) {
-            projects = projectRepository.findByOwnerIdAndStatusOrderByCreatedAtDesc(userId, status);
+            projects = projectRepository.findAccessibleProjectsWithStatus(userId, status);
         } else {
-            projects = projectRepository.findByOwnerIdOrderByCreatedAtDesc(userId);
+            projects = projectRepository.findAccessibleProjects(userId);
         }
+
+        List<ProjectMember> userMemberships = projectMemberRepository.findByUserId(userId);
+        Map<UUID, ProjectRole> roleMap = (userMemberships != null ? userMemberships : List.<ProjectMember>of()).stream()
+                .filter(m -> m.getProject() != null && m.getRole() != null)
+                .collect(Collectors.toMap(m -> m.getProject().getId(), ProjectMember::getRole, (a, b) -> a));
+
         return projects.stream()
-                .map(ProjectResponse::fromEntity)
+                .map(project -> {
+                    ProjectRole role;
+                    if (project.getOwner() != null && project.getOwner().getId().equals(userId)) {
+                        role = ProjectRole.OWNER;
+                    } else if (roleMap.containsKey(project.getId())) {
+                        role = roleMap.get(project.getId());
+                    } else {
+                        role = ProjectRole.VIEWER;
+                    }
+                    return ProjectResponse.fromEntity(project, role, role.getPermissions());
+                })
                 .toList();
+    }
+
+    public ProjectRole resolveUserProjectRole(UUID userId, Project project) {
+        if (project.getOwner() != null && project.getOwner().getId().equals(userId)) {
+            return ProjectRole.OWNER;
+        }
+        return projectMemberRepository.findByProjectIdAndUserId(project.getId(), userId)
+                .map(ProjectMember::getRole)
+                .orElse(ProjectRole.VIEWER);
     }
 
     @Transactional
@@ -185,6 +223,11 @@ public class ProjectService {
         );
 
         Project savedProject = projectRepository.save(project);
+
+        // Automatically register owner as OWNER member of the project
+        ProjectMember ownerMember = ProjectMember.create(savedProject, owner, ProjectRole.OWNER);
+        projectMemberRepository.save(ownerMember);
+
         return ProjectResponse.fromEntity(savedProject);
     }
 
@@ -222,9 +265,30 @@ public class ProjectService {
     private void validateOwnershipOrAdmin(UserPrincipal currentUser, Project project) {
         boolean isOwner = project.getOwner() != null && project.getOwner().getId().equals(currentUser.getId());
         boolean isAdmin = currentUser.getRole() == UserRole.ADMIN;
+        if (isOwner || isAdmin) {
+            return;
+        }
 
-        if (!isOwner && !isAdmin) {
+        boolean isMaintainer = projectMemberRepository.findByProjectIdAndUserId(project.getId(), currentUser.getId())
+                .map(m -> m.getRole().hasPermission(ProjectPermission.MANAGE_SETTINGS))
+                .orElse(false);
+
+        if (!isMaintainer) {
             throw new ProjectAccessDeniedException("You do not have permission to access or modify this project");
+        }
+    }
+
+    private void validateViewAccess(UserPrincipal currentUser, Project project) {
+        boolean isOwner = project.getOwner() != null && project.getOwner().getId().equals(currentUser.getId());
+        boolean isAdmin = currentUser.getRole() == UserRole.ADMIN;
+        if (isOwner || isAdmin) {
+            return;
+        }
+
+        boolean isMember = projectMemberRepository.existsByProjectIdAndUserId(project.getId(), currentUser.getId());
+
+        if (!isMember) {
+            throw new ProjectAccessDeniedException("You do not have permission to view project: " + project.getId());
         }
     }
 

@@ -30,10 +30,11 @@ public record ReleaseResponse(
         Double regressionScore,
         String deploymentDecision,   // "PASS", "WARN", "BLOCK"
         String decisionReason,
+        String aiSuggestion,
         List<TestRunSummaryDto> testRuns
 ) {
     public static ReleaseResponse fromEntity(Release release) {
-        return fromEntity(release, null, null, null, null, null, null, null, null, null, Collections.emptyList());
+        return fromEntity(release, null, null, null, null, null, null, null, null, null, null, Collections.emptyList());
     }
 
     public static ReleaseResponse fromEntity(
@@ -42,7 +43,7 @@ public record ReleaseResponse(
             String testVerdict,
             List<TestRunSummaryDto> testRuns
     ) {
-        return fromEntity(release, deploymentId, testVerdict, null, null, null, null, null, null, null, testRuns);
+        return fromEntity(release, deploymentId, testVerdict, null, null, null, null, null, null, null, release != null ? release.getAiSuggestion() : null, testRuns);
     }
 
     public static ReleaseResponse fromEntity(
@@ -54,7 +55,7 @@ public record ReleaseResponse(
             String decisionReason,
             List<TestRunSummaryDto> testRuns
     ) {
-        return fromEntity(release, deploymentId, testVerdict, compositeScore, null, null, null, null, deploymentDecision, decisionReason, testRuns);
+        return fromEntity(release, deploymentId, testVerdict, compositeScore, null, null, null, null, deploymentDecision, decisionReason, release != null ? release.getAiSuggestion() : null, testRuns);
     }
 
     public static ReleaseResponse fromEntity(
@@ -68,6 +69,23 @@ public record ReleaseResponse(
             Double regressionScore,
             String deploymentDecision,
             String decisionReason,
+            List<TestRunSummaryDto> testRuns
+    ) {
+        return fromEntity(release, deploymentId, testVerdict, compositeScore, securityScore, performanceScore, testScore, regressionScore, deploymentDecision, decisionReason, release != null ? release.getAiSuggestion() : null, testRuns);
+    }
+
+    public static ReleaseResponse fromEntity(
+            Release release,
+            UUID deploymentId,
+            String testVerdict,
+            Double compositeScore,
+            Double securityScore,
+            Double performanceScore,
+            Double testScore,
+            Double regressionScore,
+            String deploymentDecision,
+            String decisionReason,
+            String aiSuggestion,
             List<TestRunSummaryDto> testRuns
     ) {
         return new ReleaseResponse(
@@ -90,6 +108,7 @@ public record ReleaseResponse(
                 regressionScore,
                 deploymentDecision,
                 decisionReason,
+                aiSuggestion != null ? aiSuggestion : (release != null ? release.getAiSuggestion() : null),
                 testRuns != null ? testRuns : Collections.emptyList()
         );
     }

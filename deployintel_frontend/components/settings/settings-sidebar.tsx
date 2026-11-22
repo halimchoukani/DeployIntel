@@ -24,7 +24,7 @@ export function SettingsSidebar() {
   return (
     <aside className="w-[240px] flex-shrink-0 pt-6 px-6">
       <div className="mb-8">
-        <h3 className="text-[10px] font-bold uppercase tracking-widest text-zinc-500 mb-3 px-2">Account</h3>
+        <h3 className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-3 px-2">Account</h3>
         <ul className="space-y-0.5">
           {accountLinks.map((link) => {
             const isActive = pathname.startsWith(link.href);
@@ -34,13 +34,13 @@ export function SettingsSidebar() {
                   href={link.href}
                   className={`flex items-center gap-2.5 px-2 py-1.5 rounded-lg text-sm font-medium transition-colors ${
                     isActive
-                      ? "bg-zinc-100/80 text-zinc-900"
-                      : "text-zinc-600 hover:bg-zinc-50 hover:text-zinc-900"
+                      ? "bg-muted/80 text-foreground"
+                      : "text-muted-foreground hover:bg-muted hover:text-foreground"
                   }`}
                 >
-                  <span className={isActive ? "text-[#5850ec]" : "text-zinc-400"}>{link.icon}</span>
+                  <span className={isActive ? "text-ring" : "text-muted-foreground/50"}>{link.icon}</span>
                   <span className="flex-1">{link.name}</span>
-                  {isActive && <div className="w-1.5 h-1.5 rounded-full bg-[#5850ec]" />}
+                  {isActive && <div className="w-1.5 h-1.5 rounded-full bg-ring" />}
                 </Link>
               </li>
             );
@@ -49,7 +49,7 @@ export function SettingsSidebar() {
       </div>
 
       <div className="mb-8">
-        <h3 className="text-[10px] font-bold uppercase tracking-widest text-zinc-500 mb-3 px-2">Workspace</h3>
+        <h3 className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-3 px-2">Workspace</h3>
         <ul className="space-y-0.5">
           {workspaceLinks.map((link) => {
             const isActive = pathname.startsWith(link.href);
@@ -59,18 +59,18 @@ export function SettingsSidebar() {
                   href={link.href}
                   className={`flex items-center gap-2.5 px-2 py-1.5 rounded-lg text-sm font-medium transition-colors ${
                     isActive
-                      ? "bg-zinc-100/80 text-zinc-900"
-                      : "text-zinc-600 hover:bg-zinc-50 hover:text-zinc-900"
+                      ? "bg-muted/80 text-foreground"
+                      : "text-muted-foreground hover:bg-muted hover:text-foreground"
                   }`}
                 >
-                  <span className={isActive ? "text-[#5850ec]" : "text-zinc-400"}>{link.icon}</span>
+                  <span className={isActive ? "text-ring" : "text-muted-foreground/50"}>{link.icon}</span>
                   <span className="flex-1">{link.name}</span>
                   {link.badge && (
-                    <span className="text-[10px] bg-zinc-100 text-zinc-500 font-semibold px-1.5 py-0.5 rounded">
+                    <span className="text-[10px] bg-muted/40 text-muted-foreground font-semibold px-1.5 py-0.5 rounded border border-card-border">
                       {link.badge}
                     </span>
                   )}
-                  {isActive && <div className="w-1.5 h-1.5 rounded-full bg-[#5850ec]" />}
+                  {isActive && <div className="w-1.5 h-1.5 rounded-full bg-ring" />}
                 </Link>
               </li>
             );
@@ -79,15 +79,15 @@ export function SettingsSidebar() {
       </div>
 
       {/* Fast Actions Card */}
-      <div className="bg-zinc-50 rounded-xl border border-zinc-100 p-4">
-        <div className="flex items-center gap-1.5 mb-2 text-[#5850ec] font-semibold text-xs uppercase tracking-wider">
+      <div className="bg-muted/40 rounded-xl border border-card-border p-4">
+        <div className="flex items-center gap-1.5 mb-2 text-ring font-semibold text-xs uppercase tracking-wider">
           <ZapIcon />
           <span>Fast Actions</span>
         </div>
-        <p className="text-[11px] text-zinc-500 mb-3 leading-snug">
+        <p className="text-[11px] text-muted-foreground mb-3 leading-snug">
           Export personal audit diff or roll personal SSH keys.
         </p>
-        <button className="w-full h-8 bg-zinc-200/50 hover:bg-zinc-200 text-zinc-700 text-xs font-medium rounded-lg flex items-center justify-center gap-1.5 transition-colors">
+        <button className="w-full h-8 bg-muted/60 hover:bg-muted text-foreground text-xs font-medium rounded-lg flex items-center justify-center gap-1.5 transition-colors border border-card-border">
           <DownloadIcon />
           Export Audit Pack
         </button>

@@ -8,7 +8,16 @@ import { useAuthUser } from "@/hooks/use-auth-user";
 import { useGithubAuth } from "@/hooks/use-github-auth";
 import { useProjectCommits } from "@/hooks/use-project-commits";
 import { AllProjectsCommitsView } from "@/components/projects/all-projects-commits-view";
-import type { Project } from "@/lib/api/project";
+import type { Project, ProjectRole } from "@/lib/api/project";
+
+// ─── Role badge helper ────────────────────────────────────────────────────────
+
+const ROLE_PILL: Record<ProjectRole, { label: string; className: string }> = {
+  OWNER:      { label: "Owner",      className: "bg-purple-50 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800" },
+  MAINTAINER: { label: "Maintainer", className: "bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800" },
+  DEVELOPER:  { label: "Developer",  className: "bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800" },
+  VIEWER:     { label: "Viewer",     className: "bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-700" },
+};
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -43,7 +52,7 @@ function LangDot({ lang }: { lang: string | null }) {
   return (
     <span className="flex items-center gap-1.5">
       <span className="inline-block w-2.5 h-2.5 rounded-full" style={{ backgroundColor: color }} />
-      <span className="text-xs font-medium text-zinc-500">{lang}</span>
+      <span className="text-xs font-medium text-muted-foreground">{lang}</span>
     </span>
   );
 }
@@ -104,8 +113,8 @@ export default function ProjectsPage() {
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-2xl font-bold text-zinc-900 leading-tight">Projects</h1>
-          <p className="text-sm text-zinc-500 mt-1">
+          <h1 className="text-2xl font-bold text-foreground leading-tight">Projects</h1>
+          <p className="text-sm text-muted-foreground mt-1">
             Manage your monitored applications, commit streams, and deployment gate guardrails.
           </p>
         </div>
@@ -113,9 +122,9 @@ export default function ProjectsPage() {
           <button
             id="import-github-header-btn"
             onClick={handleImportClick}
-            className="flex items-center gap-2 text-sm font-semibold text-zinc-800 bg-white hover:bg-zinc-50 border border-zinc-200 px-4 py-2.5 rounded-xl transition-all shadow-sm hover:border-zinc-300"
+            className="flex items-center gap-2 text-sm font-semibold text-foreground bg-card hover:bg-muted border border-card-border px-4 py-2.5 rounded-xl transition-all shadow-xs"
           >
-            <svg viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4 text-zinc-900">
+            <svg viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4 text-foreground">
               <path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" />
             </svg>
             Import from GitHub
@@ -144,7 +153,7 @@ export default function ProjectsPage() {
             <svg
               viewBox="0 0 20 20"
               fill="currentColor"
-              className="w-4 h-4 text-zinc-400 absolute left-3 top-1/2 -translate-y-1/2"
+              className="w-4 h-4 text-muted-foreground absolute left-3 top-1/2 -translate-y-1/2"
             >
               <path
                 fillRule="evenodd"
@@ -157,18 +166,18 @@ export default function ProjectsPage() {
               placeholder="Search projects..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full pl-9 pr-4 py-2 text-sm text-zinc-900 bg-white border border-zinc-200 rounded-xl outline-none focus:border-[#5850ec] focus:ring-2 focus:ring-[#5850ec]/10 transition-all placeholder:text-zinc-400 shadow-sm"
+              className="w-full pl-9 pr-4 py-2 text-sm text-foreground bg-input-bg border border-input-border rounded-xl outline-none focus:border-[#5850ec] focus:ring-2 focus:ring-[#5850ec]/10 transition-all placeholder:text-muted-foreground shadow-xs"
             />
           </div>
 
           {/* View Toggle */}
-          <div className="flex items-center bg-zinc-100 p-1 rounded-xl border border-zinc-200/80">
+          <div className="flex items-center bg-muted p-1 rounded-xl border border-card-border">
             <button
               onClick={() => setViewMode("grid")}
               className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
                 viewMode === "grid"
-                  ? "bg-white text-zinc-900 shadow-xs"
-                  : "text-zinc-500 hover:text-zinc-800"
+                  ? "bg-card text-foreground shadow-xs"
+                  : "text-muted-foreground hover:text-foreground"
               }`}
             >
               Projects Grid
@@ -177,8 +186,8 @@ export default function ProjectsPage() {
               onClick={() => setViewMode("commits")}
               className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
                 viewMode === "commits"
-                  ? "bg-white text-zinc-900 shadow-xs"
-                  : "text-zinc-500 hover:text-zinc-800"
+                  ? "bg-card text-foreground shadow-xs"
+                  : "text-muted-foreground hover:text-foreground"
               }`}
             >
               Commits Stream
@@ -187,7 +196,7 @@ export default function ProjectsPage() {
         </div>
 
         <div className="flex items-center gap-2">
-          <span className="text-xs font-medium text-zinc-500">
+          <span className="text-xs font-medium text-muted-foreground">
             {projects?.length || 0} projects
           </span>
         </div>
@@ -197,31 +206,31 @@ export default function ProjectsPage() {
       {isLoading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="h-[200px] bg-white border border-zinc-100 rounded-2xl animate-pulse" />
+            <div key={i} className="h-[200px] bg-card border border-card-border rounded-2xl animate-pulse" />
           ))}
         </div>
       ) : error ? (
-        <div className="bg-red-50 border border-red-100 rounded-2xl p-6 text-center">
-          <p className="text-sm font-semibold text-red-600">Failed to load projects</p>
+        <div className="bg-red-50 dark:bg-red-950/40 border border-red-100 dark:border-red-900 rounded-2xl p-6 text-center">
+          <p className="text-sm font-semibold text-red-600 dark:text-red-400">Failed to load projects</p>
           <p className="text-xs text-red-500 mt-1">{(error as Error).message}</p>
         </div>
       ) : !filteredProjects || filteredProjects.length === 0 ? (
-        <div className="bg-white border border-dashed border-zinc-200 rounded-3xl py-16 text-center">
-          <div className="w-12 h-12 rounded-xl bg-zinc-50 flex items-center justify-center mx-auto mb-4">
-            <svg viewBox="0 0 20 20" fill="currentColor" className="w-6 h-6 text-zinc-400">
+        <div className="bg-card border border-dashed border-card-border rounded-3xl py-16 text-center">
+          <div className="w-12 h-12 rounded-xl bg-muted flex items-center justify-center mx-auto mb-4 border border-card-border">
+            <svg viewBox="0 0 20 20" fill="currentColor" className="w-6 h-6 text-muted-foreground">
               <path d="M2 6a2 2 0 012-2h5l2 2h5a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" />
             </svg>
           </div>
-          <h3 className="text-sm font-semibold text-zinc-900 mb-1">No projects found</h3>
-          <p className="text-xs text-zinc-500 max-w-sm mx-auto mb-6">
+          <h3 className="text-sm font-semibold text-foreground mb-1">No projects found</h3>
+          <p className="text-xs text-muted-foreground max-w-sm mx-auto mb-6">
             Get started by importing a repository from GitHub or manually configuring a new project.
           </p>
           <div className="flex items-center justify-center gap-3">
             <button
               onClick={handleImportClick}
-              className="inline-flex items-center gap-2 text-sm font-semibold text-zinc-800 bg-white hover:bg-zinc-50 border border-zinc-200 px-4 py-2 rounded-lg transition-colors shadow-sm"
+              className="inline-flex items-center gap-2 text-sm font-semibold text-foreground bg-card hover:bg-muted border border-card-border px-4 py-2 rounded-lg transition-colors shadow-xs"
             >
-              <svg viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4 text-zinc-900">
+              <svg viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4 text-foreground">
                 <path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" />
               </svg>
               Import from GitHub
@@ -246,10 +255,10 @@ export default function ProjectsPage() {
 
       {/* Import from GitHub & Grant Access Modal */}
       {showImportModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-zinc-900/50 backdrop-blur-sm animate-in fade-in duration-150">
-          <div className="bg-white rounded-2xl border border-zinc-200 shadow-2xl max-w-lg w-full overflow-hidden">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-150">
+          <div className="bg-card rounded-2xl border border-card-border shadow-2xl max-w-lg w-full overflow-hidden">
             {/* Modal Header */}
-            <div className="px-6 pt-6 pb-4 border-b border-zinc-100 flex items-start justify-between">
+            <div className="px-6 pt-6 pb-4 border-b border-card-border flex items-start justify-between">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-xl bg-[#24292f] flex items-center justify-center shrink-0">
                   <svg viewBox="0 0 24 24" fill="white" className="w-5 h-5">
@@ -257,15 +266,15 @@ export default function ProjectsPage() {
                   </svg>
                 </div>
                 <div>
-                  <h3 className="text-base font-bold text-zinc-900">Import from GitHub</h3>
-                  <p className="text-xs text-zinc-500 mt-0.5">
+                  <h3 className="text-base font-bold text-foreground">Import from GitHub</h3>
+                  <p className="text-xs text-muted-foreground mt-0.5">
                     Give DeployIntel access to your GitHub repositories
                   </p>
                 </div>
               </div>
               <button
                 onClick={() => setShowImportModal(false)}
-                className="text-zinc-400 hover:text-zinc-600 p-1 rounded-lg hover:bg-zinc-100 transition-colors"
+                className="text-muted-foreground hover:text-foreground p-1 rounded-lg hover:bg-muted transition-colors"
               >
                 <svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5">
                   <path
@@ -279,18 +288,18 @@ export default function ProjectsPage() {
 
             {/* Modal Body */}
             <div className="p-6 space-y-6">
-              {/* Option 1: Personal Access Token (No OAuth / Not signed in with GitHub) */}
-              <div className="bg-zinc-50 border border-zinc-200/80 rounded-xl p-4">
+              {/* Option 1: Personal Access Token */}
+              <div className="bg-muted/50 border border-card-border rounded-xl p-4">
                 <div className="flex items-center justify-between mb-1.5">
-                  <span className="text-xs font-bold text-zinc-900 uppercase tracking-wider">
+                  <span className="text-xs font-bold text-foreground uppercase tracking-wider">
                     Option 1: Give Access via Token
                   </span>
-                  <span className="text-[11px] font-medium text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
+                  <span className="text-[11px] font-medium text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800">
                     No sign-in required
                   </span>
                 </div>
-                <p className="text-xs text-zinc-500 mb-3">
-                  Provide a Personal Access Token with <span className="font-semibold text-zinc-700">repo</span> scope to browse and import your repositories.
+                <p className="text-xs text-muted-foreground mb-3">
+                  Provide a Personal Access Token with <span className="font-semibold text-foreground">repo</span> scope to browse and import your repositories.
                 </p>
 
                 <form onSubmit={handlePATSubmit} className="space-y-2.5">
@@ -299,7 +308,7 @@ export default function ProjectsPage() {
                     value={patInput}
                     onChange={(e) => { setPatInput(e.target.value); setPatError(""); }}
                     placeholder="ghp_xxxxxxxxxxxxxxxxxxxx"
-                    className="w-full h-9 px-3 text-xs font-mono text-zinc-900 bg-white border border-zinc-200 rounded-lg outline-none focus:border-[#5850ec] focus:ring-2 focus:ring-[#5850ec]/10 transition-all placeholder:text-zinc-400"
+                    className="w-full h-9 px-3 text-xs font-mono text-foreground bg-input-bg border border-input-border rounded-lg outline-none focus:border-[#5850ec] focus:ring-2 focus:ring-[#5850ec]/10 transition-all placeholder:text-muted-foreground"
                   />
                   {patError && <p className="text-xs text-red-500">{patError}</p>}
                   
@@ -308,7 +317,7 @@ export default function ProjectsPage() {
                       href="https://github.com/settings/tokens/new?scopes=repo&description=DeployIntel"
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1 text-xs text-[#5850ec] hover:underline font-medium"
+                      className="inline-flex items-center gap-1 text-xs text-[#5850ec] dark:text-indigo-400 hover:underline font-medium"
                     >
                       Generate token on GitHub
                       <svg viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5">
@@ -328,24 +337,24 @@ export default function ProjectsPage() {
 
               {/* Divider */}
               <div className="relative flex items-center justify-center">
-                <div className="border-t border-zinc-200 w-full" />
-                <span className="bg-white px-3 text-xs text-zinc-400 uppercase font-medium absolute">
+                <div className="border-t border-card-border w-full" />
+                <span className="bg-card px-3 text-xs text-muted-foreground uppercase font-medium absolute">
                   or
                 </span>
               </div>
 
               {/* Option 2: Authorize via GitHub OAuth */}
               <div className="text-center space-y-2">
-                <p className="text-xs text-zinc-500">
+                <p className="text-xs text-muted-foreground">
                   Connect your GitHub account to grant permanent repository access
                 </p>
                 <button
                   type="button"
                   disabled={isRedirecting}
                   onClick={handleOAuthConnect}
-                  className="w-full flex items-center justify-center gap-2 h-9 px-4 text-xs font-semibold text-zinc-800 bg-white hover:bg-zinc-50 border border-zinc-200 rounded-lg transition-colors shadow-sm disabled:opacity-50"
+                  className="w-full flex items-center justify-center gap-2 h-9 px-4 text-xs font-semibold text-foreground bg-card hover:bg-muted border border-card-border rounded-lg transition-colors shadow-xs disabled:opacity-50"
                 >
-                  <svg viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4 text-zinc-900">
+                  <svg viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4 text-foreground">
                     <path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" />
                   </svg>
                   {isRedirecting ? "Connecting..." : "Authorize with GitHub"}
@@ -367,16 +376,16 @@ function ProjectCard({ project }: { project: Project }) {
   return (
     <Link
       href={`/projects/${project.id}`}
-      className="group bg-white border border-zinc-200 hover:border-[#5850ec]/60 hover:shadow-md transition-all rounded-2xl p-5 flex flex-col relative overflow-hidden"
+      className="group bg-card border border-card-border hover:border-[#5850ec]/60 dark:hover:border-indigo-400/60 hover:shadow-md transition-all rounded-2xl p-5 flex flex-col relative overflow-hidden"
     >
       {project.status === "ARCHIVED" ? (
-        <div className="absolute top-0 right-0 bg-zinc-100 text-zinc-500 text-[10px] font-bold px-2 py-1 rounded-bl-xl border-b border-l border-zinc-200">
+        <div className="absolute top-0 right-0 bg-muted text-muted-foreground text-[10px] font-bold px-2 py-1 rounded-bl-xl border-b border-l border-card-border">
           ARCHIVED
         </div>
       ) : (
         <div className="absolute top-3 right-3 flex items-center gap-1.5 opacity-80 group-hover:opacity-100 transition-opacity">
           <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-          <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200/60 px-1.5 py-0.5 rounded-full">
+          <span className="text-[10px] font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200/60 dark:border-emerald-800 px-1.5 py-0.5 rounded-full">
             Active Gate
           </span>
         </div>
@@ -384,17 +393,17 @@ function ProjectCard({ project }: { project: Project }) {
 
       <div className="flex items-start justify-between mb-3 mt-1">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-indigo-50/50 flex items-center justify-center border border-indigo-100/60 text-[#5850ec] shadow-2xs shrink-0 group-hover:scale-105 transition-transform">
+          <div className="w-10 h-10 rounded-xl bg-indigo-50/50 dark:bg-indigo-950/40 flex items-center justify-center border border-indigo-100/60 dark:border-indigo-800/60 text-[#5850ec] dark:text-indigo-400 shadow-2xs shrink-0 group-hover:scale-105 transition-transform">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
               <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
             </svg>
           </div>
           <div>
-            <h3 className="text-[15px] font-bold text-zinc-900 group-hover:text-[#5850ec] transition-colors line-clamp-1">
+            <h3 className="text-[15px] font-bold text-foreground group-hover:text-[#5850ec] dark:group-hover:text-indigo-400 transition-colors line-clamp-1">
               {project.name}
             </h3>
             <p
-              className="text-xs text-zinc-500 mt-0.5 w-full overflow-hidden overflow-ellipsis whitespace-nowrap max-w-[220px]"
+              className="text-xs text-muted-foreground mt-0.5 w-full overflow-hidden overflow-ellipsis whitespace-nowrap max-w-[220px]"
               title={project.description || undefined}
             >
               {project.description || "No description"}
@@ -405,11 +414,11 @@ function ProjectCard({ project }: { project: Project }) {
 
       {/* Repo link */}
       <div className="mb-3">
-        <div className="flex items-center gap-2 text-xs text-zinc-500">
-          <svg viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5 text-zinc-400 shrink-0">
+        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+          <svg viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5 text-muted-foreground shrink-0">
             <path
               fillRule="evenodd"
-              d="M10 0C4.477 0 0 4.484 0 10.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0110 4.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.203 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0020 10.017C20 4.484 15.522 0 10 0z"
+              d="M10 0C4.477 0 0 4.484 0 10.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0110 4.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"
               clipRule="evenodd"
             />
           </svg>
@@ -420,48 +429,48 @@ function ProjectCard({ project }: { project: Project }) {
       {/* Latest Commit Preview Snippet */}
       <div className="flex-1 mb-4">
         {latestCommit ? (
-          <div className="p-2.5 rounded-xl bg-zinc-50/90 border border-zinc-200/70 text-xs space-y-1.5 group-hover:border-indigo-200/80 transition-colors">
+          <div className="p-2.5 rounded-xl bg-muted/60 border border-card-border text-xs space-y-1.5 group-hover:border-indigo-200 dark:group-hover:border-indigo-800 transition-colors">
             <div className="flex items-center justify-between text-[11px]">
-              <span className="font-semibold text-zinc-500 flex items-center gap-1">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="w-3 h-3 text-zinc-400">
+              <span className="font-semibold text-muted-foreground flex items-center gap-1">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="w-3 h-3 text-muted-foreground">
                   <circle cx="12" cy="12" r="3" />
                   <line x1="3" y1="12" x2="9" y2="12" />
                   <line x1="15" y1="12" x2="21" y2="12" />
                 </svg>
                 Latest Commit
               </span>
-              <span className="font-mono text-[10px] text-zinc-600 font-bold bg-white px-1.5 py-0.5 rounded border border-zinc-200 shadow-2xs">
+              <span className="font-mono text-[10px] text-foreground font-bold bg-card px-1.5 py-0.5 rounded border border-card-border shadow-2xs">
                 {latestCommit.shortHash}
               </span>
             </div>
-            <p className="text-zinc-800 font-medium truncate text-[11px] leading-tight">
+            <p className="text-foreground font-medium truncate text-[11px] leading-tight">
               {latestCommit.message}
             </p>
-            <div className="flex items-center justify-between pt-1 border-t border-zinc-200/60 text-[10px] text-zinc-400">
+            <div className="flex items-center justify-between pt-1 border-t border-card-border text-[10px] text-muted-foreground">
               <span className="truncate max-w-[130px]">{latestCommit.authorName} • {latestCommit.timeAgo}</span>
               <span className={`font-bold px-1.5 py-0.2 rounded ${
                 latestCommit.gateVerdict === "ALLOWED"
-                  ? "text-emerald-700 bg-emerald-50 border border-emerald-200"
+                  ? "text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800"
                   : latestCommit.gateVerdict === "BLOCKED"
-                  ? "text-rose-700 bg-rose-50 border border-rose-200"
-                  : "text-amber-700 bg-amber-50 border border-amber-200"
+                  ? "text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/60 border border-rose-200 dark:border-rose-800"
+                  : "text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/60 border border-amber-200 dark:border-amber-800"
               }`}>
                 {latestCommit.gateVerdict}
               </span>
             </div>
           </div>
         ) : (
-          <div className="h-16 flex items-center justify-center text-[11px] text-zinc-400 italic bg-zinc-50/50 rounded-xl border border-dashed border-zinc-200">
+          <div className="h-16 flex items-center justify-center text-[11px] text-muted-foreground italic bg-muted/40 rounded-xl border border-dashed border-card-border">
             No commit activity recorded yet
           </div>
         )}
       </div>
 
-      <div className="flex items-center justify-between pt-3.5 border-t border-zinc-100">
+      <div className="flex items-center justify-between pt-3.5 border-t border-card-border">
         <div className="flex items-center gap-3">
           <LangDot lang={project.language} />
-          <span className="text-xs text-zinc-400 flex items-center gap-1">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="w-3 h-3 text-zinc-400">
+          <span className="text-xs text-muted-foreground flex items-center gap-1">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="w-3 h-3 text-muted-foreground">
               <path d="M6 3v12" />
               <path d="M18 9a3 3 0 1 0 0-6 3 3 0 0 0 0 6z" />
               <path d="M6 21a3 3 0 1 0 0-6 3 3 0 0 0 0 6z" />
@@ -469,9 +478,14 @@ function ProjectCard({ project }: { project: Project }) {
             </svg>
             {project.defaultBranch}
           </span>
+          {project.currentUserRole && ROLE_PILL[project.currentUserRole] && (
+            <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full ${ROLE_PILL[project.currentUserRole].className}`}>
+              {ROLE_PILL[project.currentUserRole].label}
+            </span>
+          )}
         </div>
         <div className="flex items-center gap-1.5">
-          <span className="text-[11px] font-semibold text-[#5850ec] hover:underline flex items-center gap-0.5">
+          <span className="text-[11px] font-semibold text-[#5850ec] dark:text-indigo-400 hover:underline flex items-center gap-0.5">
             {commits?.length || 0} commits →
           </span>
         </div>

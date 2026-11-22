@@ -32,23 +32,23 @@ export function SignupHeader({
               <path d="m8 12 4-4 4 4" />
             </svg>
           </div>
-          <span className="text-[15px] font-semibold tracking-tight text-zinc-900">
+          <span className="text-[15px] font-semibold tracking-tight text-foreground">
             DeployIntel
           </span>
         </div>
 
         {/* Version Badge */}
-        <span className="rounded-md border border-zinc-200/80 bg-zinc-100/80 px-2 py-0.5 font-mono text-[11px] font-medium text-zinc-500">
+        <span className="rounded-md border border-card-border bg-muted/60 px-2 py-0.5 font-mono text-[11px] font-medium text-muted-foreground">
           {version}
         </span>
       </div>
 
       {/* Title & Subtitle */}
       <div className="mt-5 sm:mt-6">
-        <h1 className="text-xl sm:text-[22px] font-semibold tracking-tight text-zinc-900">
+        <h1 className="text-xl sm:text-[22px] font-semibold tracking-tight text-foreground">
           {title}
         </h1>
-        <p className="mt-1 text-[13.5px] sm:text-sm text-zinc-500">
+        <p className="mt-1 text-[13.5px] sm:text-sm text-muted-foreground">
           {subtitle}
         </p>
       </div>

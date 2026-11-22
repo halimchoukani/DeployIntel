@@ -9,7 +9,7 @@ export function SigninSocialButtons() {
   return (
     <div className="mt-6 space-y-3">
       {error && (
-        <div className="rounded-lg bg-red-50 border border-red-200/80 p-2.5 text-xs text-red-700">
+        <div className="rounded-lg bg-destructive/10 border border-destructive/20 dark:bg-destructive/20 dark:border-destructive/30 p-2.5 text-xs text-destructive">
           {error}
         </div>
       )}
@@ -18,11 +18,11 @@ export function SigninSocialButtons() {
         type="button"
         onClick={initiateGithubLogin}
         disabled={isRedirecting}
-        className="inline-flex h-10 w-full items-center justify-center gap-2.5 rounded-lg border border-zinc-200 bg-white px-4 text-sm font-medium text-zinc-700 shadow-xs hover:bg-zinc-50 hover:border-zinc-300 focus:outline-none focus:ring-2 focus:ring-zinc-400/20 active:scale-[0.99] disabled:opacity-60 disabled:cursor-not-allowed transition-all cursor-pointer"
+        className="inline-flex h-10 w-full items-center justify-center gap-2.5 rounded-lg border border-card-border bg-card px-4 text-sm font-medium text-foreground shadow-xs hover:bg-muted focus:outline-none focus:ring-2 focus:ring-ring/20 active:scale-[0.99] disabled:opacity-60 disabled:cursor-not-allowed transition-all cursor-pointer"
       >
         {isRedirecting ? (
           <svg
-            className="h-4 w-4 animate-spin text-zinc-500"
+            className="h-4 w-4 animate-spin text-muted-foreground"
             viewBox="0 0 24 24"
             fill="none"
           >
@@ -42,7 +42,7 @@ export function SigninSocialButtons() {
           </svg>
         ) : (
           <svg
-            className="h-4 w-4 fill-current text-zinc-900"
+            className="h-4 w-4 fill-current text-foreground"
             viewBox="0 0 24 24"
             aria-hidden="true"
           >

@@ -38,5 +38,7 @@ public class TestRunHistoryResponse {
     private List<SecurityFindingSummaryDto> findings;
     private List<PerformanceMetricSummaryDto> metrics;
     private List<TestResultSummaryDto> results;
+    private String aiSuggestion;
+    private String aiModel;
 }
 

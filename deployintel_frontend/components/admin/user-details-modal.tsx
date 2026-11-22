@@ -96,19 +96,19 @@ export function UserDetailsModal({ user, onClose }: UserDetailsModalProps) {
             {/* Status pill */}
             <div className="flex items-center gap-1.5">
               {currentStatus === "ACTIVE" && (
-                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
                   <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
                   Active
                 </span>
               )}
               {currentStatus === "BLOCKED" && (
-                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-rose-50 text-rose-700 border border-rose-200">
+                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800">
                   <Ban className="w-3.5 h-3.5 text-rose-600" />
                   Blocked
                 </span>
               )}
               {currentStatus === "INACTIVE" && (
-                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-zinc-100 text-zinc-600 border border-zinc-200">
+                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-700">
                   <Clock className="w-3.5 h-3.5 text-zinc-500" />
                   Inactive
                 </span>
@@ -183,7 +183,7 @@ export function UserDetailsModal({ user, onClose }: UserDetailsModalProps) {
                   onClick={() => handleRoleChange("DEVELOPER")}
                   className={`flex items-center justify-center gap-2 py-2 px-3 rounded-xl border text-xs font-semibold transition-all ${
                     currentRole === "DEVELOPER"
-                      ? "border-indigo-600 bg-indigo-50/50 text-[#5850ec]"
+                      ? "border-indigo-600 bg-indigo-50/50 dark:bg-indigo-950/60 text-[#5850ec] dark:text-indigo-300"
                       : "border-zinc-200 bg-white text-zinc-600 hover:bg-zinc-50"
                   }`}
                 >
@@ -196,7 +196,7 @@ export function UserDetailsModal({ user, onClose }: UserDetailsModalProps) {
                   onClick={() => handleRoleChange("ADMIN")}
                   className={`flex items-center justify-center gap-2 py-2 px-3 rounded-xl border text-xs font-semibold transition-all ${
                     currentRole === "ADMIN"
-                      ? "border-indigo-600 bg-indigo-50/50 text-[#5850ec]"
+                      ? "border-indigo-600 bg-indigo-50/50 dark:bg-indigo-950/60 text-[#5850ec] dark:text-indigo-300"
                       : "border-zinc-200 bg-white text-zinc-600 hover:bg-zinc-50"
                   }`}
                 >
@@ -217,7 +217,7 @@ export function UserDetailsModal({ user, onClose }: UserDetailsModalProps) {
                   onClick={() => handleStatusChange("ACTIVE")}
                   className={`py-2 px-2.5 rounded-xl border text-xs font-semibold text-center transition-all ${
                     currentStatus === "ACTIVE"
-                      ? "border-emerald-500 bg-emerald-50 text-emerald-700"
+                      ? "border-emerald-500 bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300"
                       : "border-zinc-200 bg-white text-zinc-600 hover:bg-zinc-50"
                   }`}
                 >
@@ -229,7 +229,7 @@ export function UserDetailsModal({ user, onClose }: UserDetailsModalProps) {
                   onClick={() => handleStatusChange("INACTIVE")}
                   className={`py-2 px-2.5 rounded-xl border text-xs font-semibold text-center transition-all ${
                     currentStatus === "INACTIVE"
-                      ? "border-zinc-400 bg-zinc-100 text-zinc-800"
+                      ? "border-zinc-400 dark:border-zinc-600 bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200"
                       : "border-zinc-200 bg-white text-zinc-600 hover:bg-zinc-50"
                   }`}
                 >
@@ -241,7 +241,7 @@ export function UserDetailsModal({ user, onClose }: UserDetailsModalProps) {
                   onClick={() => handleStatusChange("BLOCKED")}
                   className={`py-2 px-2.5 rounded-xl border text-xs font-semibold text-center transition-all ${
                     currentStatus === "BLOCKED"
-                      ? "border-rose-500 bg-rose-50 text-rose-700"
+                      ? "border-rose-500 bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300"
                       : "border-zinc-200 bg-white text-zinc-600 hover:bg-zinc-50"
                   }`}
                 >

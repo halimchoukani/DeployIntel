@@ -67,6 +67,12 @@ public class TestRun {
     @Column(columnDefinition = "TEXT")
     private String logs;
 
+    @Column(name = "ai_suggestion", columnDefinition = "TEXT")
+    private String aiSuggestion;
+
+    @Column(name = "ai_model", length = 100)
+    private String aiModel;
+
     @OneToMany(mappedBy = "testRun", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private List<TestResult> results = new ArrayList<>();

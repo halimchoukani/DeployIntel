@@ -20,20 +20,20 @@ export default function DashboardPage() {
           {/* Firewall status */}
           <div className="flex items-center gap-1.5 mb-2">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-            <span className="text-[10px] font-semibold text-emerald-600 uppercase tracking-widest">
+            <span className="text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 uppercase tracking-widest">
               Firewall Sentinel Online
             </span>
           </div>
-          <h1 className="text-3xl font-bold text-zinc-900 leading-tight">Good afternoon, Alex</h1>
-          <p className="text-sm text-zinc-500 mt-1">
+          <h1 className="text-3xl font-bold text-foreground leading-tight">Good afternoon, Alex</h1>
+          <p className="text-sm text-muted-foreground mt-1">
             Here&apos;s what&apos;s happening across your deployment gates and telemetry feeds.
           </p>
         </div>
 
         {/* Actions */}
         <div className="flex items-center gap-2 shrink-0">
-          <button className="flex items-center gap-1.5 text-xs font-medium text-zinc-600 border border-zinc-200 bg-white hover:bg-zinc-50 px-3 py-2 rounded-lg transition-colors shadow-sm">
-            <svg viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5 text-zinc-400">
+          <button className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground border border-card-border bg-card hover:bg-muted px-3 py-2 rounded-lg transition-colors shadow-xs">
+            <svg viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5 text-muted-foreground">
               <path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clipRule="evenodd" />
             </svg>
             Export Audit Log

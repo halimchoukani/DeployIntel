@@ -97,7 +97,7 @@ export default function AdminOverviewPage() {
                 <span className="text-3xl font-extrabold text-zinc-900 tracking-tight">
                   {userKpis.totalUsers}
                 </span>
-                <span className="text-xs font-semibold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded-full border border-emerald-100">
+                <span className="text-xs font-semibold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 px-1.5 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800">
                   +{userKpis.newUsersLast7Days} this week
                 </span>
               </div>
@@ -125,7 +125,7 @@ export default function AdminOverviewPage() {
                 <span className="text-3xl font-extrabold text-zinc-900 tracking-tight">
                   {projectKpis.totalProjects}
                 </span>
-                <span className="text-xs font-semibold text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded-full border border-blue-100">
+                <span className="text-xs font-semibold text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-950/60 px-1.5 py-0.5 rounded-full border border-blue-200 dark:border-blue-800">
                   +{projectKpis.newProjectsLast7Days} this week
                 </span>
               </div>
@@ -344,14 +344,14 @@ export default function AdminOverviewPage() {
                           <span className="w-5 text-[11px] font-bold text-zinc-400 text-center">
                             #{index + 1}
                           </span>
-                          <div className="w-7 h-7 rounded-lg bg-indigo-50 border border-indigo-100 flex items-center justify-center text-[#5850ec] font-bold text-[11px]">
+                          <div className="w-7 h-7 rounded-lg bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-100 dark:border-indigo-800 flex items-center justify-center text-[#5850ec] dark:text-indigo-300 font-bold text-[11px]">
                             {initials}
                           </div>
                           <span className="font-semibold text-zinc-900">{c.name || "Unnamed"}</span>
                         </td>
                         <td className="py-3 text-zinc-500 font-mono text-[11px]">{c.email}</td>
                         <td className="py-3 text-right">
-                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold bg-indigo-50 text-[#5850ec] border border-indigo-100">
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold bg-indigo-50 dark:bg-indigo-950/60 text-[#5850ec] dark:text-indigo-300 border border-indigo-100 dark:border-indigo-800">
                             {c.projectCount} projects
                           </span>
                         </td>

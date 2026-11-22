@@ -55,35 +55,35 @@ function statusBadge(status: EnvironmentStatus) {
   switch (status) {
     case "RUNNING":
       return (
-        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
           <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
           Running
         </span>
       );
     case "STARTING":
       return (
-        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-amber-50 text-amber-700 border border-amber-200">
+        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800">
           <Loader2 className="w-3 h-3 animate-spin text-amber-600" />
           Starting
         </span>
       );
     case "STOPPED":
       return (
-        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-zinc-100 text-zinc-600 border border-zinc-200">
+        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-700">
           <Square className="w-2.5 h-2.5 fill-zinc-400 text-zinc-400" />
           Stopped
         </span>
       );
     case "FAILED":
       return (
-        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-rose-50 text-rose-700 border border-rose-200">
+        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800">
           <AlertCircle className="w-3 h-3 text-rose-600" />
           Failed
         </span>
       );
     default:
       return (
-        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-sky-50 text-sky-700 border border-sky-200">
+        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-sky-50 dark:bg-sky-950/60 text-sky-700 dark:text-sky-300 border border-sky-200 dark:border-sky-800">
           <span className="w-1.5 h-1.5 rounded-full bg-sky-500" />
           {status}
         </span>
@@ -243,29 +243,29 @@ export function EnvironmentsTab({ project }: EnvironmentsTabProps) {
   return (
     <div className="space-y-6">
       {/* Top Banner / Docker Status Bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-xl border border-zinc-200 bg-white shadow-xs">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-xl border border-card-border bg-card text-foreground shadow-xs">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-lg bg-indigo-50 border border-indigo-100 flex items-center justify-center text-[#5850ec]">
+          <div className="w-10 h-10 rounded-lg bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-[#5850ec]">
             <Server className="w-5 h-5" />
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h3 className="text-sm font-semibold text-zinc-900">
+              <h3 className="text-sm font-semibold text-foreground">
                 Docker Execution Engine
               </h3>
               {dockerStatus?.connected ? (
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
                   Connected {dockerStatus.serverVersion ? `(v${dockerStatus.serverVersion})` : ""}
                 </span>
               ) : (
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-50 text-amber-700 border border-amber-200">
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800">
                   <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
                   Daemon Offline
                 </span>
               )}
             </div>
-            <p className="text-xs text-zinc-500 mt-0.5">
+            <p className="text-xs text-muted-foreground mt-0.5">
               Isolated containers for running tests, build scripts, and CI verification workflows.
             </p>
           </div>
@@ -275,10 +275,10 @@ export function EnvironmentsTab({ project }: EnvironmentsTabProps) {
           <button
             onClick={() => refetch()}
             disabled={isFetching}
-            className="flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-zinc-600 bg-zinc-50 hover:bg-zinc-100 border border-zinc-200 rounded-lg transition-colors cursor-pointer"
+            className="flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-foreground bg-muted hover:bg-muted/80 border border-card-border rounded-lg transition-colors cursor-pointer"
           >
             <RefreshCw
-              className={`w-3.5 h-3.5 ${isFetching ? "animate-spin text-[#5850ec]" : "text-zinc-500"}`}
+              className={`w-3.5 h-3.5 ${isFetching ? "animate-spin text-[#5850ec]" : "text-muted-foreground"}`}
             />
             <span>Refresh</span>
           </button>
@@ -294,9 +294,9 @@ export function EnvironmentsTab({ project }: EnvironmentsTabProps) {
 
       {/* Docker Offline Warning Banner if not connected */}
       {dockerStatus && !dockerStatus.connected && (
-        <div className="p-3.5 rounded-lg border border-amber-200 bg-amber-50/60 flex items-start gap-3">
-          <AlertCircle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
-          <div className="text-xs text-amber-800">
+        <div className="p-3.5 rounded-lg border border-amber-200 dark:border-amber-800/80 bg-amber-50/60 dark:bg-amber-950/40 flex items-start gap-3">
+          <AlertCircle className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+          <div className="text-xs text-amber-800 dark:text-amber-300">
             <span className="font-semibold">Docker engine not detected: </span>
             Please ensure Docker Desktop is started on your host system. Once started, click <strong>Refresh</strong> above to connect.
           </div>
@@ -307,7 +307,7 @@ export function EnvironmentsTab({ project }: EnvironmentsTabProps) {
       {isLoading && (
         <div className="flex items-center justify-center py-24 gap-3">
           <div className="w-6 h-6 border-2 border-zinc-200 border-t-[#5850ec] rounded-full animate-spin" />
-          <p className="text-xs text-zinc-500 font-medium">
+          <p className="text-xs text-muted-foreground font-medium">
             Loading test environments...
           </p>
         </div>
@@ -320,7 +320,7 @@ export function EnvironmentsTab({ project }: EnvironmentsTabProps) {
           <p className="text-sm font-semibold text-zinc-800">
             Could not load test environments
           </p>
-          <p className="text-xs text-zinc-500 max-w-sm">
+          <p className="text-xs text-muted-foreground max-w-sm">
             {(error as Error).message}
           </p>
           <button
@@ -334,14 +334,14 @@ export function EnvironmentsTab({ project }: EnvironmentsTabProps) {
 
       {/* Empty State */}
       {!isLoading && !error && (!environments || environments.length === 0) && (
-        <div className="flex flex-col items-center justify-center py-20 px-4 text-center border border-dashed border-zinc-200 rounded-xl bg-zinc-50/40">
-          <div className="w-14 h-14 rounded-2xl bg-indigo-50 border border-indigo-100 flex items-center justify-center text-[#5850ec] mb-4">
+        <div className="flex flex-col items-center justify-center py-20 px-4 text-center border border-dashed border-card-border rounded-xl bg-muted/20">
+          <div className="w-14 h-14 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-[#5850ec] mb-4">
             <Box className="w-7 h-7" />
           </div>
-          <h4 className="text-sm font-semibold text-zinc-900">
+          <h4 className="text-sm font-semibold text-foreground">
             No test environments running
           </h4>
-          <p className="text-xs text-zinc-500 max-w-md mt-1 mb-5">
+          <p className="text-xs text-muted-foreground max-w-md mt-1 mb-5">
             Spin up a lightweight Docker container configured for{" "}
             <strong>{project.language || "your project"}</strong> to run unit tests,
             regression suites, or dry-run CI tasks before deploying.
@@ -372,26 +372,26 @@ export function EnvironmentsTab({ project }: EnvironmentsTabProps) {
             return (
               <div
                 key={env.id}
-                className="p-5 rounded-xl border border-zinc-200 bg-white shadow-xs hover:border-zinc-300 transition-all flex flex-col justify-between gap-4"
+                className="p-5 rounded-xl border border-card-border bg-card text-foreground shadow-xs hover:border-muted-foreground/30 transition-all flex flex-col justify-between gap-4"
               >
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                   <div className="flex items-start gap-3">
-                    <div className="w-10 h-10 rounded-lg bg-zinc-100 border border-zinc-200 flex items-center justify-center text-zinc-700 shrink-0 mt-0.5">
+                    <div className="w-10 h-10 rounded-lg bg-muted border border-card-border flex items-center justify-center text-muted-foreground shrink-0 mt-0.5">
                       <Box className="w-5 h-5" />
                     </div>
                     <div>
                       <div className="flex items-center gap-2 flex-wrap">
-                        <h4 className="text-sm font-bold text-zinc-900">
+                        <h4 className="text-sm font-bold text-foreground">
                           {env.name}
                         </h4>
                         {statusBadge(env.status)}
                       </div>
-                      <div className="flex items-center gap-3 text-xs text-zinc-500 mt-1 flex-wrap">
-                        <span className="font-mono bg-zinc-100 px-1.5 py-0.5 rounded text-[11px] text-zinc-700">
+                      <div className="flex items-center gap-3 text-xs text-muted-foreground mt-1 flex-wrap">
+                        <span className="font-mono bg-zinc-100 px-1.5 py-0.5 rounded text-[11px] text-foreground">
                           {env.image}
                         </span>
                         {env.containerId && (
-                          <div className="flex items-center gap-1 font-mono text-[11px] text-zinc-500">
+                          <div className="flex items-center gap-1 font-mono text-[11px] text-muted-foreground">
                             <span>ID: {env.containerId.slice(0, 12)}</span>
                             <button
                               onClick={() =>
@@ -413,7 +413,7 @@ export function EnvironmentsTab({ project }: EnvironmentsTabProps) {
                           {env.workspacePath}
                         </span>
                         {env.portMapping && (
-                          <span className="font-mono text-[11px] bg-indigo-50 text-[#5850ec] px-1.5 py-0.5 rounded border border-indigo-100">
+                          <span className="font-mono text-[11px] bg-indigo-50 dark:bg-indigo-950/60 text-[#5850ec] dark:text-indigo-300 px-1.5 py-0.5 rounded border border-indigo-100 dark:border-indigo-800">
                             Port {env.portMapping}
                           </span>
                         )}
@@ -427,7 +427,7 @@ export function EnvironmentsTab({ project }: EnvironmentsTabProps) {
                     <button
                       onClick={() => setActiveExecEnv(env)}
                       disabled={env.status !== "RUNNING"}
-                      className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-zinc-700 bg-zinc-50 hover:bg-zinc-100 border border-zinc-200 rounded-lg transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-foreground bg-muted hover:bg-muted/80 border border-card-border rounded-lg transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                       title="Run commands inside container"
                     >
                       <Terminal className="w-3.5 h-3.5 text-[#5850ec]" />
@@ -437,10 +437,10 @@ export function EnvironmentsTab({ project }: EnvironmentsTabProps) {
                     {/* View Logs Modal */}
                     <button
                       onClick={() => setActiveLogsEnv(env)}
-                      className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-zinc-700 bg-zinc-50 hover:bg-zinc-100 border border-zinc-200 rounded-lg transition-colors cursor-pointer"
+                      className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-foreground bg-muted hover:bg-muted/80 border border-card-border rounded-lg transition-colors cursor-pointer"
                       title="Inspect container stdout/stderr"
                     >
-                      <FileText className="w-3.5 h-3.5 text-zinc-500" />
+                      <FileText className="w-3.5 h-3.5 text-muted-foreground" />
                       <span>Logs</span>
                     </button>
 
@@ -449,7 +449,7 @@ export function EnvironmentsTab({ project }: EnvironmentsTabProps) {
                       <button
                         onClick={() => stopMutation.mutate(env.id)}
                         disabled={isStopping}
-                        className="flex items-center gap-1 px-3 py-1.5 text-xs font-semibold text-amber-700 bg-amber-50 hover:bg-amber-100 border border-amber-200 rounded-lg transition-colors cursor-pointer disabled:opacity-50"
+                        className="flex items-center gap-1 px-3 py-1.5 text-xs font-semibold text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/50 hover:bg-amber-100 dark:hover:bg-amber-900/60 border border-amber-200 dark:border-amber-800 rounded-lg transition-colors cursor-pointer disabled:opacity-50"
                         title="Stop container"
                       >
                         {isStopping ? (
@@ -463,7 +463,7 @@ export function EnvironmentsTab({ project }: EnvironmentsTabProps) {
                       <button
                         onClick={() => startMutation.mutate(env.id)}
                         disabled={isStarting}
-                        className="flex items-center gap-1 px-3 py-1.5 text-xs font-semibold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded-lg transition-colors cursor-pointer disabled:opacity-50"
+                        className="flex items-center gap-1 px-3 py-1.5 text-xs font-semibold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/50 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 border border-emerald-200 dark:border-emerald-800 rounded-lg transition-colors cursor-pointer disabled:opacity-50"
                         title="Start container"
                       >
                         {isStarting ? (
@@ -501,7 +501,7 @@ export function EnvironmentsTab({ project }: EnvironmentsTabProps) {
 
                 {/* Error Banner if container failed */}
                 {env.errorMessage && (
-                  <div className="p-2.5 rounded-lg border border-rose-200 bg-rose-50 text-xs text-rose-700 flex items-start gap-2">
+                  <div className="p-2.5 rounded-lg border border-rose-200 dark:border-rose-800 bg-rose-50 dark:bg-rose-950/50 text-xs text-rose-700 dark:text-rose-300 flex items-start gap-2">
                     <AlertCircle className="w-4 h-4 text-rose-500 shrink-0 mt-0.5" />
                     <span>{env.errorMessage}</span>
                   </div>
@@ -519,7 +519,7 @@ export function EnvironmentsTab({ project }: EnvironmentsTabProps) {
             className={`rounded-2xl w-full border shadow-2xl overflow-hidden max-h-[92vh] flex flex-col transition-all duration-300 ${
               createMutation.isPending
                 ? "max-w-xl border-zinc-800 bg-zinc-950"
-                : "max-w-lg border-zinc-200 bg-white"
+                : "max-w-lg border-card-border bg-card text-foreground"
             }`}
           >
             {createMutation.isPending ? (
@@ -538,10 +538,10 @@ export function EnvironmentsTab({ project }: EnvironmentsTabProps) {
               />
             ) : (
               <>
-                <div className="px-6 py-4 border-b border-zinc-200 flex items-center justify-between">
+                <div className="px-6 py-4 border-b border-card-border flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <Box className="w-5 h-5 text-[#5850ec]" />
-                    <h3 className="text-sm font-bold text-zinc-900">
+                    <h3 className="text-sm font-bold text-foreground">
                       Provision Docker Test Container
                     </h3>
                   </div>
@@ -558,7 +558,7 @@ export function EnvironmentsTab({ project }: EnvironmentsTabProps) {
 
                 <form onSubmit={handleCreateSubmit} className="p-6 space-y-4 overflow-y-auto flex-1">
                   {createErrorMsg && (
-                    <div className="p-3 rounded-lg bg-rose-50 border border-rose-200 text-rose-700 text-xs flex items-start gap-2.5">
+                    <div className="p-3 rounded-lg bg-rose-50 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-300 text-xs flex items-start gap-2.5">
                       <AlertCircle className="w-4 h-4 shrink-0 text-rose-600 mt-0.5" />
                       <div>
                         <span className="font-semibold block">Provisioning Failed</span>
@@ -567,7 +567,7 @@ export function EnvironmentsTab({ project }: EnvironmentsTabProps) {
                     </div>
                   )}
               <div>
-                <label className="block text-xs font-semibold text-zinc-700 mb-1">
+                <label className="block text-xs font-semibold text-foreground mb-1">
                   Environment Name
                 </label>
                 <input
@@ -576,12 +576,12 @@ export function EnvironmentsTab({ project }: EnvironmentsTabProps) {
                   onChange={(e) => setName(e.target.value)}
                   placeholder="e.g. CI Regression Container"
                   required
-                  className="w-full px-3 py-2 text-xs border border-zinc-300 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-[#5850ec]/20 focus:border-[#5850ec]"
+                  className="w-full px-3 py-2 text-xs border border-card-border bg-muted/30 text-foreground rounded-lg focus:outline-hidden focus:ring-2 focus:ring-[#5850ec]/20 focus:border-[#5850ec]"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-zinc-700 mb-1">
+                <label className="block text-xs font-semibold text-foreground mb-1">
                   Base Docker Image
                 </label>
                 <div className="grid grid-cols-2 gap-2 mb-2">
@@ -602,7 +602,7 @@ export function EnvironmentsTab({ project }: EnvironmentsTabProps) {
                       className={`text-left p-2.5 rounded-lg border text-xs transition-all cursor-pointer ${
                         selectedImage === preset.img && !customImage
                           ? "border-[#5850ec] bg-indigo-50/50 text-[#5850ec] font-semibold"
-                          : "border-zinc-200 hover:border-zinc-300 text-zinc-700"
+                          : "border-card-border hover:border-muted-foreground/30 text-foreground"
                       }`}
                     >
                       <div className="font-medium">{preset.label}</div>
@@ -618,12 +618,12 @@ export function EnvironmentsTab({ project }: EnvironmentsTabProps) {
                   value={customImage}
                   onChange={(e) => setCustomImage(e.target.value)}
                   placeholder="Or enter custom image tag (e.g. gradle:8-jdk21)"
-                  className="w-full px-3 py-2 text-xs border border-zinc-300 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-[#5850ec]/20 focus:border-[#5850ec]"
+                  className="w-full px-3 py-2 text-xs border border-card-border bg-muted/30 text-foreground rounded-lg focus:outline-hidden focus:ring-2 focus:ring-[#5850ec]/20 focus:border-[#5850ec]"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-zinc-700 mb-1">
+                <label className="block text-xs font-semibold text-foreground mb-1">
                   Expose Port (Optional)
                 </label>
                 <input
@@ -631,7 +631,7 @@ export function EnvironmentsTab({ project }: EnvironmentsTabProps) {
                   value={port}
                   onChange={(e) => setPort(e.target.value)}
                   placeholder="e.g. 8080 or 3000"
-                  className="w-full px-3 py-2 text-xs border border-zinc-300 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-[#5850ec]/20 focus:border-[#5850ec]"
+                  className="w-full px-3 py-2 text-xs border border-card-border bg-muted/30 text-foreground rounded-lg focus:outline-hidden focus:ring-2 focus:ring-[#5850ec]/20 focus:border-[#5850ec]"
                 />
                 <p className="text-[10px] text-zinc-400 mt-1">
                   Maps the container port to the host for testing running web servers or APIs.
@@ -641,18 +641,18 @@ export function EnvironmentsTab({ project }: EnvironmentsTabProps) {
               {/* Environment Variables Section */}
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <label className="flex items-center gap-1.5 text-xs font-semibold text-zinc-700">
+                  <label className="flex items-center gap-1.5 text-xs font-semibold text-foreground">
                     <Key className="w-3.5 h-3.5 text-[#5850ec]" />
                     <span>Environment Variables (Optional)</span>
                   </label>
-                  <div className="flex items-center gap-1 bg-zinc-100 p-0.5 rounded-md border border-zinc-200">
+                  <div className="flex items-center gap-1 bg-muted p-0.5 rounded-md border border-card-border">
                     <button
                       type="button"
                       onClick={() => switchEnvMode("pairs")}
                       className={`px-2 py-0.5 text-[11px] font-medium rounded transition-all cursor-pointer ${
                         envInputMode === "pairs"
-                          ? "bg-white text-zinc-900 shadow-xs font-semibold"
-                          : "text-zinc-500 hover:text-zinc-800"
+                          ? "bg-card text-foreground shadow-xs font-semibold"
+                          : "text-muted-foreground hover:text-zinc-800"
                       }`}
                     >
                       Key-Value
@@ -662,8 +662,8 @@ export function EnvironmentsTab({ project }: EnvironmentsTabProps) {
                       onClick={() => switchEnvMode("raw")}
                       className={`px-2 py-0.5 text-[11px] font-medium rounded transition-all cursor-pointer ${
                         envInputMode === "raw"
-                          ? "bg-white text-zinc-900 shadow-xs font-semibold"
-                          : "text-zinc-500 hover:text-zinc-800"
+                          ? "bg-card text-foreground shadow-xs font-semibold"
+                          : "text-muted-foreground hover:text-zinc-800"
                       }`}
                     >
                       .env Syntax
@@ -682,7 +682,7 @@ export function EnvironmentsTab({ project }: EnvironmentsTabProps) {
                             handleUpdateEnvVar(idx, "key", e.target.value)
                           }
                           placeholder="VARIABLE_NAME"
-                          className="w-5/12 px-2.5 py-1.5 font-mono text-[11px] border border-zinc-300 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-[#5850ec]/20 focus:border-[#5850ec]"
+                          className="w-5/12 px-2.5 py-1.5 font-mono text-[11px] border border-card-border bg-muted/30 text-foreground rounded-lg focus:outline-hidden focus:ring-2 focus:ring-[#5850ec]/20 focus:border-[#5850ec]"
                         />
                         <span className="text-zinc-400 font-mono text-xs">=</span>
                         <input
@@ -692,7 +692,7 @@ export function EnvironmentsTab({ project }: EnvironmentsTabProps) {
                             handleUpdateEnvVar(idx, "value", e.target.value)
                           }
                           placeholder="value"
-                          className="flex-1 px-2.5 py-1.5 font-mono text-[11px] border border-zinc-300 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-[#5850ec]/20 focus:border-[#5850ec]"
+                          className="flex-1 px-2.5 py-1.5 font-mono text-[11px] border border-card-border bg-muted/30 text-foreground rounded-lg focus:outline-hidden focus:ring-2 focus:ring-[#5850ec]/20 focus:border-[#5850ec]"
                         />
                         <button
                           type="button"
@@ -720,7 +720,7 @@ export function EnvironmentsTab({ project }: EnvironmentsTabProps) {
                       onChange={(e) => setRawEnvText(e.target.value)}
                       rows={4}
                       placeholder={`DATABASE_URL=postgres://user:pass@host:5432/db\nNODE_ENV=test\nAPI_KEY=secret_key`}
-                      className="w-full px-3 py-2 font-mono text-[11.5px] border border-zinc-300 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-[#5850ec]/20 focus:border-[#5850ec] resize-none"
+                      className="w-full px-3 py-2 font-mono text-[11.5px] border border-card-border bg-muted/30 text-foreground rounded-lg focus:outline-hidden focus:ring-2 focus:ring-[#5850ec]/20 focus:border-[#5850ec] resize-none"
                     />
                     <p className="text-[10px] text-zinc-400 mt-1">
                       One per line in KEY=VALUE format. Comments starting with # are ignored.
@@ -737,7 +737,7 @@ export function EnvironmentsTab({ project }: EnvironmentsTabProps) {
                   onChange={(e) => setAutoClone(e.target.checked)}
                   className="rounded text-[#5850ec] focus:ring-[#5850ec] cursor-pointer"
                 />
-                <label htmlFor="autoClone" className="text-xs text-zinc-700 cursor-pointer">
+                <label htmlFor="autoClone" className="text-xs text-foreground cursor-pointer">
                   Auto-clone repository into container workspace (<span className="font-mono text-[11px]">/workspace</span>)
                 </label>
               </div>
@@ -745,23 +745,23 @@ export function EnvironmentsTab({ project }: EnvironmentsTabProps) {
               {/* Semgrep Toggle */}
               <div className={`flex items-start gap-3 p-3 rounded-xl border transition-all ${
                 installSemgrep
-                  ? "border-emerald-200 bg-emerald-50/60"
-                  : "border-zinc-200 bg-zinc-50/40"
+                  ? "border-emerald-200 dark:border-emerald-800/80 bg-emerald-50/60 dark:bg-emerald-950/40"
+                  : "border-card-border bg-muted/20"
               }`}>
                 <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 mt-0.5 transition-colors ${
                   installSemgrep
                     ? "bg-emerald-100 text-emerald-700"
-                    : "bg-zinc-100 text-zinc-400"
+                    : "bg-muted text-muted-foreground"
                 }`}>
                   <ShieldCheck className="w-4 h-4" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between gap-2">
                     <div>
-                      <p className={`text-xs font-semibold ${installSemgrep ? "text-emerald-800" : "text-zinc-700"}`}>
+                      <p className={`text-xs font-semibold ${installSemgrep ? "text-emerald-800 dark:text-emerald-300" : "text-foreground"}`}>
                         Install Semgrep SAST Scanner
                       </p>
-                      <p className="text-[10px] text-zinc-500 mt-0.5 leading-relaxed">
+                      <p className="text-[10px] text-muted-foreground mt-0.5 leading-relaxed">
                         Installs <span className="font-mono">semgrep</span> via pip for static analysis & security scanning. Available immediately in the container terminal.
                       </p>
                     </div>
@@ -783,7 +783,7 @@ export function EnvironmentsTab({ project }: EnvironmentsTabProps) {
                     </button>
                   </div>
                   {installSemgrep && (
-                    <p className="text-[10px] text-emerald-600 font-medium mt-1.5 flex items-center gap-1">
+                    <p className="text-[10px] text-emerald-600 dark:text-emerald-400 font-medium mt-1.5 flex items-center gap-1">
                       <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block" />
                       Run <span className="font-mono">semgrep scan --config=auto</span> on your cloned code to detect vulnerabilities
                     </p>
@@ -909,7 +909,7 @@ function CommandExecModal({
           <div className="flex items-center gap-2 font-mono text-xs text-zinc-300">
             <Terminal className="w-4 h-4 text-[#5850ec]" />
             <span className="font-bold text-white">{environment.name}</span>
-            <span className="text-zinc-500">|</span>
+            <span className="text-muted-foreground">|</span>
             <span className="text-zinc-400">{environment.image}</span>
           </div>
           <button
@@ -933,7 +933,7 @@ function CommandExecModal({
               {qc}
             </button>
           ))}
-          <span className="text-[10px] text-zinc-500 font-mono ml-auto hidden md:inline shrink-0">
+          <span className="text-[10px] text-muted-foreground font-mono ml-auto hidden md:inline shrink-0">
             Semgrep installs in background (~1-2m)
           </span>
         </div>
@@ -941,7 +941,7 @@ function CommandExecModal({
         {/* Output Console */}
         <div className="p-5 font-mono text-xs flex-1 overflow-y-auto space-y-4 bg-zinc-950 min-h-[300px]">
           {outputHistory.length === 0 && (
-            <div className="text-zinc-500 italic">
+            <div className="text-muted-foreground italic">
               Interactive terminal ready in workspace {workingDir}. Click a quick preset or type a command below.
             </div>
           )}
@@ -1116,18 +1116,18 @@ function ContainerLogsModal({
           <div className="flex items-center gap-1.5 flex-wrap">
             {/* Search Input */}
             <div className="relative flex items-center">
-              <Search className="w-3.5 h-3.5 absolute left-2.5 text-zinc-500 pointer-events-none" />
+              <Search className="w-3.5 h-3.5 absolute left-2.5 text-muted-foreground pointer-events-none" />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Filter logs..."
-                className="pl-8 pr-6 py-1 bg-zinc-950 border border-zinc-700 hover:border-zinc-600 focus:border-[#5850ec] rounded-lg text-xs text-zinc-200 placeholder:text-zinc-500 focus:outline-hidden w-36 sm:w-44 transition-colors"
+                className="pl-8 pr-6 py-1 bg-zinc-950 border border-zinc-700 hover:border-zinc-600 focus:border-[#5850ec] rounded-lg text-xs text-zinc-200 placeholder:text-muted-foreground focus:outline-hidden w-36 sm:w-44 transition-colors"
               />
               {searchQuery && (
                 <button
                   onClick={() => setSearchQuery("")}
-                  className="absolute right-2 text-zinc-500 hover:text-zinc-300 text-xs"
+                  className="absolute right-2 text-muted-foreground hover:text-zinc-300 text-xs"
                 >
                   ×
                 </button>
@@ -1242,7 +1242,7 @@ function ContainerLogsModal({
               showLineNumbers={showLineNumbers}
             />
           ) : (
-            <div className="text-zinc-500 italic py-10 text-center text-xs">
+            <div className="text-muted-foreground italic py-10 text-center text-xs">
               No output recorded in container log stream yet.
             </div>
           )}
@@ -1265,7 +1265,7 @@ function ContainerLogsModal({
             )}
           </div>
 
-          <div className="flex items-center gap-3 text-zinc-500">
+          <div className="flex items-center gap-3 text-muted-foreground">
             {environment.containerId && (
               <span>ID: {environment.containerId.slice(0, 12)}</span>
             )}

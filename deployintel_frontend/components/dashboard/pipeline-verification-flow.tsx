@@ -49,28 +49,28 @@ const pipelineSteps = [
 
 export function PipelineVerificationFlow() {
   return (
-    <section className="mb-6 bg-white rounded-xl border border-zinc-200 p-5">
+    <section className="mb-6 bg-card rounded-xl border border-card-border p-5">
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-start gap-2">
           <div>
             <div className="flex items-center gap-2">
-              <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 text-[#5850ec]">
+              <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 text-[#5850ec] dark:text-indigo-400">
                 <path fillRule="evenodd" d="M2 11.5a.5.5 0 01.5-.5h14.086l-3.793-3.793a.5.5 0 11.707-.707l4.5 4.5a.5.5 0 010 .707l-4.5 4.5a.5.5 0 01-.707-.707L16.586 12H2.5a.5.5 0 01-.5-.5z" clipRule="evenodd" />
               </svg>
-              <h2 className="text-sm font-semibold text-zinc-900">Active Pipeline Verification Flow</h2>
-              <span className="text-[10px] font-mono text-zinc-500 bg-zinc-100 px-1.5 py-0.5 rounded">Pipeline #DP-9921</span>
+              <h2 className="text-sm font-semibold text-foreground">Active Pipeline Verification Flow</h2>
+              <span className="text-[10px] font-mono text-muted-foreground bg-muted px-1.5 py-0.5 rounded border border-card-border">Pipeline #DP-9921</span>
             </div>
-            <p className="text-[11px] text-zinc-400 mt-0.5">
+            <p className="text-[11px] text-muted-foreground mt-0.5">
               Real-time gate telemetry for commit{" "}
-              <span className="font-mono text-[#5850ec] underline cursor-pointer">chout1</span>{" "}
+              <span className="font-mono text-[#5850ec] dark:text-indigo-400 underline cursor-pointer">chout1</span>{" "}
               targeting production us-east-1
             </p>
           </div>
         </div>
         <div className="flex items-center gap-1.5">
           <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-          <span className="text-[11px] font-semibold text-emerald-600 uppercase tracking-wide">All Gates Verified</span>
+          <span className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 uppercase tracking-wide">All Gates Verified</span>
         </div>
       </div>
 
@@ -100,13 +100,13 @@ export function PipelineVerificationFlow() {
 
               {/* Step label */}
               <div className="text-center mt-2 px-1">
-                <p className={`text-[10px] font-bold uppercase tracking-wide ${step.status === "active" ? "text-[#5850ec]" : "text-zinc-700"}`}>
+                <p className={`text-[10px] font-bold uppercase tracking-wide ${step.status === "active" ? "text-[#5850ec] dark:text-indigo-400" : "text-foreground"}`}>
                   {step.id}. {step.label}
                 </p>
-                <p className={`text-[10px] mt-0.5 ${step.status === "active" ? "text-[#5850ec] font-semibold" : "text-zinc-500"}`}>
+                <p className={`text-[10px] mt-0.5 ${step.status === "active" ? "text-[#5850ec] dark:text-indigo-400 font-semibold" : "text-muted-foreground"}`}>
                   {step.sublabel}
                 </p>
-                <p className="text-[10px] text-zinc-400">{step.detail}</p>
+                <p className="text-[10px] text-muted-foreground">{step.detail}</p>
               </div>
             </div>
 

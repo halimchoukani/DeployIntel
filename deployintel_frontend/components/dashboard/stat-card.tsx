@@ -26,29 +26,29 @@ interface StatCardProps {
 }
 
 const badgeColors = {
-  red: "bg-red-100 text-red-700",
-  yellow: "bg-amber-100 text-amber-700",
-  green: "bg-emerald-100 text-emerald-700",
-  blue: "bg-blue-100 text-blue-700",
+  red: "bg-destructive/10 text-destructive border border-destructive/20 dark:bg-destructive/20 dark:border-destructive/30",
+  yellow: "bg-warning/10 text-warning border border-warning/20 dark:bg-warning/20 dark:border-warning/30",
+  green: "bg-success/10 text-success border border-success/20 dark:bg-success/20 dark:border-success/30",
+  blue: "bg-accent/10 text-accent border border-accent/20 dark:bg-accent/20 dark:border-accent/30",
 };
 
 const trendColors = {
-  green: "text-emerald-600 bg-emerald-50",
-  red: "text-red-600 bg-red-50",
-  blue: "text-blue-600 bg-blue-50",
+  green: "text-success bg-success/10 dark:bg-success/20",
+  red: "text-destructive bg-destructive/10 dark:bg-destructive/20",
+  blue: "text-accent bg-accent/10 dark:bg-accent/20",
 };
 
 const dotColors = {
-  red: "bg-red-400",
-  green: "bg-emerald-400",
-  yellow: "bg-amber-400",
+  red: "bg-destructive",
+  green: "bg-success",
+  yellow: "bg-warning",
 };
 
 export function StatCard({ label, value, subtitle, trend, badge, action, statusDot }: StatCardProps) {
   return (
-    <div className="bg-white rounded-xl border border-zinc-200 p-4 flex flex-col gap-2 hover:shadow-md transition-shadow">
+    <div className="bg-card rounded-xl border border-card-border p-4 flex flex-col gap-2 hover:shadow-md transition-shadow">
       <div className="flex items-start justify-between gap-2">
-        <p className="text-[10px] font-semibold text-zinc-400 uppercase tracking-widest leading-tight">{label}</p>
+        <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest leading-tight">{label}</p>
         {trend && (
           <span className={`flex items-center gap-0.5 text-[10px] font-semibold px-1.5 py-0.5 rounded-full ${trendColors[trend.color ?? "green"]}`}>
             {trend.direction === "up" ? (
@@ -72,21 +72,21 @@ export function StatCard({ label, value, subtitle, trend, badge, action, statusD
 
       <div className="flex items-end justify-between gap-2">
         <div>
-          <p className="text-2xl font-bold text-zinc-900 leading-none">{value}</p>
-          {subtitle && <p className="text-[11px] text-zinc-400 mt-1">{subtitle}</p>}
+          <p className="text-2xl font-bold text-foreground leading-none">{value}</p>
+          {subtitle && <p className="text-[11px] text-muted-foreground mt-1">{subtitle}</p>}
         </div>
       </div>
 
       {(action || statusDot) && (
-        <div className="flex items-center justify-between mt-auto pt-1 border-t border-zinc-50">
+        <div className="flex items-center justify-between mt-auto pt-1 border-t border-card-border">
           {statusDot && (
             <div className="flex items-center gap-1.5">
               <span className={`w-1.5 h-1.5 rounded-full ${dotColors[statusDot.color]}`} />
-              <span className="text-[10px] text-zinc-400">{statusDot.label}</span>
+              <span className="text-[10px] text-muted-foreground">{statusDot.label}</span>
             </div>
           )}
           {action && (
-            <button className="text-[10px] font-medium text-[#5850ec] hover:underline flex items-center gap-0.5 ml-auto">
+            <button className="text-[10px] font-medium text-accent hover:underline flex items-center gap-0.5 ml-auto">
               {action.label}
               <svg viewBox="0 0 20 20" fill="currentColor" className="w-3 h-3">
                 <path fillRule="evenodd" d="M3 10a.75.75 0 01.75-.75h10.638L10.23 5.29a.75.75 0 111.04-1.08l5.5 5.25a.75.75 0 010 1.08l-5.5 5.25a.75.75 0 11-1.04-1.08l4.158-3.96H3.75A.75.75 0 013 10z" clipRule="evenodd" />

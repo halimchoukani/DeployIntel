@@ -1,5 +1,7 @@
 package com.example.deployintel.gate.service;
 
+import com.example.deployintel.ai.config.OllamaProperties;
+import com.example.deployintel.ai.service.OllamaService;
 import com.example.deployintel.auth.security.UserPrincipal;
 import com.example.deployintel.environment.dto.CommandExecutionResponse;
 import com.example.deployintel.environment.entity.EnvironmentStatus;
@@ -14,6 +16,7 @@ import com.example.deployintel.gate.dto.K6CheckResponse;
 import com.example.deployintel.gate.entity.TestRun;
 import com.example.deployintel.gate.repository.*;
 import com.example.deployintel.project.entity.Project;
+import com.example.deployintel.project.member.repository.ProjectMemberRepository;
 import com.example.deployintel.project.repository.ProjectRepository;
 import com.example.deployintel.user.entity.User;
 import com.example.deployintel.user.entity.UserRole;
@@ -45,6 +48,9 @@ class GateServiceTest {
     private ProjectRepository projectRepository;
 
     @Mock
+    private ProjectMemberRepository projectMemberRepository;
+
+    @Mock
     private TestEnvironmentRepository testEnvironmentRepository;
 
     @Mock
@@ -74,6 +80,12 @@ class GateServiceTest {
     @Mock
     private RiskRuleRepository riskRuleRepository;
 
+    @Mock
+    private OllamaService ollamaService;
+
+    @Mock
+    private OllamaProperties ollamaProperties;
+
     @Spy
     private ObjectMapper objectMapper = new ObjectMapper();
 
@@ -100,6 +112,8 @@ class GateServiceTest {
                 .build();
 
         principal = new UserPrincipal(owner.getId(), owner.getEmail(), owner.getRole());
+
+        when(ollamaProperties.getModel()).thenReturn("qwen2.5-coder:7b");
 
         Deployment deployment = Deployment.builder()
                 .id(UUID.randomUUID())
@@ -188,7 +202,6 @@ class GateServiceTest {
         verify(testRunRepository, atLeastOnce()).save(any(TestRun.class));
         verify(securityFindingRepository, atLeastOnce()).save(any(com.example.deployintel.gate.entity.SecurityFinding.class));
         verify(testResultRepository, atLeastOnce()).save(any(com.example.deployintel.gate.entity.TestResult.class));
-        verify(riskAssessmentRepository, atLeastOnce()).save(any(com.example.deployintel.gate.entity.RiskAssessment.class));
     }
 
     @Test
@@ -289,6 +302,5 @@ class GateServiceTest {
         verify(testRunRepository, atLeastOnce()).save(any(TestRun.class));
         verify(testResultRepository, atLeastOnce()).save(any(com.example.deployintel.gate.entity.TestResult.class));
         verify(performanceMetricRepository, atLeastOnce()).save(any(com.example.deployintel.gate.entity.PerformanceMetric.class));
-        verify(riskAssessmentRepository, atLeastOnce()).save(any(com.example.deployintel.gate.entity.RiskAssessment.class));
     }
 }

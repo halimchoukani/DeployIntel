@@ -69,6 +69,13 @@ public class User {
     public User() {
     }
 
+    public String getFullName() {
+        if (firstName == null && lastName == null) return "";
+        if (firstName == null) return lastName;
+        if (lastName == null) return firstName;
+        return (firstName + " " + lastName).trim();
+    }
+
     public static User create(
             String email,
             String passwordHash,

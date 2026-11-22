@@ -132,7 +132,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const isPublic = isPublicRoute(pathname);
   if (!isInitialized && !isPublic && pathname !== "/") {
     return (
-      <div className="min-h-screen w-full flex items-center justify-center bg-[#f8fafc]">
+      <div className="min-h-screen w-full flex items-center justify-center bg-background">
         <div className="flex flex-col items-center gap-3">
           <div className="relative h-10 w-10">
             <div className="absolute inset-0 rounded-full border-4 border-zinc-200" />

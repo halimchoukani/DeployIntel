@@ -1,9 +1,10 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useReleases, useCreateRelease } from "@/hooks/use-releases";
 import type { Release, ReleaseEnvironment, ReleaseStatus } from "@/lib/api/releases";
 import type { Project } from "@/lib/api/project";
+import { AiSuggestionCard } from "@/components/projects/ai-suggestion-card";
 import {
   Tag,
   GitCommit,
@@ -45,11 +46,11 @@ interface ReleasesTabProps {
 
 function envBadge(env: ReleaseEnvironment) {
   const map: Record<ReleaseEnvironment, string> = {
-    PRODUCTION: "bg-violet-50 text-violet-700 border-violet-200",
-    STAGING: "bg-amber-50 text-amber-700 border-amber-200",
-    DEVELOPMENT: "bg-sky-50 text-sky-700 border-sky-200",
+    PRODUCTION: "bg-violet-50 dark:bg-violet-950/60 text-violet-700 dark:text-violet-300 border border-violet-200 dark:border-violet-800",
+    STAGING: "bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800",
+    DEVELOPMENT: "bg-sky-50 dark:bg-sky-950/60 text-sky-700 dark:text-sky-300 border border-sky-200 dark:border-sky-800",
   };
-  return map[env] ?? "bg-zinc-100 text-zinc-600 border-zinc-200";
+  return map[env] ?? "bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-700";
 }
 
 function statusIcon(status: ReleaseStatus) {
@@ -69,13 +70,13 @@ function statusIcon(status: ReleaseStatus) {
 
 function statusLabel(status: ReleaseStatus) {
   const map: Record<ReleaseStatus, { label: string; cls: string }> = {
-    SUCCESS: { label: "Success", cls: "text-emerald-600 bg-emerald-50 border-emerald-200" },
-    FAILED:  { label: "Failed",  cls: "text-rose-600 bg-rose-50 border-rose-200" },
-    BLOCKED: { label: "Blocked", cls: "text-red-700 bg-red-50 border-red-300" },
-    DRAFT:   { label: "Draft",   cls: "text-zinc-500 bg-zinc-50 border-zinc-200" },
-    PENDING: { label: "Pending", cls: "text-amber-600 bg-amber-50 border-amber-200" },
+    SUCCESS: { label: "Success", cls: "text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800" },
+    FAILED:  { label: "Failed",  cls: "text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/60 border border-rose-200 dark:border-rose-800" },
+    BLOCKED: { label: "Blocked", cls: "text-red-700 dark:text-red-300 bg-red-50 dark:bg-red-950/60 border border-red-300 dark:border-red-800" },
+    DRAFT:   { label: "Draft",   cls: "text-muted-foreground bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700" },
+    PENDING: { label: "Pending", cls: "text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/60 border border-amber-200 dark:border-amber-800" },
   };
-  const s = map[status] ?? { label: status, cls: "text-zinc-500 bg-zinc-50 border-zinc-200" };
+  const s = map[status] ?? { label: status, cls: "text-muted-foreground bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700" };
   return (
     <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold border ${s.cls}`}>
       {statusIcon(status)}
@@ -88,14 +89,14 @@ function testVerdictBadge(verdict?: string) {
   switch (verdict?.toUpperCase()) {
     case "PASSED":
       return (
-        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
           <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
           Gates Passed
         </span>
       );
     case "FAILED":
       return (
-        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-red-50 text-red-700 border border-red-200">
+        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-red-50 dark:bg-red-950/60 text-red-700 dark:text-red-300 border border-red-200 dark:border-red-800">
           <XCircle className="w-3.5 h-3.5 text-red-500" />
           Gate Blocked
         </span>
@@ -103,14 +104,14 @@ function testVerdictBadge(verdict?: string) {
     case "RUNNING":
     case "PENDING":
       return (
-        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-amber-50 text-amber-700 border border-amber-200">
+        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800">
           <Loader2 className="w-3.5 h-3.5 text-amber-500 animate-spin" />
           Running Tests...
         </span>
       );
     default:
       return (
-        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] text-zinc-400 bg-zinc-50 border border-zinc-200">
+        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] text-zinc-400 dark:text-zinc-400 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700">
           Not Run
         </span>
       );
@@ -122,21 +123,21 @@ function decisionBadge(decision?: string) {
   switch (decision) {
     case "PASS":
       return (
-        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
           <CircleCheckBig className="w-3.5 h-3.5" />
           PASS
         </span>
       );
     case "WARN":
       return (
-        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-50 text-amber-700 border border-amber-200">
+        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800">
           <TriangleAlert className="w-3.5 h-3.5" />
           WARN
         </span>
       );
     case "BLOCK":
       return (
-        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-red-50 text-red-700 border border-red-300">
+        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-red-50 dark:bg-red-950/60 text-red-700 dark:text-red-300 border border-red-300 dark:border-red-800">
           <CircleX className="w-3.5 h-3.5" />
           BLOCK
         </span>
@@ -177,10 +178,25 @@ function ScoreGauge({ score, decision, size = 72 }: { score: number; decision?: 
 
   const risk = riskLevelBadge(score);
 
+  // Reduced motion preference
+  const prefersReducedMotion = typeof window !== 'undefined' &&
+    window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // Live region for score announcements
+  const [announcedScore, setAnnouncedScore] = useState(score);
+  useEffect(() => {
+    setAnnouncedScore(score);
+  }, [score]);
+
   return (
     <div className="relative flex flex-col items-center justify-center">
+      {/* Live region for screen readers - announces score changes */}
+      <div aria-live="polite" aria-atomic="true" className="sr-only" role="status">
+        Risk score: {Math.round(pct)}. Risk level: {risk.level}. {risk.desc}
+      </div>
+
       <div className="relative flex items-center justify-center" style={{ width: size, height: size }}>
-        <svg className="w-full h-full -rotate-90" viewBox={`0 0 ${size} ${size}`}>
+        <svg className="w-full h-full -rotate-90" viewBox={`0 0 ${size} ${size}`} aria-hidden="true" focusable="false">
           {/* Track */}
           <circle
             cx={size / 2}
@@ -206,8 +222,10 @@ function ScoreGauge({ score, decision, size = 72 }: { score: number; decision?: 
             strokeWidth="6"
             strokeLinecap="round"
             strokeDasharray={circumference}
-            strokeDashoffset={offset}
-            style={{ transition: "stroke-dashoffset 0.8s cubic-bezier(0.4, 0, 0.2, 1)" }}
+            strokeDashoffset={prefersReducedMotion ? circumference - (pct / 100) * circumference : offset}
+            style={{
+              transition: prefersReducedMotion ? "none" : "stroke-dashoffset 0.8s cubic-bezier(0.4, 0, 0.2, 1)"
+            }}
             filter="drop-shadow(0 2px 4px rgba(0,0,0,0.1))"
           />
         </svg>
@@ -223,13 +241,13 @@ function ScoreGauge({ score, decision, size = 72 }: { score: number; decision?: 
       <div className="mt-2 text-center">
         <span
           className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold ${
-            risk.color === "emerald" ? "bg-emerald-50 text-emerald-700" :
-            risk.color === "amber" ? "bg-amber-50 text-amber-700" :
-            risk.color === "orange" ? "bg-orange-50 text-orange-700" :
-            "bg-red-50 text-red-700"
+            risk.color === "emerald" ? "bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800" :
+            risk.color === "amber" ? "bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800" :
+            risk.color === "orange" ? "bg-orange-50 dark:bg-orange-950/60 text-orange-700 dark:text-orange-300 border border-orange-200 dark:border-orange-800" :
+            "bg-red-50 dark:bg-red-950/60 text-red-700 dark:text-red-300 border border-red-200 dark:border-red-800"
           }`}
         >
-          <risk.icon className="w-3 h-3" />
+          <risk.icon className="w-3 h-3" aria-hidden="true" />
           {risk.desc}
         </span>
       </div>
@@ -237,7 +255,7 @@ function ScoreGauge({ score, decision, size = 72 }: { score: number; decision?: 
   );
 }
 
-/** Horizontal sub-score bar with better visual design */
+/** Horizontal sub-score bar with better visual design (Bullet Chart style) */
 function ScoreBar({ label, value, icon, weight }: { label: string; value: number; icon: React.ReactNode; weight?: string }) {
   const pct = Math.min(100, Math.max(0, value));
   const barColor =
@@ -248,6 +266,11 @@ function ScoreBar({ label, value, icon, weight }: { label: string; value: number
 
   const bgColor =
     pct >= 80 ? "bg-emerald-50" : pct >= 60 ? "bg-amber-50" : pct >= 40 ? "bg-orange-50" : "bg-red-50";
+
+  // Bullet chart ranges
+  const poorEnd = 40;
+  const fairEnd = 60;
+  const goodEnd = 80;
 
   return (
     <div className="space-y-1.5">
@@ -261,20 +284,64 @@ function ScoreBar({ label, value, icon, weight }: { label: string; value: number
           {weight && <span className="text-[10px] text-zinc-400 font-mono">{weight}</span>}
         </div>
       </div>
-      <div className="h-2 bg-zinc-100 rounded-full overflow-hidden relative">
+
+      {/* Bullet Chart with qualitative ranges */}
+      <div className="relative h-2 bg-zinc-100 rounded-full overflow-hidden">
+        {/* Qualitative ranges (poor/fair/good) */}
+        <div className="absolute inset-0 flex">
+          <div className="bg-red-100" style={{ width: `${poorEnd}%` }} />
+          <div className="bg-amber-100" style={{ width: `${fairEnd - poorEnd}%` }} />
+          <div className="bg-emerald-100" style={{ width: `${goodEnd - fairEnd}%` }} />
+          <div className="bg-emerald-50" style={{ width: `${100 - goodEnd}%` }} />
+        </div>
+
+        {/* Performance bar */}
         <div
-          className={`h-full rounded-full ${barColor} transition-all duration-700 ease-out`}
-          style={{ width: `${pct}%` }}
+          className={`absolute top-0 bottom-0 h-full rounded-full ${barColor} transition-all duration-700 ease-out shadow-sm`}
+          style={{ width: `${pct}%`, zIndex: 2 }}
         />
-        {/* Threshold markers */}
-        <div className="absolute top-0 bottom-0 left-[60%] w-px bg-zinc-300/50" />
-        <div className="absolute top-0 bottom-0 left-[80%] w-px bg-zinc-300/50" />
+
+        {/* Target markers at 60% (WARN) and 80% (PASS) */}
+        <div
+          className="absolute top-0 bottom-0 w-px bg-amber-500/60"
+          style={{ left: `${fairEnd}%`, zIndex: 3 }}
+          title="WARN threshold (60)"
+        />
+        <div
+          className="absolute top-0 bottom-0 w-px bg-emerald-500/60"
+          style={{ left: `${goodEnd}%`, zIndex: 3 }}
+          title="PASS threshold (80)"
+        />
       </div>
+
+      {/* Range labels */}
       <div className="flex justify-between text-[9px] text-zinc-400">
-        <span>Needs Review</span>
-        <span>Acceptable</span>
-        <span>Good</span>
+        <span>Critical {"<"}40</span>
+        <span>High 40–59</span>
+        <span>Medium 60–79</span>
+        <span>Low ≥80</span>
       </div>
+    </div>
+  );
+}
+
+/** Compact bullet chart for inline use */
+function CompactBulletChart({ score, label, weight }: { score: number; label: string; weight?: string }) {
+  const pct = Math.min(100, Math.max(0, score));
+  const color = pct >= 80 ? "emerald" : pct >= 60 ? "amber" : pct >= 40 ? "orange" : "red";
+  const barColor = `bg-${color}-500`;
+  const trackColor = `bg-${color}-100`;
+
+  return (
+    <div className="flex items-center gap-2 min-w-[140px]">
+      <span className="text-[11px] font-medium text-zinc-600 w-24 truncate">{label}</span>
+      <div className="flex-1 h-1.5 bg-zinc-100 rounded-full overflow-hidden relative">
+        <div className={`h-full rounded-full ${barColor} transition-all duration-500`} style={{ width: `${pct}%` }} />
+        <div className="absolute top-0 bottom-0 w-px bg-amber-500/60" style={{ left: '60%' }} />
+        <div className="absolute top-0 bottom-0 w-px bg-emerald-500/60" style={{ left: '80%' }} />
+      </div>
+      <span className={`text-[11px] font-bold text-${color}-600 w-8 text-right`}>{Math.round(pct)}</span>
+      {weight && <span className="text-[10px] text-zinc-400 font-mono w-12 text-right">{weight}</span>}
     </div>
   );
 }
@@ -298,31 +365,50 @@ function RiskFactorCard({
   const pct = Math.min(100, Math.max(0, score));
   const color = pct >= 80 ? "emerald" : pct >= 60 ? "amber" : pct >= 40 ? "orange" : "red";
 
+  const riskLevel = pct >= 80 ? "LOW" : pct >= 60 ? "MEDIUM" : pct >= 40 ? "HIGH" : "CRITICAL";
+  const riskDesc = pct >= 80 ? "Safe to deploy" : pct >= 60 ? "Review recommended" : pct >= 40 ? "Significant risk" : "Do not deploy";
+
   return (
-    <div className="bg-white border border-zinc-200 rounded-xl p-4 hover:border-zinc-300 transition-colors">
+    <article className="bg-card border border-card-border rounded-xl p-4 hover:border-muted-foreground/30 transition-colors" aria-labelledby={`${title.toLowerCase().replace(/\s+/g, '-')}-label`}>
       <div className="flex items-start gap-3">
-        <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${color === "emerald" ? "bg-emerald-50 text-emerald-600" : color === "amber" ? "bg-amber-50 text-amber-600" : color === "orange" ? "bg-orange-50 text-orange-600" : "bg-red-50 text-red-600"}`}>
+        <div
+          className={`w-10 h-10 rounded-xl flex items-center justify-center ${color === "emerald" ? "bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400" : color === "amber" ? "bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400" : color === "orange" ? "bg-orange-50 dark:bg-orange-950/60 text-orange-600 dark:text-orange-400" : "bg-red-50 dark:bg-red-950/60 text-red-600 dark:text-red-400"}`}
+          aria-hidden="true"
+        >
           {icon}
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center justify-between gap-2">
-            <h5 className="text-sm font-semibold text-zinc-900">{title}</h5>
-            <span className={`text-sm font-bold ${color === "emerald" ? "text-emerald-600" : color === "amber" ? "text-amber-600" : color === "orange" ? "text-orange-600" : "text-red-600"}`}>
-              {Math.round(pct)}
-            </span>
+            <h5 id={`${title.toLowerCase().replace(/\s+/g, '-')}-label`} className="text-sm font-semibold text-foreground">
+              {title}
+            </h5>
+            <div className="flex items-center gap-1.5">
+              <span
+                className={`text-sm font-bold ${color === "emerald" ? "text-emerald-600" : color === "amber" ? "text-amber-600" : color === "orange" ? "text-orange-600" : "text-red-600"}`}
+                aria-label={`Score: ${Math.round(pct)} out of 100`}
+              >
+                {Math.round(pct)}
+              </span>
+              <span
+                className={`text-[10px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded ${color === "emerald" ? "bg-emerald-50 text-emerald-700" : color === "amber" ? "bg-amber-50 text-amber-700" : color === "orange" ? "bg-orange-50 text-orange-700" : "bg-red-50 dark:bg-red-950/60 text-red-700 dark:text-red-300 border border-red-200 dark:border-red-800"}`}
+                aria-label={`Risk level: ${riskLevel}`}
+              >
+                {riskLevel}
+              </span>
+            </div>
           </div>
-          <p className="text-[11px] text-zinc-500 mt-0.5 line-clamp-2">{description}</p>
+          <p className="text-[11px] text-muted-foreground mt-0.5 line-clamp-2">{description}</p>
           {weight && (
             <span className="inline-block mt-1.5 px-2 py-0.5 text-[10px] font-mono text-zinc-400 bg-zinc-50 rounded">
               Weight: {weight}
             </span>
           )}
           {findings && (
-            <div className="mt-3 flex items-center gap-2 text-[10px]">
-              {findings.critical > 0 && <span className="px-1.5 py-0.5 rounded bg-red-50 text-red-700 font-medium">{findings.critical} Critical</span>}
-              {findings.high > 0 && <span className="px-1.5 py-0.5 rounded bg-orange-50 text-orange-700 font-medium">{findings.high} High</span>}
-              {findings.medium > 0 && <span className="px-1.5 py-0.5 rounded bg-amber-50 text-amber-700 font-medium">{findings.medium} Medium</span>}
-              {findings.low > 0 && <span className="px-1.5 py-0.5 rounded bg-zinc-50 text-zinc-700 font-medium">{findings.low} Low</span>}
+            <div className="mt-3 flex flex-wrap items-center gap-2 text-[10px]" aria-label="Finding counts by severity">
+              {findings.critical > 0 && <span className="px-1.5 py-0.5 rounded bg-red-50 dark:bg-red-950/60 text-red-700 dark:text-red-300 border border-red-200/60 dark:border-red-800 font-medium">{findings.critical} Critical</span>}
+              {findings.high > 0 && <span className="px-1.5 py-0.5 rounded bg-orange-50 dark:bg-orange-950/60 text-orange-700 dark:text-orange-300 border border-orange-200/60 dark:border-orange-800 font-medium">{findings.high} High</span>}
+              {findings.medium > 0 && <span className="px-1.5 py-0.5 rounded bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border border-amber-200/60 dark:border-amber-800 font-medium">{findings.medium} Medium</span>}
+              {findings.low > 0 && <span className="px-1.5 py-0.5 rounded bg-zinc-50 text-foreground font-medium">{findings.low} Low</span>}
               {(findings.critical + findings.high + findings.medium + findings.low) === 0 && (
                 <span className="text-zinc-400">No findings</span>
               )}
@@ -330,7 +416,7 @@ function RiskFactorCard({
           )}
         </div>
       </div>
-    </div>
+    </article>
   );
 }
 
@@ -405,7 +491,7 @@ export function ReleasesTab({ project, onNavigateToTestHistory }: ReleasesTabPro
     return (
       <div className="flex items-center justify-center py-24 gap-3">
         <div className="w-6 h-6 border-2 border-zinc-200 border-t-[#5850ec] rounded-full animate-spin" />
-        <p className="text-xs text-zinc-500 font-medium">Loading releases…</p>
+        <p className="text-xs text-muted-foreground font-medium">Loading releases…</p>
       </div>
     );
   }
@@ -414,7 +500,7 @@ export function ReleasesTab({ project, onNavigateToTestHistory }: ReleasesTabPro
     return (
       <div className="flex flex-col items-center justify-center py-24 gap-3 text-center">
         <AlertCircle className="w-8 h-8 text-rose-400" />
-        <p className="text-sm font-semibold text-zinc-700">Could not load releases</p>
+        <p className="text-sm font-semibold text-foreground">Could not load releases</p>
         <p className="text-xs text-zinc-400 max-w-xs">{(error as Error).message}</p>
         <button onClick={() => refetch()} className="mt-2 text-xs font-semibold text-[#5850ec] hover:underline">
           Retry
@@ -430,7 +516,7 @@ export function ReleasesTab({ project, onNavigateToTestHistory }: ReleasesTabPro
           <Rocket className="w-7 h-7 text-[#5850ec]" />
         </div>
         <div>
-          <p className="text-sm font-bold text-zinc-800">No releases yet</p>
+          <p className="text-sm font-bold text-foreground">No releases yet</p>
           <p className="text-xs text-zinc-400 mt-1 max-w-sm">
             Releases trigger automatic security (Semgrep) and performance (k6) gate checks. A composite risk score determines PASS or BLOCK.
           </p>
@@ -452,22 +538,22 @@ export function ReleasesTab({ project, onNavigateToTestHistory }: ReleasesTabPro
       {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
-          <h3 className="text-sm font-bold text-zinc-900">Release History & Gate Evaluations</h3>
+          <h3 className="text-sm font-bold text-foreground">Release History & Gate Evaluations</h3>
           <p className="text-xs text-zinc-400 mt-0.5">
             {releases.length} release{releases.length !== 1 ? "s" : ""} recorded • Composite risk score drives PASS / BLOCK decisions
           </p>
         </div>
 
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-1.5 bg-zinc-50 rounded-lg p-1 border border-zinc-100">
+          <div className="flex items-center gap-1.5 bg-muted/60 rounded-lg p-1 border border-card-border">
             {(["ALL", "PRODUCTION", "STAGING", "DEVELOPMENT"] as const).map((env) => (
               <button
                 key={env}
                 onClick={() => setEnvFilter(env)}
                 className={`px-3 py-1.5 rounded-md text-[11px] font-semibold transition-all ${
                   envFilter === env
-                    ? "bg-white text-[#5850ec] shadow-sm"
-                    : "text-zinc-500 hover:text-zinc-700"
+                    ? "bg-card text-[#5850ec] shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
                 }`}
               >
                 {env === "ALL" ? "All" : env.charAt(0) + env.slice(1).toLowerCase()}
@@ -485,10 +571,10 @@ export function ReleasesTab({ project, onNavigateToTestHistory }: ReleasesTabPro
       </div>
 
       {/* Table */}
-      <div className="bg-white rounded-2xl border border-zinc-200 shadow-xs overflow-hidden">
+      <div className="bg-card text-foreground rounded-2xl border border-card-border shadow-xs overflow-hidden">
         <table className="w-full text-xs">
           <thead>
-            <tr className="border-b border-zinc-100 bg-zinc-50/60 text-[11px] font-semibold text-zinc-400 uppercase tracking-wide">
+            <tr className="border-b border-card-border bg-muted/40 text-[11px] font-semibold text-zinc-400 uppercase tracking-wide">
               <th className="py-3 px-5 text-left">Version</th>
               <th className="py-3 px-4 text-left">Environment</th>
               <th className="py-3 px-4 text-left">Risk Score</th>
@@ -500,7 +586,7 @@ export function ReleasesTab({ project, onNavigateToTestHistory }: ReleasesTabPro
               <th className="py-3 px-5 text-right"></th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-zinc-100">
+          <tbody className="divide-y divide-card-border">
             {filtered.length === 0 ? (
               <tr>
                 <td colSpan={9} className="py-12 text-center text-zinc-400 text-xs">
@@ -512,7 +598,16 @@ export function ReleasesTab({ project, onNavigateToTestHistory }: ReleasesTabPro
                 <tr
                   key={release.id}
                   onClick={() => setSelected(release)}
-                  className="hover:bg-zinc-50/70 transition-colors cursor-pointer group"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      setSelected(release);
+                    }
+                  }}
+                  tabIndex={0}
+                  role="button"
+                  aria-label={`View details for release ${release.versionNumber}, risk score ${release.compositeScore != null ? Math.round(release.compositeScore) : 'not available'}, ${release.deploymentDecision || release.testVerdict || 'pending'}`}
+                  className="hover:bg-muted/40 transition-colors cursor-pointer group focus:outline-none focus:ring-2 focus:ring-[#5850ec] focus:ring-offset-2 focus:ring-offset-white"
                 >
                   {/* Version */}
                   <td className="py-4 px-5">
@@ -520,7 +615,7 @@ export function ReleasesTab({ project, onNavigateToTestHistory }: ReleasesTabPro
                       <div className="w-7 h-7 rounded-lg bg-indigo-50 flex items-center justify-center shrink-0">
                         <Tag className="w-3.5 h-3.5 text-[#5850ec]" />
                       </div>
-                      <span className="font-bold text-zinc-900">{release.versionNumber}</span>
+                      <span className="font-bold text-foreground">{release.versionNumber}</span>
                     </div>
                   </td>
 
@@ -552,10 +647,10 @@ export function ReleasesTab({ project, onNavigateToTestHistory }: ReleasesTabPro
                           const risk = riskLevelBadge(release.compositeScore);
                           return (
                             <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold ${
-                              risk.color === "emerald" ? "bg-emerald-50 text-emerald-700" :
-                              risk.color === "amber" ? "bg-amber-50 text-amber-700" :
-                              risk.color === "orange" ? "bg-orange-50 text-orange-700" :
-                              "bg-red-50 text-red-700"
+                              risk.color === "emerald" ? "bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800" :
+                              risk.color === "amber" ? "bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800" :
+                              risk.color === "orange" ? "bg-orange-50 dark:bg-orange-950/60 text-orange-700 dark:text-orange-300 border border-orange-200 dark:border-orange-800" :
+                              "bg-red-50 dark:bg-red-950/60 text-red-700 dark:text-red-300 border border-red-200 dark:border-red-800"
                             }`}>
                               <risk.icon className="w-3 h-3" />
                               {risk.level}
@@ -593,7 +688,7 @@ export function ReleasesTab({ project, onNavigateToTestHistory }: ReleasesTabPro
 
                   {/* Branch / Tag */}
                   <td className="py-4 px-4 whitespace-nowrap">
-                    <div className="flex items-center gap-1.5 text-zinc-500">
+                    <div className="flex items-center gap-1.5 text-muted-foreground">
                       {release.tag ? (
                         <>
                           <Tag className="w-3 h-3 text-zinc-400" />
@@ -622,7 +717,7 @@ export function ReleasesTab({ project, onNavigateToTestHistory }: ReleasesTabPro
                   <td className="py-4 px-5 text-right">
                     <button
                       onClick={(e) => { e.stopPropagation(); setSelected(release); }}
-                      className="text-xs font-semibold text-[#5850ec] hover:text-[#4d44e7] p-1.5 rounded-lg hover:bg-indigo-50 transition-colors inline-flex items-center gap-1 opacity-0 group-hover:opacity-100"
+                      className="text-xs font-semibold text-[#5850ec] hover:text-[#4d44e7] p-1.5 rounded-lg hover:bg-indigo-50 dark:hover:bg-indigo-950/50 transition-colors inline-flex items-center gap-1 opacity-0 group-hover:opacity-100"
                     >
                       Details
                       <ChevronRight className="w-3.5 h-3.5" />
@@ -637,23 +732,62 @@ export function ReleasesTab({ project, onNavigateToTestHistory }: ReleasesTabPro
 
       {/* ── Detail modal ──────────────────────────────────────────────────────── */}
       {selected && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-zinc-900/40 backdrop-blur-sm animate-in fade-in duration-150">
-          <div className="bg-white rounded-2xl border border-zinc-200 shadow-2xl max-w-3xl w-full p-6 space-y-5 max-h-[90vh] overflow-y-auto">
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-zinc-900/40 backdrop-blur-sm animate-in fade-in duration-150"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="release-modal-title"
+          onKeyDown={(e) => {
+            if (e.key === 'Escape') {
+              setSelected(null);
+            }
+          }}
+        >
+          {/* Focus trap */}
+          <div tabIndex={-1} className="sr-only" aria-hidden="true" />
+          <div
+            className="bg-card text-foreground rounded-2xl border border-card-border shadow-2xl max-w-3xl w-full p-6 space-y-5 max-h-[90vh] overflow-y-auto"
+            ref={(el) => {
+              if (el) {
+                el.focus();
+                // Trap focus within modal
+                const focusableElements = el.querySelectorAll(
+                  'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+                );
+                const firstElement = focusableElements[0] as HTMLElement;
+                const lastElement = focusableElements[focusableElements.length - 1] as HTMLElement;
 
+                const handleTab = (e: KeyboardEvent) => {
+                  if (e.key === 'Tab') {
+                    if (e.shiftKey && document.activeElement === firstElement) {
+                      e.preventDefault();
+                      lastElement?.focus();
+                    } else if (!e.shiftKey && document.activeElement === lastElement) {
+                      e.preventDefault();
+                      firstElement?.focus();
+                    }
+                  }
+                };
+                el.addEventListener('keydown', handleTab);
+                return () => el.removeEventListener('keydown', handleTab);
+              }
+            }}
+          >
             {/* Modal header */}
-            <div className="flex items-start justify-between border-b border-zinc-100 pb-4">
+            <div className="flex items-start justify-between border-b border-card-border pb-4">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-indigo-50 flex items-center justify-center">
+                <div className="w-10 h-10 rounded-xl bg-indigo-50 flex items-center justify-center" aria-hidden="true">
                   <Tag className="w-5 h-5 text-[#5850ec]" />
                 </div>
                 <div>
                   <p className="text-xs text-zinc-400 font-medium">Release Overview</p>
-                  <h3 className="text-base font-bold text-zinc-900">{selected.versionNumber}</h3>
+                  <h2 id="release-modal-title" className="text-base font-bold text-foreground">{selected.versionNumber}</h2>
                 </div>
               </div>
               <button
                 onClick={() => setSelected(null)}
-                className="text-zinc-400 hover:text-zinc-600 p-1.5 rounded-lg hover:bg-zinc-100 transition-colors"
+                className="text-zinc-400 hover:text-zinc-600 p-1.5 rounded-lg hover:bg-zinc-100 transition-colors focus:outline-none focus:ring-2 focus:ring-[#5850ec] focus:ring-offset-2"
+                aria-label="Close release details"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -681,21 +815,21 @@ export function ReleasesTab({ project, onNavigateToTestHistory }: ReleasesTabPro
                     {/* Main summary */}
                     <div className="md:col-span-2">
                       <div className="flex items-center gap-2 mb-2">
-                        <span className="text-xs font-bold text-zinc-700">Composite Risk Score</span>
+                        <span className="text-xs font-bold text-foreground">Composite Risk Score</span>
                         {decisionBadge(selected.deploymentDecision)}
                       </div>
-                      <p className="text-[11px] text-zinc-500 leading-relaxed line-clamp-2">
+                      <p className="text-[11px] text-muted-foreground leading-relaxed line-clamp-2">
                         {selected.decisionReason ?? "Risk assessment completed."}
                       </p>
 
                       {/* Formula & thresholds */}
                       <div className="mt-3 flex flex-wrap items-center gap-3 text-[10px] text-zinc-400">
-                        <span className="font-mono bg-white/70 px-2 py-0.5 rounded border border-zinc-200">
+                        <span className="font-mono bg-muted px-2 py-0.5 rounded border border-card-border">
                           composite = sec×0.40 + perf×0.35 + tests×0.15 + reg×0.10
                         </span>
                         <span className="px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 font-medium">≥80 PASS</span>
-                        <span className="px-2 py-0.5 rounded bg-amber-50 text-amber-700 font-medium">60–79 WARN</span>
-                        <span className="px-2 py-0.5 rounded bg-red-50 text-red-700 font-medium">{"<"}60 BLOCK</span>
+                        <span className="px-2 py-0.5 rounded bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border border-amber-200/60 dark:border-amber-800 font-medium">60–79 WARN</span>
+                        <span className="px-2 py-0.5 rounded bg-red-50 dark:bg-red-950/60 text-red-700 dark:text-red-300 border border-red-200/60 dark:border-red-800 font-medium">{"<"}60 BLOCK</span>
                       </div>
                     </div>
 
@@ -731,12 +865,12 @@ export function ReleasesTab({ project, onNavigateToTestHistory }: ReleasesTabPro
               </div>
             ) : (
               /* No score yet — show pending state */
-              <div className="rounded-2xl border border-zinc-100 bg-zinc-50 p-4 flex items-center gap-3">
+              <div className="rounded-2xl border border-card-border bg-muted/30 p-4 flex items-center gap-3">
                 {selected.status === "PENDING" ? (
                   <>
                     <Loader2 className="w-5 h-5 text-amber-500 animate-spin shrink-0" />
                     <div>
-                      <p className="text-xs font-semibold text-zinc-700">Gate checks in progress…</p>
+                      <p className="text-xs font-semibold text-foreground">Gate checks in progress…</p>
                       <p className="text-[11px] text-zinc-400">Composite risk score will appear once both Semgrep and k6 tests complete.</p>
                     </div>
                   </>
@@ -744,7 +878,7 @@ export function ReleasesTab({ project, onNavigateToTestHistory }: ReleasesTabPro
                   <>
                     <Info className="w-5 h-5 text-zinc-400 shrink-0" />
                     <div>
-                      <p className="text-xs font-semibold text-zinc-700">No risk score available</p>
+                      <p className="text-xs font-semibold text-foreground">No risk score available</p>
                       <p className="text-[11px] text-zinc-400">Gate checks may not have run for this release.</p>
                     </div>
                   </>
@@ -755,7 +889,7 @@ export function ReleasesTab({ project, onNavigateToTestHistory }: ReleasesTabPro
             {/* ── Detailed Risk Factor Cards ───────────────────────────────────── */}
             {selected.compositeScore != null && (
               <div className="space-y-3 pt-1">
-                <h4 className="text-xs font-bold text-zinc-900 flex items-center gap-1.5">
+                <h4 className="text-xs font-bold text-foreground flex items-center gap-1.5">
                   <BarChart2 className="w-3.5 h-3.5 text-[#5850ec]" />
                   Risk Factor Breakdown
                 </h4>
@@ -798,44 +932,54 @@ export function ReleasesTab({ project, onNavigateToTestHistory }: ReleasesTabPro
               </div>
             )}
 
+            {/* Local Ollama Release Gate Advisory */}
+            {selected.aiSuggestion && (
+              <div className="pt-1">
+                <AiSuggestionCard
+                  suggestion={selected.aiSuggestion}
+                  title="Ollama AI Release Advisory & Risk Mitigation"
+                />
+              </div>
+            )}
+
             {/* Release metadata grid */}
             <div className="grid grid-cols-2 md:grid-cols-3 gap-3 text-xs pt-2 border-t border-zinc-100">
-              <div className="bg-zinc-50 p-3 rounded-xl border border-zinc-200/70">
+              <div className="bg-muted/40 p-3 rounded-xl border border-card-border">
                 <p className="text-zinc-400 font-medium mb-1">Release Status</p>
                 {statusLabel(selected.status)}
               </div>
-              <div className="bg-zinc-50 p-3 rounded-xl border border-zinc-200/70">
+              <div className="bg-muted/40 p-3 rounded-xl border border-card-border">
                 <p className="text-zinc-400 font-medium mb-1">Gate Check State</p>
                 {testVerdictBadge(selected.testVerdict)}
               </div>
-              <div className="bg-zinc-50 p-3 rounded-xl border border-zinc-200/70">
+              <div className="bg-muted/40 p-3 rounded-xl border border-card-border">
                 <p className="text-zinc-400 font-medium mb-1">Environment</p>
                 <span className={`inline-block px-2.5 py-0.5 rounded-full text-[11px] font-semibold border ${envBadge(selected.environment)}`}>
                   {selected.environment.charAt(0) + selected.environment.slice(1).toLowerCase()}
                 </span>
               </div>
-              <div className="bg-zinc-50 p-3 rounded-xl border border-zinc-200/70">
+              <div className="bg-muted/40 p-3 rounded-xl border border-card-border">
                 <p className="text-zinc-400 font-medium mb-1">Commit SHA</p>
-                <span className="font-mono text-[11px] text-zinc-700 break-all">{selected.commitSha}</span>
+                <span className="font-mono text-[11px] text-foreground break-all">{selected.commitSha}</span>
               </div>
-              <div className="bg-zinc-50 p-3 rounded-xl border border-zinc-200/70">
+              <div className="bg-muted/40 p-3 rounded-xl border border-card-border">
                 <p className="text-zinc-400 font-medium mb-1">Branch</p>
-                <span className="font-mono text-zinc-700">{selected.branch ?? "—"}</span>
+                <span className="font-mono text-foreground">{selected.branch ?? "—"}</span>
               </div>
-              <div className="bg-zinc-50 p-3 rounded-xl border border-zinc-200/70">
+              <div className="bg-muted/40 p-3 rounded-xl border border-card-border">
                 <p className="text-zinc-400 font-medium mb-1">Released</p>
-                <span className="text-zinc-700">{new Date(selected.createdAt).toLocaleString()}</span>
+                <span className="text-foreground">{new Date(selected.createdAt).toLocaleString()}</span>
               </div>
             </div>
 
             {/* Test Runs */}
             {selected.testRuns && selected.testRuns.length > 0 && (
               <div className="space-y-2 pt-1 border-t border-zinc-100">
-                <h4 className="text-xs font-bold text-zinc-900 flex items-center gap-1.5">
+                <h4 className="text-xs font-bold text-foreground flex items-center gap-1.5">
                   <Shield className="w-3.5 h-3.5 text-[#5850ec]" />
                   Executed Automated Gate Checks:
                 </h4>
-                <div className="divide-y divide-zinc-100 bg-zinc-50 rounded-xl border border-zinc-200/70">
+                <div className="divide-y divide-card-border bg-zinc-50 rounded-xl border border-zinc-200/70">
                   {selected.testRuns.map((tr) => (
                     <div key={tr.id} className="p-3 flex items-center justify-between text-xs">
                       <div className="flex items-center gap-2">
@@ -849,7 +993,7 @@ export function ReleasesTab({ project, onNavigateToTestHistory }: ReleasesTabPro
                           </div>
                         )}
                         <div>
-                          <span className="font-semibold text-zinc-800">
+                          <span className="font-semibold text-foreground">
                             {tr.type === "SECURITY" ? "Semgrep SAST Security" : "Grafana k6 Performance"}
                           </span>
                           <span className="text-[11px] text-zinc-400 block">
@@ -889,7 +1033,7 @@ export function ReleasesTab({ project, onNavigateToTestHistory }: ReleasesTabPro
               <div className="ml-auto">
                 <button
                   onClick={() => setSelected(null)}
-                  className="px-4 py-2 text-xs font-semibold text-zinc-700 bg-zinc-100 hover:bg-zinc-200 rounded-xl transition-colors"
+                  className="px-4 py-2 text-xs font-semibold text-foreground bg-muted hover:bg-muted/80 text-foreground rounded-xl transition-colors"
                 >
                   Close
                 </button>
@@ -902,18 +1046,18 @@ export function ReleasesTab({ project, onNavigateToTestHistory }: ReleasesTabPro
       {/* ── Create Release Modal ────────────────────────────────────────────── */}
       {isCreateOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-zinc-900/40 backdrop-blur-sm animate-in fade-in duration-150">
-          <div className="bg-white rounded-2xl border border-zinc-200 shadow-2xl max-w-md w-full p-6 space-y-4">
-            <div className="flex items-center justify-between border-b border-zinc-100 pb-3">
+          <div className="bg-card text-foreground rounded-2xl border border-card-border shadow-2xl max-w-md w-full p-6 space-y-4">
+            <div className="flex items-center justify-between border-b border-card-border pb-3">
               <div className="flex items-center gap-2">
                 <Rocket className="w-5 h-5 text-[#5850ec]" />
-                <h3 className="text-sm font-bold text-zinc-900">Create New Release</h3>
+                <h3 className="text-sm font-bold text-foreground">Create New Release</h3>
               </div>
               <button onClick={() => setIsCreateOpen(false)} className="text-zinc-400 hover:text-zinc-600 p-1 rounded-lg">
                 <X className="w-4 h-4" />
               </button>
             </div>
 
-            <p className="text-xs text-zinc-500">
+            <p className="text-xs text-muted-foreground">
               When created, DeployIntel will automatically run Semgrep SAST and k6 performance checks,
               then compute a <strong>composite risk score</strong> to decide PASS or BLOCK.
             </p>
@@ -926,23 +1070,23 @@ export function ReleasesTab({ project, onNavigateToTestHistory }: ReleasesTabPro
 
             <form onSubmit={handleCreateRelease} className="space-y-3.5 text-xs">
               <div>
-                <label className="block font-semibold text-zinc-700 mb-1">Version Number *</label>
+                <label className="block font-semibold text-foreground mb-1">Version Number *</label>
                 <input
                   type="text"
                   value={versionNumber}
                   onChange={(e) => setVersionNumber(e.target.value)}
                   placeholder="e.g. v2.1.0"
-                  className="w-full px-3 py-2 bg-zinc-50 border border-zinc-200 rounded-xl text-xs focus:ring-2 focus:ring-[#5850ec]/30 focus:border-[#5850ec]"
+                  className="w-full px-3 py-2 bg-muted/40 border border-card-border text-foreground rounded-xl text-xs focus:ring-2 focus:ring-[#5850ec]/30 focus:border-[#5850ec]"
                   required
                 />
               </div>
 
               <div>
-                <label className="block font-semibold text-zinc-700 mb-1">Target Environment *</label>
+                <label className="block font-semibold text-foreground mb-1">Target Environment *</label>
                 <select
                   value={environment}
                   onChange={(e) => setEnvironment(e.target.value as ReleaseEnvironment)}
-                  className="w-full px-3 py-2 bg-zinc-50 border border-zinc-200 rounded-xl text-xs focus:ring-2 focus:ring-[#5850ec]/30 focus:border-[#5850ec]"
+                  className="w-full px-3 py-2 bg-muted/40 border border-card-border text-foreground rounded-xl text-xs focus:ring-2 focus:ring-[#5850ec]/30 focus:border-[#5850ec]"
                 >
                   <option value="PRODUCTION">Production</option>
                   <option value="STAGING">Staging</option>
@@ -952,29 +1096,29 @@ export function ReleasesTab({ project, onNavigateToTestHistory }: ReleasesTabPro
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block font-semibold text-zinc-700 mb-1">Branch</label>
+                  <label className="block font-semibold text-foreground mb-1">Branch</label>
                   <input
                     type="text"
                     value={branch}
                     onChange={(e) => setBranch(e.target.value)}
                     placeholder="main"
-                    className="w-full px-3 py-2 bg-zinc-50 border border-zinc-200 rounded-xl text-xs"
+                    className="w-full px-3 py-2 bg-muted/40 border border-card-border text-foreground rounded-xl text-xs"
                   />
                 </div>
                 <div>
-                  <label className="block font-semibold text-zinc-700 mb-1">Commit SHA</label>
+                  <label className="block font-semibold text-foreground mb-1">Commit SHA</label>
                   <input
                     type="text"
                     value={commitSha}
                     onChange={(e) => setCommitSha(e.target.value)}
                     placeholder="e.g. 7f9a2b1"
-                    className="w-full px-3 py-2 bg-zinc-50 border border-zinc-200 rounded-xl text-xs font-mono"
+                    className="w-full px-3 py-2 bg-muted/40 border border-card-border text-foreground rounded-xl text-xs font-mono"
                   />
                 </div>
               </div>
 
               {/* Scoring info panel */}
-              <div className="bg-indigo-50 border border-indigo-100 rounded-xl p-3 text-[11px] text-indigo-700 space-y-1">
+              <div className="bg-indigo-500/10 border border-indigo-500/20 rounded-xl p-3 text-[11px] text-indigo-600 dark:text-indigo-400 space-y-1">
                 <p className="font-bold flex items-center gap-1"><Sparkles className="w-3 h-3" /> Risk Score Formula</p>
                 <p className="font-mono text-[10px] text-indigo-500">
                   score = Security×40% + Performance×35% + Tests×15% + Regression×10%
@@ -986,7 +1130,7 @@ export function ReleasesTab({ project, onNavigateToTestHistory }: ReleasesTabPro
                 <button
                   type="button"
                   onClick={() => setIsCreateOpen(false)}
-                  className="px-4 py-2 text-xs font-semibold text-zinc-600 bg-zinc-100 hover:bg-zinc-200 rounded-xl transition-colors"
+                  className="px-4 py-2 text-xs font-semibold text-zinc-600 bg-muted hover:bg-muted/80 text-foreground rounded-xl transition-colors"
                 >
                   Cancel
                 </button>

@@ -13,6 +13,7 @@ import com.example.deployintel.environment.entity.EnvironmentStatus;
 import com.example.deployintel.environment.entity.TestEnvironment;
 import com.example.deployintel.environment.repository.TestEnvironmentRepository;
 import com.example.deployintel.project.entity.Project;
+import com.example.deployintel.project.member.repository.ProjectMemberRepository;
 import com.example.deployintel.project.repository.ProjectRepository;
 import com.example.deployintel.user.entity.User;
 import com.example.deployintel.user.entity.UserRole;
@@ -46,6 +47,9 @@ class EnvironmentServiceTest {
 
     @Mock
     private ProjectRepository projectRepository;
+
+    @Mock
+    private ProjectMemberRepository projectMemberRepository;
 
     @Mock
     private DockerService dockerService;

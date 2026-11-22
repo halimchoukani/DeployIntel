@@ -23,5 +23,7 @@ public class TestRunSummaryDto {
     private int failedTests;
     private Long durationMs;
     private OffsetDateTime completedAt;
+    private String aiSuggestion;
+    private String aiModel;
 }
 

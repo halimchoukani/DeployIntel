@@ -10,6 +10,7 @@ import com.example.deployintel.environment.entity.EnvironmentStatus;
 import com.example.deployintel.environment.entity.TestEnvironment;
 import com.example.deployintel.environment.repository.TestEnvironmentRepository;
 import com.example.deployintel.project.entity.Project;
+import com.example.deployintel.project.member.repository.ProjectMemberRepository;
 import com.example.deployintel.project.repository.ProjectRepository;
 import com.example.deployintel.user.entity.UserRole;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -34,6 +35,7 @@ public class EnvironmentService {
 
     private final TestEnvironmentRepository testEnvironmentRepository;
     private final ProjectRepository projectRepository;
+    private final ProjectMemberRepository projectMemberRepository;
     private final DockerService dockerService;
     private final ObjectMapper objectMapper;
 
@@ -794,8 +796,9 @@ public class EnvironmentService {
 
         boolean isOwner = project.getOwner() != null && project.getOwner().getId().equals(currentUser.getId());
         boolean isAdmin = currentUser.getRole() == UserRole.ADMIN;
+        boolean isMember = projectMemberRepository.existsByProjectIdAndUserId(projectId, currentUser.getId());
 
-        if (!isOwner && !isAdmin) {
+        if (!isOwner && !isAdmin && !isMember) {
             throw new ProjectAccessDeniedException("You do not have permission to access or modify this project");
         }
 

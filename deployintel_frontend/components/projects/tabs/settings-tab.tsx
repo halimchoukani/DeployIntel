@@ -221,33 +221,33 @@ export function SettingsTab({ project }: SettingsTabProps) {
   return (
     <div className="space-y-6">
       {/* 1. General Project Details */}
-      <div className="bg-white rounded-2xl border border-zinc-200 p-6 shadow-xs flex items-center justify-between">
+      <div className="bg-card text-foreground rounded-2xl border border-card-border p-6 shadow-xs flex items-center justify-between">
         <div>
-          <h3 className="text-sm font-bold text-zinc-900">Project Configuration</h3>
-          <p className="text-xs text-zinc-500 mt-0.5">
+          <h3 className="text-sm font-bold text-foreground">Project Configuration</h3>
+          <p className="text-xs text-muted-foreground mt-0.5">
             Modify repository name, default branch, description, and language settings.
           </p>
         </div>
         <Link
           href={`/projects/${project.id}/edit`}
-          className="inline-flex items-center gap-1.5 text-xs font-semibold text-zinc-700 bg-white hover:bg-zinc-50 border border-zinc-200 px-4 py-2 rounded-xl transition-all shadow-xs"
+          className="inline-flex items-center gap-1.5 text-xs font-semibold text-foreground bg-card hover:bg-muted border border-card-border text-foreground px-4 py-2 rounded-xl transition-all shadow-xs"
         >
-          <Edit className="w-3.5 h-3.5 text-zinc-500" />
+          <Edit className="w-3.5 h-3.5 text-muted-foreground" />
           <span>Edit Metadata</span>
         </Link>
       </div>
 
       {/* 2. GitHub Actions CI/CD Setup */}
-      <div className="bg-white rounded-2xl border border-zinc-200 shadow-xs overflow-hidden">
+      <div className="bg-card text-foreground rounded-2xl border border-card-border shadow-xs overflow-hidden">
         {/* Section header */}
-        <div className="px-6 pt-6 pb-4 border-b border-zinc-100">
+        <div className="px-6 pt-6 pb-4 border-b border-card-border">
           <div className="flex items-center gap-2 mb-1">
             <Workflow className="w-4 h-4 text-[#5850ec]" />
-            <h3 className="text-sm font-bold text-zinc-900">GitHub Actions CI/CD Integration</h3>
+            <h3 className="text-sm font-bold text-foreground">GitHub Actions CI/CD Integration</h3>
           </div>
-          <p className="text-xs text-zinc-500">
+          <p className="text-xs text-muted-foreground">
             Add this workflow to{" "}
-            <code className="font-mono text-[11px] bg-zinc-100 px-1.5 py-0.5 rounded text-zinc-700">
+            <code className="font-mono text-[11px] bg-muted px-1.5 py-0.5 rounded text-muted-foreground">
               .github/workflows/deployintel-release.yml
             </code>{" "}
             — or push it directly from here using your GitHub token.
@@ -258,12 +258,12 @@ export function SettingsTab({ project }: SettingsTabProps) {
           {/* Step 1 — Token Creation & Workflow Authentication */}
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <p className="text-xs font-bold text-zinc-700 flex items-center gap-1.5">
+              <p className="text-xs font-bold text-foreground flex items-center gap-1.5">
                 <span className="w-5 h-5 rounded-full bg-[#5850ec] text-white text-[10px] flex items-center justify-center font-bold shrink-0">1</span>
                 Create CI/CD Access Token & Authentication
               </p>
               {tokenFlash && (
-                <span className="text-[11px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-full flex items-center gap-1 animate-in fade-in">
+                <span className="text-[11px] font-semibold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 px-2.5 py-0.5 rounded-full flex items-center gap-1 animate-in fade-in">
                   <CheckCircle2 className="w-3 h-3 text-emerald-600" />
                   Token generated & applied to workflow!
                 </span>
@@ -271,20 +271,20 @@ export function SettingsTab({ project }: SettingsTabProps) {
             </div>
 
             {/* Token Generation Box */}
-            <div className="rounded-2xl border border-indigo-100 bg-gradient-to-br from-indigo-50/70 via-white to-purple-50/50 p-5 space-y-4 shadow-xs">
+            <div className="rounded-2xl border border-card-border bg-gradient-to-br from-indigo-500/10 via-card to-purple-500/10 p-5 space-y-4 shadow-xs">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div className="flex items-center gap-3">
                   <div className="w-9 h-9 rounded-xl bg-[#5850ec]/10 flex items-center justify-center text-[#5850ec] shrink-0">
                     <Key className="w-4 h-4" />
                   </div>
                   <div>
-                    <h4 className="text-xs font-bold text-zinc-900 flex items-center gap-1.5">
+                    <h4 className="text-xs font-bold text-foreground flex items-center gap-1.5">
                       DeployIntel CI/CD Token
                       <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[#5850ec]/10 text-[#5850ec]">
                         Recommended
                       </span>
                     </h4>
-                    <p className="text-[11px] text-zinc-500">
+                    <p className="text-[11px] text-muted-foreground">
                       Generate a long-lived token to authenticate the GitHub Action release tracker.
                     </p>
                   </div>
@@ -295,7 +295,7 @@ export function SettingsTab({ project }: SettingsTabProps) {
                     <select
                       value={tokenDuration}
                       onChange={(e) => setTokenDuration(Number(e.target.value))}
-                      className="text-xs bg-white border border-zinc-200 rounded-xl px-2.5 py-1.5 text-zinc-700 outline-none focus:border-[#5850ec] shadow-2xs"
+                      className="text-xs bg-card border border-card-border rounded-xl px-2.5 py-1.5 text-foreground outline-none focus:border-[#5850ec] shadow-2xs"
                     >
                       <option value={365}>1 Year (Recommended)</option>
                       <option value={90}>90 Days</option>
@@ -319,7 +319,7 @@ export function SettingsTab({ project }: SettingsTabProps) {
                     <button
                       onClick={handleGenerateToken}
                       disabled={createTokenMutation.isPending}
-                      className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-zinc-600 bg-white hover:bg-zinc-50 border border-zinc-200 px-3 py-1.5 rounded-xl transition-all shadow-2xs cursor-pointer"
+                      className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-zinc-600 bg-card hover:bg-muted border border-card-border text-foreground px-3 py-1.5 rounded-xl transition-all shadow-2xs cursor-pointer"
                     >
                       <RefreshCw className={`w-3 h-3 ${createTokenMutation.isPending ? "animate-spin" : ""}`} />
                       Regenerate
@@ -333,7 +333,7 @@ export function SettingsTab({ project }: SettingsTabProps) {
                 <div className="space-y-3 pt-3 border-t border-indigo-100/60">
                   <div>
                     <div className="flex items-center justify-between mb-1.5">
-                      <label className="text-[11px] font-semibold text-zinc-700 flex items-center gap-1">
+                      <label className="text-[11px] font-semibold text-foreground flex items-center gap-1">
                         <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
                         Generated CI/CD Token
                       </label>
@@ -349,7 +349,7 @@ export function SettingsTab({ project }: SettingsTabProps) {
                           type={showGeneratedToken ? "text" : "password"}
                           readOnly
                           value={generatedToken}
-                          className="w-full h-9 pl-3 pr-10 text-xs font-mono bg-white border border-zinc-200 rounded-xl text-zinc-800 outline-none select-all focus:border-[#5850ec]"
+                          className="w-full h-9 pl-3 pr-10 text-xs font-mono bg-muted/40 border border-card-border rounded-xl text-foreground outline-none select-all focus:border-[#5850ec]"
                         />
                         <button
                           type="button"
@@ -361,20 +361,20 @@ export function SettingsTab({ project }: SettingsTabProps) {
                       </div>
                       <button
                         onClick={copyGeneratedToken}
-                        className="h-9 px-3 text-xs font-semibold text-zinc-700 bg-white hover:bg-zinc-50 border border-zinc-200 rounded-xl transition-all shadow-2xs flex items-center gap-1.5 cursor-pointer"
+                        className="h-9 px-3 text-xs font-semibold text-foreground bg-card hover:bg-muted border border-card-border text-foreground rounded-xl transition-all shadow-2xs flex items-center gap-1.5 cursor-pointer"
                       >
-                        {copiedToken ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5 text-zinc-500" />}
+                        {copiedToken ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5 text-muted-foreground" />}
                         {copiedToken ? "Copied" : "Copy"}
                       </button>
                     </div>
                   </div>
 
                   {/* Direct Embed Toggle */}
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 bg-white/90 border border-indigo-100 rounded-xl shadow-2xs">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 bg-card/90 border border-card-border rounded-xl shadow-2xs">
                     <div className="flex items-center gap-2.5">
                       <span className={`w-2 h-2 rounded-full shrink-0 ${embedToken ? "bg-emerald-500 animate-pulse" : "bg-zinc-300"}`} />
                       <div>
-                        <p className="text-xs font-semibold text-zinc-800">
+                        <p className="text-xs font-semibold text-foreground">
                           Include token directly in workflow file
                         </p>
                         <p className="text-[11px] text-zinc-400">
@@ -389,7 +389,7 @@ export function SettingsTab({ project }: SettingsTabProps) {
                       className={`h-7 px-3 text-[11px] font-semibold rounded-lg transition-all flex items-center gap-1.5 shadow-2xs cursor-pointer ${
                         embedToken
                           ? "bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100"
-                          : "bg-zinc-100 text-zinc-700 border border-zinc-200 hover:bg-zinc-200"
+                          : "bg-zinc-100 text-foreground border border-zinc-200 hover:bg-zinc-200"
                       }`}
                     >
                       {embedToken ? <Check className="w-3 h-3 text-emerald-600" /> : <Sparkles className="w-3 h-3 text-[#5850ec]" />}
@@ -404,26 +404,26 @@ export function SettingsTab({ project }: SettingsTabProps) {
             <div className="rounded-xl border border-zinc-200 overflow-hidden">
               <table className="w-full text-xs">
                 <thead>
-                  <tr className="bg-zinc-50 border-b border-zinc-200">
-                    <th className="py-2.5 px-4 text-left text-[11px] font-semibold text-zinc-500 uppercase tracking-wide">Secret / Parameter</th>
-                    <th className="py-2.5 px-4 text-left text-[11px] font-semibold text-zinc-500 uppercase tracking-wide">Status / Value</th>
+                  <tr className="bg-muted/40 border-b border-card-border">
+                    <th className="py-2.5 px-4 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">Secret / Parameter</th>
+                    <th className="py-2.5 px-4 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">Status / Value</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-zinc-100">
+                <tbody className="divide-y divide-card-border">
                   <tr className={embedToken ? "bg-emerald-50/30" : ""}>
-                    <td className="py-3 px-4 font-mono text-zinc-800 font-semibold">DEPLOYINTEL_TOKEN</td>
+                    <td className="py-3 px-4 font-mono text-foreground font-semibold">DEPLOYINTEL_TOKEN</td>
                     <td className="py-3 px-4">
                       {embedToken ? (
-                        <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-md">
+                        <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 px-2 py-0.5 rounded-md">
                           <Check className="w-3 h-3 text-emerald-600" />
                           Included in workflow file
                         </span>
                       ) : generatedToken ? (
                         <div className="flex items-center gap-2">
-                          <span className="text-zinc-500 text-[11px]">Token generated</span>
+                          <span className="text-muted-foreground text-[11px]">Token generated</span>
                           <button
                             onClick={copyGeneratedToken}
-                            className="h-6 px-2 text-[10px] font-semibold text-zinc-700 bg-white hover:bg-zinc-50 border border-zinc-200 rounded-md transition-colors flex items-center gap-1 shadow-2xs"
+                            className="h-6 px-2 text-[10px] font-semibold text-foreground bg-card hover:bg-muted border border-card-border text-foreground rounded-md transition-colors flex items-center gap-1 shadow-2xs"
                           >
                             {copiedToken ? <Check className="w-2.5 h-2.5 text-emerald-600" /> : <Copy className="w-2.5 h-2.5" />}
                             {copiedToken ? "Copied" : "Copy Token"}
@@ -437,10 +437,10 @@ export function SettingsTab({ project }: SettingsTabProps) {
                     </td>
                   </tr>
                   <tr>
-                    <td className="py-3 px-4 font-mono text-zinc-800 font-semibold">DEPLOYINTEL_API_URL</td>
-                    <td className="py-3 px-4 text-zinc-500">
+                    <td className="py-3 px-4 font-mono text-foreground font-semibold">DEPLOYINTEL_API_URL</td>
+                    <td className="py-3 px-4 text-muted-foreground">
                       <div className="flex items-center gap-2">
-                        <code className="font-mono text-[11px] bg-zinc-100 px-1.5 py-0.5 rounded text-zinc-700">
+                        <code className="font-mono text-[11px] bg-muted px-1.5 py-0.5 rounded text-muted-foreground">
                           {typeof window !== "undefined" && window.location.origin.includes("localhost")
                             ? "http://localhost:8080"
                             : "https://api.deployintel.io"}
@@ -454,7 +454,7 @@ export function SettingsTab({ project }: SettingsTabProps) {
                             setCopiedApiUrl(true);
                             setTimeout(() => setCopiedApiUrl(false), 2000);
                           }}
-                          className="h-6 px-2 text-[10px] font-semibold text-zinc-600 bg-white hover:bg-zinc-50 border border-zinc-200 rounded-md transition-colors flex items-center gap-1 shadow-2xs"
+                          className="h-6 px-2 text-[10px] font-semibold text-zinc-600 bg-card hover:bg-muted border border-card-border text-foreground rounded-md transition-colors flex items-center gap-1 shadow-2xs"
                         >
                           {copiedApiUrl ? <Check className="w-2.5 h-2.5 text-emerald-600" /> : <Copy className="w-2.5 h-2.5" />}
                           {copiedApiUrl ? "Copied" : "Copy"}
@@ -463,15 +463,15 @@ export function SettingsTab({ project }: SettingsTabProps) {
                     </td>
                   </tr>
                   <tr className="bg-indigo-50/40">
-                    <td className="py-3 px-4 font-mono text-zinc-800 font-semibold">DEPLOYINTEL_PROJECT_ID</td>
+                    <td className="py-3 px-4 font-mono text-foreground font-semibold">DEPLOYINTEL_PROJECT_ID</td>
                     <td className="py-3 px-4">
                       <div className="flex items-center gap-2">
-                        <code className="font-mono text-[11px] bg-white border border-zinc-200 px-2 py-1 rounded text-zinc-700 select-all">
+                        <code className="font-mono text-[11px] bg-white border border-zinc-200 px-2 py-1 rounded text-foreground select-all">
                           {project.id}
                         </code>
                         <button
                           onClick={copyProjectId}
-                          className="h-7 px-2.5 text-[11px] font-semibold text-zinc-600 bg-white hover:bg-zinc-50 border border-zinc-200 rounded-lg transition-colors flex items-center gap-1 shadow-2xs"
+                          className="h-7 px-2.5 text-[11px] font-semibold text-zinc-600 bg-card hover:bg-muted border border-card-border text-foreground rounded-lg transition-colors flex items-center gap-1 shadow-2xs"
                         >
                           {copiedId ? <Check className="w-3 h-3 text-emerald-600" /> : <Copy className="w-3 h-3" />}
                           {copiedId ? "Copied" : "Copy"}
@@ -487,14 +487,14 @@ export function SettingsTab({ project }: SettingsTabProps) {
           {/* Step 2 — Workflow editor */}
           <div>
             <div className="flex items-center justify-between mb-3">
-              <p className="text-xs font-bold text-zinc-700 flex items-center gap-1.5">
+              <p className="text-xs font-bold text-foreground flex items-center gap-1.5">
                 <span className="w-5 h-5 rounded-full bg-[#5850ec] text-white text-[10px] flex items-center justify-center font-bold shrink-0">2</span>
                 Workflow file
               </p>
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => setEditorOpen((v) => !v)}
-                  className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-zinc-600 bg-white hover:bg-zinc-50 border border-zinc-200 px-3 py-1.5 rounded-lg transition-colors shadow-2xs"
+                  className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-zinc-600 bg-card hover:bg-muted border border-card-border text-foreground px-3 py-1.5 rounded-lg transition-colors shadow-2xs"
                 >
                   <Terminal className="w-3.5 h-3.5 text-[#5850ec]" />
                   {editorOpen ? "Collapse" : "Edit workflow"}
@@ -502,16 +502,16 @@ export function SettingsTab({ project }: SettingsTabProps) {
                 </button>
                 <button
                   onClick={copyYaml}
-                  className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-zinc-600 bg-white hover:bg-zinc-50 border border-zinc-200 px-3 py-1.5 rounded-lg transition-colors shadow-2xs"
+                  className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-zinc-600 bg-card hover:bg-muted border border-card-border text-foreground px-3 py-1.5 rounded-lg transition-colors shadow-2xs"
                 >
-                  {copiedYaml ? <Check className="w-3 h-3 text-emerald-600" /> : <Copy className="w-3 h-3 text-zinc-500" />}
+                  {copiedYaml ? <Check className="w-3 h-3 text-emerald-600" /> : <Copy className="w-3 h-3 text-muted-foreground" />}
                   {copiedYaml ? "Copied!" : "Copy YAML"}
                 </button>
                 <button
                   onClick={downloadYaml}
-                  className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-zinc-600 bg-white hover:bg-zinc-50 border border-zinc-200 px-3 py-1.5 rounded-lg transition-colors shadow-2xs"
+                  className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-zinc-600 bg-card hover:bg-muted border border-card-border text-foreground px-3 py-1.5 rounded-lg transition-colors shadow-2xs"
                 >
-                  <Download className="w-3 h-3 text-zinc-500" />
+                  <Download className="w-3 h-3 text-muted-foreground" />
                   Download
                 </button>
               </div>
@@ -529,7 +529,7 @@ export function SettingsTab({ project }: SettingsTabProps) {
                   <span className="text-[11px] text-zinc-400 font-mono ml-1">.github/workflows/deployintel-release.yml</span>
                 </div>
                 {editorOpen && (
-                  <span className="text-[10px] font-semibold text-[#5850ec] bg-indigo-900/40 border border-indigo-700/50 px-2 py-0.5 rounded-full">
+                  <span className="text-[10px] font-semibold text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200 dark:border-indigo-800 px-2 py-0.5 rounded-full">
                     Editing
                   </span>
                 )}
@@ -559,7 +559,7 @@ export function SettingsTab({ project }: SettingsTabProps) {
                 <div className="flex items-center gap-2">
                   <button
                     onClick={handleResetWorkflow}
-                    className="text-[11px] font-semibold text-zinc-500 hover:text-zinc-700 px-3 py-1.5 rounded-lg hover:bg-zinc-100 transition-colors"
+                    className="text-[11px] font-semibold text-muted-foreground hover:text-foreground px-3 py-1.5 rounded-lg hover:bg-zinc-100 transition-colors"
                   >
                     Reset to default
                   </button>
@@ -586,11 +586,11 @@ export function SettingsTab({ project }: SettingsTabProps) {
               <div className="flex items-center gap-2.5">
                 <span className="w-5 h-5 rounded-full bg-[#5850ec] text-white text-[10px] flex items-center justify-center font-bold shrink-0">3</span>
                 <div>
-                  <p className="text-xs font-bold text-zinc-800 flex items-center gap-2">
+                  <p className="text-xs font-bold text-foreground flex items-center gap-2">
                     <GitFork className="w-3.5 h-3.5" />
                     Push directly to GitHub
                   </p>
-                  <p className="text-[11px] text-zinc-500 mt-0.5">
+                  <p className="text-[11px] text-muted-foreground mt-0.5">
                     DeployIntel will commit the workflow file to your repository using the GitHub API.
                   </p>
                 </div>
@@ -602,7 +602,7 @@ export function SettingsTab({ project }: SettingsTabProps) {
               <div className="px-5 py-5 space-y-4 border-t border-zinc-200">
                 {/* Token input */}
                 <div>
-                  <label className="block text-xs font-semibold text-zinc-700 mb-1.5 flex items-center gap-1.5">
+                  <label className="block text-xs font-semibold text-foreground mb-1.5 flex items-center gap-1.5">
                     <Lock className="w-3.5 h-3.5 text-zinc-400" />
                     GitHub Personal Access Token
                     <span className="text-zinc-400 font-normal">(optional if you signed in via GitHub OAuth)</span>
@@ -613,7 +613,7 @@ export function SettingsTab({ project }: SettingsTabProps) {
                       value={githubToken}
                       onChange={(e) => setGithubToken(e.target.value)}
                       placeholder="ghp_••••••••••••••••••••••••••••••••••••"
-                      className="w-full h-9 pl-3 pr-10 text-xs font-mono bg-zinc-50 border border-zinc-200 rounded-xl text-zinc-800 outline-none focus:border-[#5850ec] focus:ring-1 focus:ring-[#5850ec]/20 transition-all placeholder:text-zinc-300"
+                      className="w-full h-9 pl-3 pr-10 text-xs font-mono bg-zinc-50 border border-zinc-200 rounded-xl text-foreground outline-none focus:border-[#5850ec] focus:ring-1 focus:ring-[#5850ec]/20 transition-all placeholder:text-zinc-300"
                     />
                     <button
                       type="button"
@@ -625,14 +625,14 @@ export function SettingsTab({ project }: SettingsTabProps) {
                   </div>
                   <p className="text-[11px] text-zinc-400 mt-1.5 flex items-center gap-1">
                     <Info className="w-3 h-3 shrink-0" />
-                    GitHub requires the <code className="bg-zinc-100 px-1 rounded text-zinc-700 font-mono">workflow</code> + <code className="bg-zinc-100 px-1 rounded text-zinc-700 font-mono">repo</code> scopes (classic PAT) or <code className="bg-zinc-100 px-1 rounded text-zinc-700 font-mono">Workflows: Read & write</code> (fine-grained PAT).
+                    GitHub requires the <code className="bg-zinc-100 px-1 rounded text-foreground font-mono">workflow</code> + <code className="bg-zinc-100 px-1 rounded text-foreground font-mono">repo</code> scopes (classic PAT) or <code className="bg-zinc-100 px-1 rounded text-foreground font-mono">Workflows: Read & write</code> (fine-grained PAT).
                     Never stored — used only for this request.
                   </p>
                 </div>
 
                 {/* Custom commit message */}
                 <div>
-                  <label className="block text-xs font-semibold text-zinc-700 mb-1.5">
+                  <label className="block text-xs font-semibold text-foreground mb-1.5">
                     Commit message <span className="text-zinc-400 font-normal">(optional)</span>
                   </label>
                   <input
@@ -640,7 +640,7 @@ export function SettingsTab({ project }: SettingsTabProps) {
                     value={commitMsg}
                     onChange={(e) => setCommitMsg(e.target.value)}
                     placeholder="ci: add DeployIntel release tracker workflow"
-                    className="w-full h-9 px-3 text-xs bg-zinc-50 border border-zinc-200 rounded-xl text-zinc-800 outline-none focus:border-[#5850ec] focus:ring-1 focus:ring-[#5850ec]/20 transition-all placeholder:text-zinc-300"
+                    className="w-full h-9 px-3 text-xs bg-zinc-50 border border-zinc-200 rounded-xl text-foreground outline-none focus:border-[#5850ec] focus:ring-1 focus:ring-[#5850ec]/20 transition-all placeholder:text-zinc-300"
                   />
                 </div>
 
@@ -719,7 +719,7 @@ export function SettingsTab({ project }: SettingsTabProps) {
           <AlertTriangle className="w-4 h-4" />
           <h3 className="text-sm font-bold uppercase tracking-wider">Danger Zone</h3>
         </div>
-        <p className="text-xs text-zinc-500 mb-6">
+        <p className="text-xs text-muted-foreground mb-6">
           Irreversible actions. Archiving disables automated gate enforcement. Deleting removes all historical risk telemetry.
         </p>
 
@@ -752,7 +752,7 @@ export function SettingsTab({ project }: SettingsTabProps) {
               </button>
               <button
                 onClick={() => setShowDeleteConfirm(false)}
-                className="text-xs font-medium text-zinc-500 hover:text-zinc-700 px-2 py-1"
+                className="text-xs font-medium text-muted-foreground hover:text-foreground px-2 py-1"
               >
                 Cancel
               </button>
